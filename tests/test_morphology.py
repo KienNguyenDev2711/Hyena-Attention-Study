@@ -31,6 +31,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from hyena_study.morphology import (  # noqa: E402
     alphas_from_mi,
+    logspaced_alphas,
     mutual_information_decay,
     uniform_alphas,
 )
@@ -170,6 +171,35 @@ def test_alpha_mapping_concentrates_where_information_is():
     return float(np.median(eff))
 
 
+def test_fair_baseline_actually_covers_short_range():
+    """Doi chung CONG BANG phai phu ca vung khoang cach ngan.
+
+    Ly do co test nay: doi chung 1 (`uniform_alphas`) voi khoang alpha nhom chon
+    dat 100% so kenh ra xa hon 64 token, trong khi phep do E0-b cho thay 80-90%
+    thong tin nam trong d <= 34 token. Dem de xuat di so voi mot cau hinh nhu the
+    la so voi HINH NON: thang cung khong chung minh duoc gi.
+
+    Test nay chot rang `logspaced_alphas` khong mac loi do, de moi so sanh trong
+    bao cao deu co mot doi chung dang tin.
+    """
+    L, D = 512, 256
+    fair = np.array(logspaced_alphas(D, seq_len=L).effective_lengths)
+    weak = np.array(uniform_alphas(D, seq_len=L).effective_lengths)
+
+    assert (weak <= 64).sum() == 0, (
+        "doi chung 1 le ra phai dat toan bo kenh o vung xa - neu khong thi "
+        "ly do ton tai cua doi chung 2 da thay doi, phai xem lai"
+    )
+    assert (fair <= 4).sum() >= D // 8, (
+        f"doi chung cong bang chi co {(fair <= 4).sum()}/{D} kenh <= 4 token, "
+        "chua phu duoc vung thong tin tap trung"
+    )
+    assert fair.min() <= 1.5 and fair.max() >= L * 0.9, (
+        f"doi chung cong bang khong trai het thang do: [{fair.min():.1f}, {fair.max():.1f}]"
+    )
+    return float(np.median(fair))
+
+
 def test_alpha_mapping_refuses_degenerate_input():
     """Nếu thông tin đo được toàn <= 0, phải TỪ CHỐI sinh alpha, không được đoán bừa.
 
@@ -211,8 +241,9 @@ def main() -> int:
         ("M2a Tìm đúng chu kỳ đã biết (k=8)", test_detects_known_periodicity),
         ("M2b Phát hiện suy giảm đơn điệu", test_detects_monotonic_decay),
         ("M3a Alpha tập trung đúng chỗ", test_alpha_mapping_concentrates_where_information_is),
-        ("M3b Từ chối phép đo vô nghĩa", test_alpha_mapping_refuses_degenerate_input),
-        ("M3c Alpha cắm được vào mô hình", test_alpha_spec_plugs_into_model),
+        ("M3b Đối chứng công bằng phủ vùng ngắn", test_fair_baseline_actually_covers_short_range),
+        ("M3c Từ chối phép đo vô nghĩa", test_alpha_mapping_refuses_degenerate_input),
+        ("M3d Alpha cắm được vào mô hình", test_alpha_spec_plugs_into_model),
     ]
     n_fail = 0
     for name, fn in tests:

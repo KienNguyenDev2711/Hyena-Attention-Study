@@ -203,14 +203,55 @@ def alphas_from_mi(
 
 def uniform_alphas(d_model: int, alpha_min: float = 0.05,
                    alpha_max: float = 6.0, seq_len: int = 512) -> AlphaSpec:
-    """Đường cơ sở: trải đều như paper. Dùng để đối chiếu trong báo cáo."""
+    """Đường cơ sở 1: alpha trải đều tuyến tính (cách đọc sát chữ của Figure 3).
+
+    CẢNH BÁO PHẢI ĐỌC TRƯỚC KHI DÙNG LÀM ĐỐI CHỨNG:
+    Khoảng [alpha_min, alpha_max] = [0.05, 6.0] là lựa chọn của NHÓM, paper KHÔNG
+    quy định khoảng này. Với seq_len=512, khoảng đó cho độ dài hiệu dụng từ 85
+    tới 10240 token, nghĩa là 100% số kênh nằm xa hơn 64 token.
+
+    Phép đo E0-b trên corpus cho thấy 80-90% thông tin dự đoán nằm trong d <= 34
+    token. Vậy đường cơ sở này đặt toàn bộ kênh ra ngoài vùng có thông tin, và
+    đem đề xuất đi so với nó là so với một HÌNH NỘM: thắng cũng không chứng minh
+    được điều gì.
+
+    Vì vậy phải luôn báo cáo kèm `logspaced_alphas` (đường cơ sở 2). Kết luận
+    khoa học chỉ được rút ra từ so sánh với đường cơ sở 2.
+    """
     alpha = np.linspace(alpha_min, alpha_max, d_model)
     return AlphaSpec(
         alpha=[float(a) for a in alpha],
         effective_lengths=[float(seq_len / a) for a in alpha],
         seq_len=seq_len, d_model=d_model,
-        source="uniform_linspace_paper_default",
-        notes="Đường cơ sở theo Figure 3 của paper: alpha trải đều theo kênh.",
+        source="uniform_linspace",
+        notes=("Doi chung 1: alpha trai deu tuyen tinh trong [%.3f, %.3f]. "
+               "Khoang nay do nhom chon, paper khong quy dinh."
+               % (alpha_min, alpha_max)),
+    )
+
+
+def logspaced_alphas(d_model: int, seq_len: int = 512,
+                     min_len: float = 1.0) -> AlphaSpec:
+    """Đường cơ sở 2 (ĐỐI CHỨNG CÔNG BẰNG): độ dài hiệu dụng cách đều theo thang log.
+
+    Đây là lựa chọn "không biết gì về ngôn ngữ" nhưng HỢP LÝ: phủ đều mọi thang
+    khoảng cách từ 1 token tới trọn chuỗi, thay vì dồn hết vào vùng xa như đường
+    cơ sở 1.
+
+    Đây mới là đối chứng mà đề xuất phải vượt qua. Nếu `corpus` chỉ hơn được
+    `uniform` mà KHÔNG hơn được `logspace`, kết luận trung thực là: cải thiện đến
+    từ việc chọn khoảng alpha hợp lý hơn, KHÔNG phải từ việc thích ứng ngôn ngữ.
+    """
+    eff = np.logspace(np.log10(min_len), np.log10(seq_len), d_model)
+    alpha = seq_len / eff
+    return AlphaSpec(
+        alpha=[float(a) for a in alpha],
+        effective_lengths=[float(e) for e in eff],
+        seq_len=seq_len, d_model=d_model,
+        source="logspaced_effective_lengths",
+        notes=("Doi chung 2 (cong bang): do dai hieu dung cach deu theo thang log "
+               "tu %.1f toi %d token. Khong dung thong tin ngon ngu nao."
+               % (min_len, seq_len)),
     )
 
 

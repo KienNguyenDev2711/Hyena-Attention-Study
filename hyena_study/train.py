@@ -134,7 +134,13 @@ def train(args: argparse.Namespace) -> dict:
 
     # -- Mô hình -------------------------------------------------------------
     alpha_values = None
-    if args.decay_mode == "corpus":
+    if args.decay_mode == "logspace":
+        # Doi chung CONG BANG (xem morphology.logspaced_alphas): do dai hieu dung
+        # cach deu theo thang log tu 1 toi seq_len. Khong dung thong tin ngon ngu.
+        from .morphology import logspaced_alphas
+        alpha_values = logspaced_alphas(args.d_model, args.seq_len).alpha
+        print(f"[{run_name}] alpha = log-spaced 1..{args.seq_len} token (doi chung cong bang)")
+    elif args.decay_mode == "corpus":
         # ĐỀ XUẤT MỚI (E4). Cố tình BẮT LỖI TO thay vì im lặng bỏ qua: một cờ
         # dòng lệnh không có tác dụng gì là cách nhanh nhất để tạo ra một bảng
         # kết quả sai mà không ai phát hiện.
@@ -279,8 +285,12 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     g.add_argument("--no_sine", action="store_true", help="dùng GELU thay sine (E3b)")
     g.add_argument("--learn_decay", action="store_true", help="học alpha (E3c)")
     g.add_argument("--normalize_filter", action="store_true")
-    g.add_argument("--decay_mode", default="uniform", choices=["uniform", "corpus"],
-                   help="uniform = như paper; corpus = đề xuất mới của nhóm (E4)")
+    g.add_argument("--decay_mode", default="uniform",
+                   choices=["uniform", "logspace", "corpus"],
+                   help="uniform = doi chung 1 (alpha trai deu, khoang do nhom chon); "
+                        "logspace = doi chung 2 CONG BANG (do dai hieu dung cach deu "
+                        "theo log); corpus = de xuat moi cua nhom (E4). "
+                        "Ket luan khoa hoc phai so voi logspace, khong phai uniform.")
     g.add_argument("--alpha_file", default=None,
                    help="JSON chứa alpha đo từ corpus; BẮT BUỘC khi --decay_mode corpus")
 
