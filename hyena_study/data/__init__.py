@@ -1,5 +1,12 @@
 """Tầng dữ liệu."""
 
+from .synthetic import (
+    RecallConfig,
+    build_recall_dataset,
+    chance_accuracy,
+    make_recall_split,
+    query_distance,
+)
 from .corpus import (
     EOS,
     PAD,
@@ -20,4 +27,6 @@ __all__ = [
     "SyllableTokenizer", "BPETokenizer",
     "CorpusStats", "LMWindowDataset",
     "build_token_stream", "load_wiki_texts", "normalize_text", "stats_to_dict",
+    "RecallConfig", "build_recall_dataset", "chance_accuracy",
+    "make_recall_split", "query_distance",
 ]
