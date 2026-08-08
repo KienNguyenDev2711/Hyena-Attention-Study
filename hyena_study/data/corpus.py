@@ -7,7 +7,7 @@ Chữ Quốc ngữ viết RỜI THEO ÂM TIẾT. "trường đại học" là ba
 khoảng trắng, nhưng chỉ là MỘT đơn vị từ vựng. Hệ quả trực tiếp: cùng một nội
 dung, token hoá theo âm tiết sinh ra chuỗi DÀI HƠN so với token hoá bằng BPE.
 
-Chuỗi dài hơn ⇒ chi phí O(L²) của attention cắn mạnh hơn ⇒ về lý thuyết, lợi thế
+Chuỗi dài hơn => chi phí O(L²) của attention cắn mạnh hơn => về lý thuyết, lợi thế
 dưới bậc hai của Hyena có giá trị thực tiễn với tiếng Việt hơn. Đó là giả thuyết
 H2 trong đề cương, và tầng dữ liệu này tồn tại để kiểm chứng nó — chứ không phải
 chỉ để "nạp dữ liệu vào mô hình".
@@ -33,9 +33,9 @@ PAD, UNK, EOS = 0, 1, 2
 SPECIAL_TOKENS = ["<pad>", "<unk>", "<eos>"]
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # Làm sạch văn bản
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 _WS = re.compile(r"\s+")
 
 
@@ -53,9 +53,9 @@ def normalize_text(text: str) -> str:
     return _WS.sub(" ", text).strip()
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # Bộ token hoá
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 class SyllableTokenizer:
     """Token hoá theo ÂM TIẾT — tách theo khoảng trắng, tách riêng dấu câu.
 
@@ -106,7 +106,7 @@ class BPETokenizer:
     """BPE huấn luyện trên chính corpus, dùng thư viện `tokenizers` của HuggingFace.
 
     Đối chiếu với `SyllableTokenizer`: BPE gộp các âm tiết hay đi cùng nhau thành
-    một token ⇒ chuỗi NGẮN hơn. Chênh lệch độ dài giữa hai bộ này chính là đại
+    một token => chuỗi NGẮN hơn. Chênh lệch độ dài giữa hai bộ này chính là đại
     lượng cần đo cho giả thuyết H2.
     """
 
@@ -157,9 +157,9 @@ class BPETokenizer:
 TOKENIZERS = {"syllable": SyllableTokenizer, "bpe": BPETokenizer}
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # Nạp corpus
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 WIKI_CONFIG = {"vi": "20231101.vi", "en": "20231101.en"}
 
 
@@ -187,7 +187,7 @@ def load_wiki_texts(lang: str, n_docs: int, seed: int = 0,
     Nguồn: `wikimedia/wikipedia`, config `20231101.vi` (665.622 bài, ~1,13 GB) và
     `20231101.en`. Đã kiểm chứng tồn tại ngày 2026-08-08.
 
-    ⚠️ MẶC ĐỊNH DÙNG STREAMING — lý do quan trọng:
+    MẶC ĐỊNH DÙNG STREAMING — lý do quan trọng:
     Wikipedia tiếng Anh có ~6,4 triệu bài. Tải trọn bộ về chỉ để lấy vài chục
     nghìn bài sẽ ăn hết dung lượng đĩa của Kaggle và tốn rất nhiều thời gian,
     trong khi nhánh đối chứng tiếng Anh chỉ cần đúng bằng lượng của tiếng Việt.
@@ -276,9 +276,9 @@ def build_token_stream(
     return train, val, test, tok, stats
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # Dataset cho PyTorch
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 class LMWindowDataset:
     """Cắt dòng token liền mạch thành các cửa sổ dài L+1 KHÔNG chồng lấn.
 

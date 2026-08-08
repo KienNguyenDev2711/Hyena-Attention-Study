@@ -182,7 +182,7 @@ class SequenceLM(nn.Module):
             x = block(x)
         return self.lm_head(self.norm_f(x))
 
-    # ── tiện ích báo cáo ────────────────────────────────────────────────────
+    # -- tiện ích báo cáo ----------------------------------------------------
     def num_parameters(self, trainable_only: bool = True, exclude_embedding: bool = False) -> int:
         params = [p for p in self.parameters() if p.requires_grad or not trainable_only]
         total = sum(p.numel() for p in params)

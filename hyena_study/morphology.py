@@ -3,7 +3,7 @@ E0-b — Đo cấu trúc tầm xa của corpus, rồi sinh phân bố suy giảm
 
 ĐÂY LÀ NỀN TẢNG CỦA ĐÓNG GÓP MỚI (đề cương §6). Đọc kỹ phần lập luận trước khi sửa.
 
-────────────────────────────────────────────────────────────────────────────────
+--------------------------------------------------------------------------------
 VẤN ĐỀ
 
 Trong bộ lọc Hyena (eq. 7), kênh thứ i có cửa sổ exp(-α_i · t). Với t chuẩn hoá về
@@ -14,7 +14,7 @@ Paper đặt {α_i} **trải đều** theo kênh (Figure 3), một lựa chọn 
 không gắn với ngôn ngữ nào. Câu hỏi của nhóm: nếu đặt {ℓ_i} phủ đúng nơi thông
 tin dự đoán THỰC SỰ nằm trong tiếng Việt thì có tốt hơn không?
 
-────────────────────────────────────────────────────────────────────────────────
+--------------------------------------------------------------------------------
 VÌ SAO ĐO THÔNG TIN TƯƠNG HỖ, KHÔNG ĐO ĐỘ DÀI TỪ GHÉP
 
 Phương án hiển nhiên là chạy bộ tách từ tiếng Việt rồi lấy phân bố số âm tiết mỗi
@@ -35,7 +35,7 @@ Thay vào đó ta đo **thông tin tương hỗ giữa hai token cách nhau d**:
 
 Cùng một công thức, cùng một cách ước lượng, áp cho cả hai ngôn ngữ.
 
-────────────────────────────────────────────────────────────────────────────────
+--------------------------------------------------------------------------------
 CẠM BẪY THỐNG KÊ ĐÃ ĐƯỢC XỬ LÝ
 
 Ước lượng hợp lý cực đại của thông tin tương hỗ **luôn chệch DƯƠNG** trên mẫu hữu
@@ -55,7 +55,7 @@ Ngoài ra ta thô hoá từ điển xuống K token thường gặp nhất (ph�
 một ký hiệu "khác") để giảm độ chệch. Thô hoá làm thông tin đo được **thấp hơn**
 giá trị thật — tức là ước lượng THẬN TRỌNG, hướng sai lệch an toàn.
 
-────────────────────────────────────────────────────────────────────────────────
+--------------------------------------------------------------------------------
 Chạy:
     python -m hyena_study.morphology --lang vi --out alpha_vi.json
     python -m hyena_study.morphology --lang en --out alpha_en.json
@@ -72,9 +72,9 @@ from pathlib import Path
 import numpy as np
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # Ước lượng thông tin tương hỗ
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 def _coarse_grain(tokens: np.ndarray, top_k: int) -> tuple[np.ndarray, int]:
     """Giữ K token thường gặp nhất, gộp phần còn lại vào một ký hiệu 'khác'.
 
@@ -142,9 +142,9 @@ def mutual_information_decay(
     return lags, raw - base, base
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # Ánh xạ I(d) -> phân bố α
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 @dataclass
 class AlphaSpec:
     alpha: list[float]
@@ -214,9 +214,9 @@ def uniform_alphas(d_model: int, alpha_min: float = 0.05,
     )
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # CLI
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(
         description="E0-b: đo suy giảm thông tin tương hỗ, sinh alpha cho bộ lọc Hyena")
@@ -293,7 +293,7 @@ def main(argv: list[str] | None = None) -> int:
     print(f"\n[E0-b/{args.lang}] độ dài hiệu dụng của {args.d_model} kênh: "
           f"min {eff.min():.1f} · trung vị {np.median(eff):.1f} · max {eff.max():.1f} token")
     print(f"[E0-b/{args.lang}] đã ghi {out_path} và {mi_path}")
-    print("\n⚠️  Trước khi dùng: đối chiếu cột 'tín hiệu/chệch'. Ở khoảng cách nào "
+    print("\n Trước khi dùng: đối chiếu cột 'tín hiệu/chệch'. Ở khoảng cách nào "
           "tỉ số này xuống gần 1 thì phép đo tại đó KHÔNG còn ý nghĩa — phải nêu "
           "giới hạn này trong báo cáo.")
     return 0

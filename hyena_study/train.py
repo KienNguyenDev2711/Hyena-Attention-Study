@@ -37,9 +37,9 @@ from .data import LMWindowDataset, build_token_stream, load_wiki_texts, stats_to
 from .models import HyenaFilterConfig, LMConfig, SequenceLM
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # Tái lập được (reproducibility)
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 def set_seed(seed: int) -> None:
     """Cố định seed cho MỌI nguồn ngẫu nhiên.
 
@@ -57,9 +57,9 @@ def get_device() -> torch.device:
     return torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # Lịch learning rate
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 def lr_at(step: int, total: int, base_lr: float, warmup: int, min_ratio: float = 0.1) -> float:
     """Warmup tuyến tính rồi giảm theo cosine — giống hệt nhau cho mọi mô hình."""
     if step < warmup:
@@ -69,9 +69,9 @@ def lr_at(step: int, total: int, base_lr: float, warmup: int, min_ratio: float =
     return base_lr * (min_ratio + (1 - min_ratio) * 0.5 * (1 + math.cos(math.pi * prog)))
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # Đánh giá
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 @torch.no_grad()
 def evaluate(model: SequenceLM, loader: DataLoader, device: torch.device,
              max_batches: int | None = None) -> tuple[float, float]:
@@ -96,9 +96,9 @@ def evaluate(model: SequenceLM, loader: DataLoader, device: torch.device,
     return mean_loss, math.exp(min(mean_loss, 20.0))
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # Huấn luyện
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 def train(args: argparse.Namespace) -> dict:
     set_seed(args.seed)
     device = get_device()
@@ -113,7 +113,7 @@ def train(args: argparse.Namespace) -> dict:
         f"_{args.decay_mode}_s{args.seed}"
     )
 
-    # ── Dữ liệu ─────────────────────────────────────────────────────────────
+    # -- Dữ liệu -------------------------------------------------------------
     print(f"[{run_name}] nạp corpus {args.lang} ({args.n_docs} bài) ...")
     texts = load_wiki_texts(args.lang, args.n_docs, seed=args.data_seed,
                             cache_dir=args.cache_dir)
@@ -132,7 +132,7 @@ def train(args: argparse.Namespace) -> dict:
     dl_va = DataLoader(ds_va, batch_size=args.batch_size)
     dl_te = DataLoader(ds_te, batch_size=args.batch_size)
 
-    # ── Mô hình ─────────────────────────────────────────────────────────────
+    # -- Mô hình -------------------------------------------------------------
     alpha_values = None
     if args.decay_mode == "corpus":
         # ĐỀ XUẤT MỚI (E4). Cố tình BẮT LỖI TO thay vì im lặng bỏ qua: một cờ
@@ -227,7 +227,7 @@ def train(args: argparse.Namespace) -> dict:
                 })
                 print(f"  --> val loss {vl:.4f} | val PPL {vppl:.2f}")
 
-    # ── Đánh giá cuối trên tập TEST ─────────────────────────────────────────
+    # -- Đánh giá cuối trên tập TEST -----------------------------------------
     test_loss, test_ppl = evaluate(model, dl_te, device)
     wall = time.time() - t0
     peak_mem = (torch.cuda.max_memory_allocated() / 2**20) if device.type == "cuda" else 0.0
@@ -258,9 +258,9 @@ def train(args: argparse.Namespace) -> dict:
     return summary
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # CLI
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Huấn luyện LM Hyena/Transformer/lai")
 

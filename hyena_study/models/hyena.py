@@ -58,9 +58,9 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # Cấu hình
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 @dataclass
 class HyenaFilterConfig:
     """Siêu tham số của bộ lọc ngầm (eq. 7)."""
@@ -93,9 +93,9 @@ class HyenaConfig:
     filter: HyenaFilterConfig = field(default_factory=HyenaFilterConfig)
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # Thành phần
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 class Sine(nn.Module):
     """Kích hoạt tuần hoàn y = sin(w0 · x) — §3.3, theo Romero et al. 2021a."""
 
@@ -111,7 +111,7 @@ class Sine(nn.Module):
 
 
 class PositionalEncoding(nn.Module):
-    """t ∈ {0..L-1} → đặc trưng Fourier. Xem ghi chú (I1), (I2).
+    """t ∈ {0..L-1} -> đặc trưng Fourier. Xem ghi chú (I1), (I2).
 
     Trả về tensor (L, emb_dim_effective) với
         emb_dim_effective = 1 + 2 · n_freq,
@@ -238,9 +238,9 @@ class HyenaFilter(nn.Module):
         return h                                           # (N, D, L)
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # Tích chập nhân quả qua FFT
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 def causal_fft_conv(h: torch.Tensor, v: torch.Tensor) -> torch.Tensor:
     """Tích chập nhân quả (h ⊛ v) tính trong miền Fourier.
 
@@ -284,9 +284,9 @@ def causal_direct_conv(h: torch.Tensor, v: torch.Tensor) -> torch.Tensor:
     return F.conv1d(v_pad, h_flip, groups=D)
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # Toán tử Hyena
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 class HyenaOperator(nn.Module):
     """Toán tử Hyena bậc N — Def 3.1 + Algorithm 1/2/3.
 
@@ -319,16 +319,16 @@ class HyenaOperator(nn.Module):
         B, L, D = u.shape
         N = self.cfg.order
 
-        # ── Algorithm 1: Projection ──────────────────────────────────────────
+        # -- Algorithm 1: Projection ------------------------------------------
         z = self.in_proj(u).transpose(1, 2)                   # (B, (N+1)D, L)
         z = self.short_filter(z)[..., :L]                     # cắt phần đệm phải -> nhân quả
         parts = z.split(D, dim=1)                             # (N+1) × (B, D, L)
         xs, v = parts[:N], parts[N]                           # x^1..x^N, v
 
-        # ── Algorithm 2: bộ lọc ngầm ────────────────────────────────────────
+        # -- Algorithm 2: bộ lọc ngầm ----------------------------------------
         h = self.filter(L, device=u.device, dtype=u.dtype)    # (N, D, L)
 
-        # ── Algorithm 3: đệ quy eq.(4) ──────────────────────────────────────
+        # -- Algorithm 3: đệ quy eq.(4) --------------------------------------
         for n in range(N):
             y = causal_fft_conv(h[n], v)
             if self.skip is not None:
