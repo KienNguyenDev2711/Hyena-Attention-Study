@@ -298,7 +298,10 @@ def main(argv: list[str] | None = None) -> int:
 
     out_dir = Path(args.out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
-    mi_path = out_dir / f"E0b_mi_decay_{args.lang}_{args.tokenizer}.csv"
+    # Ten file PHAI chua top_k: do chech ty le voi top_k^2 nen hai lan chay khac
+    # top_k cho ra hai phep do KHAC HAN. Neu ten file bo qua tham so nay thi lan
+    # chay sau am tham de mat ket qua lan truoc - da xay ra that ngay 2026-08-08.
+    mi_path = out_dir / f"E0b_mi_decay_{args.lang}_{args.tokenizer}_k{args.top_k}.csv"
     with mi_path.open("w", newline="", encoding="utf-8") as fh:
         w = csv.writer(fh)
         w.writerow(["lag", "mi_corrected_nats", "mi_baseline_nats", "signal_to_bias"])
