@@ -1,0 +1,15 @@
+# Lõi — Kaggle đã cài sẵn torch với CUDA, KHÔNG cài đè
+torch>=2.1
+numpy>=1.24
+
+# Dữ liệu — trên Kaggle thường đã có, nếu thiếu thì: pip install -q datasets tokenizers
+datasets>=2.14
+tokenizers>=0.15
+
+# Vẽ biểu đồ (chỉ dùng ở bước phân tích)
+matplotlib>=3.7
+pandas>=2.0
+
+# Ghi chú: KHÔNG cần thư viện nào cho unit test — chạy được bằng python thuần.
+#   python tests/test_models.py
+#   python tests/test_pipeline.py

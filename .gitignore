@@ -1,0 +1,93 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# TÀI LIỆU CÁ NHÂN — TUYỆT ĐỐI KHÔNG ĐẨY LÊN GIT
+#
+# Repo này là mã nguồn công khai để cả nhóm và Kaggle dùng chung. Mọi tài liệu
+# soạn thảo (báo cáo, slide, ghi chú, bản nháp) đều KHÔNG thuộc về đây — chúng
+# chứa nội dung chưa hoàn thiện, thông tin cá nhân, và không ai cần chúng để
+# chạy được thí nghiệm.
+#
+# Lưu ý: các file .docx/.md ở THƯ MỤC CHA (CLAUDE.md, context.md, Hyena_*.docx,
+# Timelin.docx, ...) vốn đã nằm ngoài repo nên git không thể chạm tới. Các luật
+# dưới đây là lớp phòng vệ cho trường hợp có người vô tình COPY chúng vào trong.
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Tài liệu soạn thảo
+*.doc
+*.docx
+*.odt
+*.rtf
+*.pdf
+
+# Trình chiếu
+*.ppt
+*.pptx
+*.odp
+
+# Bảng tính
+*.xls
+*.xlsx
+*.ods
+*.csv.bak
+
+# Nén
+*.zip
+*.rar
+*.7z
+*.tar
+*.tar.gz
+*.tgz
+
+# File tạm của Microsoft Office (bản khoá khi đang mở file)
+~$*
+*.tmp
+
+# ─────────────────────────────────────────────────────────────────────────────
+# MARKDOWN — CHẶN TOÀN BỘ (quyết định của nhóm, 2026-08-08)
+#
+# Nhóm phân phối tài liệu qua Zalo, không qua git. Vì vậy repo này chỉ chứa MÃ
+# NGUỒN CHẠY ĐƯỢC, không chứa bất kỳ tài liệu soạn thảo nào.
+#
+# Các file bị loại khỏi repo (vẫn còn nguyên trên máy, chỉ không được đẩy lên):
+#   README.md                        hướng dẫn chạy
+#   docs/00_de_cuong_nghien_cuu.md   đề cương nghiên cứu
+#   docs/01_checklist_phan_cong.md   checklist phân công 3 thành viên
+#
+# ⚠️ HỆ QUẢ PHẢI NHỚ: người clone repo về sẽ KHÔNG có hướng dẫn nào. Trưởng nhóm
+# phải gửi 3 file trên qua Zalo cho Tiến và Quang, nếu không họ chỉ nhận được
+# code trần. Notebook notebooks/kaggle_E0.ipynb vẫn nằm trong repo và tự chứa
+# hướng dẫn chạy nên vẫn dùng được độc lập.
+#
+# Nếu sau này muốn đưa riêng README trở lại: thêm dòng   !README.md
+*.md
+# ─────────────────────────────────────────────────────────────────────────────
+
+# ─── Python ──────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+.ipynb_checkpoints/
+.pytest_cache/
+.mypy_cache/
+.venv/
+venv/
+env/
+*.egg-info/
+
+# ─── Kết quả thí nghiệm ──────────────────────────────────────────────────────
+# Giữ lại .csv/.json trong results/ vì đó là BẰNG CHỨNG cho mọi con số trong
+# báo cáo — mất chúng là không truy nguồn được nữa.
+# Bỏ checkpoint và cache dữ liệu vì quá nặng và tái tạo được.
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+data_cache/
+wandb/
+runs/
+
+# ─── Hệ điều hành / IDE ──────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
