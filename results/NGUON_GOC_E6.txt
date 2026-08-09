@@ -1,0 +1,55 @@
+NGUON GOC CUA CAC FILE E6
+=========================
+
+Ghi ngay 2026-08-09.
+
+VAN DE DA XAY RA
+----------------
+File `E6_recall_comparison.csv` tung duoc commit vao repo tu lan chay E6 DAU
+TIEN (lan bi tran bao hoa). Vi no nam trong repo, moi lan Kaggle clone repo de
+chay thi nghiem khac, file cu do di theo va bi goi vao ket qua tai ve. Nguoi
+doc se tuong day la ket qua moi nhat.
+
+Dau hieu nhan biet: file do co cot `chance = 0.2`, ung voi vocab = 5 va do dai
+17. Cau hinh E6 hien hanh dung vocab = 10 va do dai 65, tuc `chance = 0.1`.
+
+File cu da duoc go khoi repo.
+
+
+CAC LAN CHAY E6 THEO THU TU
+---------------------------
+
+Lan 1 (bo di) - vocab=5, L=17, 18720 buoc, 4 cau hinh x 2 seed
+  Ca bon cau hinh deu dat khoang 1,000. TRAN BAO HOA, khong phan biet duoc gi.
+  Nguyen nhan: dong chon cau hinh lay phan tu cuoi danh sach thay vi cau hinh
+  kho nhat, va phan tu cuoi tinh co la cau hinh de nhat.
+  KHONG DUNG SO LIEU NAY.
+
+Lan 2 - vocab=10, L=65, 18720 buoc, 4 cau hinh x 2 seed
+  attention 1,000 (do lech 0) · hyena_uniform 0,564 · hyena_corpus 0,507
+  (seed 0: 0,092 · seed 1: 0,922) · hyena_logspace 0,170.
+  Do lech giua seed lon hon khoang cach giua moi cap cau hinh.
+
+Lan 3 - vocab=10, L=65, 37440 buoc, chi hyena_corpus x 3 seed
+  0,9810 · 0,1410 · 0,9870
+  Ghi trong file `E6_recall_corpus_k37440.csv`.
+
+  LUU Y VE NGUON: file do duoc chep tay tu log chay Kaggle ngay 2026-08-09,
+  khong phai file goc tai truc tiep tu Kaggle. File goc nam trong `E6_A.zip`.
+  Neu can doi chieu chinh xac tung chu so, hay giai nen `E6_A.zip` de lay ban
+  goc va thay the.
+
+
+KET LUAN TU BA LAN CHAY
+-----------------------
+Gop 5 seed cua lan 2 va lan 3 (deu o vocab=10, L=65):
+  0,092 · 0,141 · 0,922 · 0,981 · 0,987
+=> 3 lan thanh cong (>= 0,92), 2 lan sap (<= 0,14), KHONG co gia tri trung gian.
+
+Gap doi ngan sach lam cac lan thanh cong tot len (0,922 -> 0,98) nhung KHONG
+khu duoc kieu hong (do lech 0,415 -> 0,397). Day la that bai toi uu hoa luong
+cuc, khong phai hoi tu cham.
+
+VOI PHAN BO LUONG CUC, BAO CAO TRUNG BINH KEM DO LECH LA SAI LECH: khong lan
+chay nao dat gan gia tri trung binh. Phai bao cao ty le thanh cong va do chinh
+xac khi thanh cong.

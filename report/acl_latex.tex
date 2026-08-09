@@ -610,15 +610,28 @@ xác 1,000 ở độ dài 65 và giảm còn 0,196 ở độ dài 129, với m�
 Chúng tôi cũng xác nhận lịch warmup là yếu tố quyết định: cùng 18.720 bước và
 cùng learning rate, có warmup đạt 1,000 còn không có warmup chỉ đạt 0,187.
 
-Kết quả với cấu hình bộ lọc suy từ corpus, chạy 5 seed ở độ dài 65, cho một
-phân bố \emph{lưỡng cực}: ba lần đạt 0,922 trở lên (cụ thể 0,922, 0,981, 0,987)
-và hai lần sập về gần mức đoán mò (0,092 và 0,141), không có giá trị trung
-gian. Gấp đôi ngân sách huấn luyện làm các lần thành công tốt lên nhưng không
-khử được kiểu hỏng.
+Ở độ dài 65, attention đạt 1,000 với độ lệch bằng 0, còn mọi cấu hình Hyena đều
+kém hơn hẳn và dao động rất mạnh giữa các seed: 0,564 với \textsf{uniform} và
+0,170 với \textsf{logspace} (2 seed mỗi cấu hình). Độ lệch giữa các seed lớn
+hơn khoảng cách giữa bất kỳ cặp cấu hình nào, nên chúng tôi \emph{không} xếp
+hạng được các biến thể bộ lọc trên tác vụ này.
+
+Với cấu hình suy từ corpus, chúng tôi gộp 5 seed từ hai ngân sách huấn luyện
+(2 seed ở 18.720 bước và 3 seed ở 37.440 bước, cùng độ dài 65 và cùng cấu hình
+tác vụ). Việc gộp này được nêu rõ vì nó là một lựa chọn phương pháp, không phải
+một lần chạy đồng nhất. Phân bố thu được \emph{lưỡng cực}: ba lần đạt từ 0,922
+trở lên (0,922; 0,981; 0,987) và hai lần sập về gần mức đoán mò (0,092 và
+0,141), không có giá trị trung gian.
+
+Gấp đôi ngân sách huấn luyện làm các lần thành công tốt lên (từ 0,922 lên 0,98)
+nhưng \emph{không} khử được kiểu hỏng: độ lệch chỉ giảm từ 0,415 xuống 0,397.
+Đây là dấu hiệu của thất bại tối ưu hoá chứ không phải hội tụ chậm. Nói cách
+khác, Hyena có đủ năng lực biểu diễn cho tác vụ này ở độ dài 65, vì hai lần
+chạy đạt tới 0,98; vấn đề nằm ở độ ổn định huấn luyện.
 
 Với phân bố như vậy, báo cáo trung bình kèm độ lệch chuẩn là sai lệch, vì không
-lần chạy nào đạt gần giá trị trung bình. Đại lượng đúng là tỉ lệ thành công,
-ở đây là 3 trên 5, và độ chính xác khi thành công, ở đây là 0,963.
+lần chạy nào đạt gần giá trị trung bình. Đại lượng đúng là tỉ lệ thành công, ở
+đây là 3 trên 5, và độ chính xác khi thành công, ở đây là 0,963.
 
 % =============================================================================
 \section{Thảo luận}

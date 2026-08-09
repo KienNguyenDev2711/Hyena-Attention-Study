@@ -1,0 +1,4 @@
+config,seed,accuracy,acc_near,acc_far,chance,seconds,steps,seq_len,n_pairs,vocab
+hyena_corpus,0,0.9810,0.994,0.966,0.100,462,37440,65,16,10
+hyena_corpus,1,0.1410,0.172,0.105,0.100,459,37440,65,16,10
+hyena_corpus,2,0.9870,0.995,0.978,0.100,461,37440,65,16,10

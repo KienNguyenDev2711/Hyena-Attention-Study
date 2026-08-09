@@ -276,27 +276,54 @@ def analyse_benchmark(results_dir: Path) -> None:
 
 
 def analyse_recall(results_dir: Path) -> None:
-    """E6: bao cao ty le thanh cong khi phan bo luong cuc."""
-    f = results_dir / "E6_recall_comparison.csv"
-    if not f.exists():
+    """E6: gom moi file E6_recall_*.csv, gop theo cau hinh, canh bao luong cuc.
+
+    Gom NHIEU file thay vi doc mot ten co dinh, vi hai ly do:
+
+    1. Cac lan chay E6 co ngan sach huan luyen khac nhau nam o file khac nhau.
+       Gop lai moi du seed de phat hien luong cuc: rieng 3 seed cua mot lan chay
+       thi `detect_bimodal` tu choi ket luan, dung nhu no phai lam.
+    2. Mot ten file co dinh tung gay hau qua that: ban E6 cu (tran bao hoa,
+       chance=0,2) da duoc commit vao repo, nen moi lan Kaggle clone repo de
+       chay thi nghiem khac, file cu do di theo va nam trong ket qua tai ve,
+       khien nguoi doc tuong la so lieu moi nhat.
+
+    Ta chi gop cac lan chay CO CUNG muc doan mo. Gop hai cau hinh tac vu khac
+    nhau (vocab khac nhau) se tao ra mot phan bo gia luong cuc.
+    """
+    files = sorted(results_dir.glob("E6_recall_*.csv"))
+    if not files:
         print("  (chua co ket qua E6)")
         return
-    with f.open(encoding="utf-8") as fh:
-        rows = list(csv.DictReader(fh))
-    by = defaultdict(list)
-    for r in rows:
-        by[r["config"]].append(float(r["accuracy"]))
-    print(f"\n  {'cau hinh':<18}{'n':>3}{'TB':>8}{'do lech':>9}  ghi chu")
-    for cfg, vals in sorted(by.items()):
-        st = mean_ci(vals)
-        bm = detect_bimodal(vals)
-        note = ""
-        if bm.get("bimodal"):
-            note = (f"LUONG CUC: thanh cong {bm['success_rate']:.0%}, "
-                    f"khi thanh cong {bm['mean_when_success']:.3f}")
-        elif bm.get("high_variance"):
-            note = "phan tan lon, can them seed"
-        print(f"  {cfg:<18}{st['n']:>3}{st['mean']:>8.3f}{st['std']:>9.3f}  {note}")
+
+    by = defaultdict(list)          # (chance, config) -> [accuracy]
+    src = defaultdict(set)
+    for f in files:
+        with f.open(encoding="utf-8") as fh:
+            for r in csv.DictReader(fh):
+                key = (float(r["chance"]), r["config"])
+                by[key].append(float(r["accuracy"]))
+                src[key].add(f.name)
+
+    for chance in sorted({k[0] for k in by}):
+        print(f"\n  Muc doan mo {chance:.3f}")
+        print(f"  {'cau hinh':<18}{'n':>3}{'TB':>8}{'do lech':>9}  ghi chu")
+        for (ch, cfg), vals in sorted(by.items()):
+            if ch != chance:
+                continue
+            st = mean_ci(vals)
+            bm = detect_bimodal(vals)
+            if bm.get("bimodal"):
+                note = (f"LUONG CUC: thanh cong {bm['success_rate']:.0%}, "
+                        f"khi thanh cong {bm['mean_when_success']:.3f} "
+                        f"=> KHONG bao cao trung binh")
+            elif bm.get("high_variance"):
+                note = "phan tan lon, can them seed"
+            else:
+                note = ""
+            print(f"  {cfg:<18}{st['n']:>3}{st['mean']:>8.3f}{st['std']:>9.3f}  {note}")
+            if len(src[(ch, cfg)]) > 1:
+                print(f"  {'':<18}   (gop tu {len(src[(ch, cfg)])} lan chay)")
 
 
 # -----------------------------------------------------------------------------
