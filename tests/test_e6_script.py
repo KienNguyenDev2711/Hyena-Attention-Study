@@ -131,6 +131,37 @@ def test_full_script_runs_end_to_end():
         shutil.rmtree(tmp, ignore_errors=True)
 
 
+def test_configs_filter_selects_and_rejects():
+    """--configs phai loc dung cau hinh, va BAO LOI khi ten sai.
+
+    Neu ten sai bi bo qua am tham thi nguoi dung tuong da chay cau hinh minh
+    muon trong khi thuc te khong chay gi - dung loai loi im lang da lam hong
+    ba lan chay truoc.
+    """
+    tmp = Path(tempfile.mkdtemp())
+    try:
+        code = main(["--smoke", "--skip_phase0", "--out_dir", str(tmp),
+                     "--mi_csv", str(tmp / "khong_ton_tai.csv"),
+                     "--configs", "hyena_uniform"])
+        assert code == 0
+        with (tmp / "E6_recall_comparison.csv").open(encoding="utf-8") as fh:
+            names = {r["config"] for r in csv.DictReader(fh)}
+        assert names == {"hyena_uniform"}, f"loc sai, con lai: {sorted(names)}"
+
+        # ten sai phai bao loi to, khong duoc im lang
+        try:
+            main(["--smoke", "--skip_phase0", "--out_dir", str(tmp),
+                  "--mi_csv", str(tmp / "khong_ton_tai.csv"),
+                  "--configs", "hyena_khong_ton_tai"])
+        except SystemExit:
+            pass
+        else:
+            raise AssertionError("ten cau hinh sai ma khong bao loi")
+        return len(names)
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
 def test_phase0_runs_and_writes():
     """Pha 0 phai chay va ghi file, ke ca khi ngan sach smoke khong du de dat."""
     tmp = Path(tempfile.mkdtemp())
@@ -157,6 +188,7 @@ def main_runner() -> int:
         ("S4 Chon muc KHO NHAT, khong phai cuoi danh sach", test_scout_picks_the_hardest_not_the_last),
         ("S5 Ca script chay tron tu dau den cuoi", test_full_script_runs_end_to_end),
         ("S6 Pha 0 chay va ghi file", test_phase0_runs_and_writes),
+        ("S7 --configs loc dung va bao loi ten sai", test_configs_filter_selects_and_rejects),
     ]
     n_fail = 0
     for name, fn in tests:

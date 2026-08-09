@@ -236,6 +236,20 @@ def phase2_compare(cfg, target: dict) -> list[dict]:
     if corpus_alpha is not None:
         configs.append(("hyena_corpus", "HH", corpus_alpha))
 
+    # Cho phep chi chay mot phan cau hinh. Dung khi chan doan: vi du kiem tra
+    # Hyena da hoi tu chua thi khong can chay lai attention (da dat 1,000 voi
+    # do lech 0), tiet kiem hon mot nua thoi gian GPU.
+    if cfg.configs:
+        want = set(cfg.configs)
+        unknown = want - {c[0] for c in configs}
+        if unknown:
+            raise SystemExit(
+                f"--configs khong hop le: {sorted(unknown)}. "
+                f"Chon trong {sorted(c[0] for c in configs)}"
+            )
+        configs = [c for c in configs if c[0] in want]
+        print(f"  chi chay: {', '.join(c[0] for c in configs)}")
+
     rows = []
     print(f"\n{'cau hinh':<16}{'seed':>5}{'acc':>8}{'gan':>7}{'xa':>7}{'giay':>7}")
     print("-" * 50)
@@ -283,6 +297,9 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--fillers", type=int, nargs="+", default=[0, 32, 96, 224, 480])
     p.add_argument("--mi_csv", default="results/E0b_mi_decay_vi_bpe_k500.csv")
     p.add_argument("--out_dir", default="results")
+    p.add_argument("--configs", nargs="+", default=None,
+                   help="chi chay mot phan cau hinh o pha 2, vd: hyena_uniform "
+                        "hyena_corpus. Mac dinh chay het.")
     p.add_argument("--margin", type=float, default=MARGIN,
                    help="vuot muc doan mo bao nhieu thi coi la giai duoc")
     p.add_argument("--skip_phase0", action="store_true")
