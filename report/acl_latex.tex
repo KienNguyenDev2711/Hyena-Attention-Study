@@ -64,14 +64,19 @@ hiện trên tiếng Anh. Chúng tôi cài đặt lại Hyena, kiểm chứng t�
 cài đặt bằng bộ kiểm thử tự động, và áp dụng cho mô hình ngôn ngữ tiếng Việt.
 Ngoài phần tái hiện, chúng tôi đề xuất khởi tạo phân bố suy giảm của bộ lọc
 Hyena từ đường cong suy giảm thông tin tương hỗ đo trên chính corpus huấn
-luyện, thay cho cách đặt thủ công. Chúng tôi đo được tiếng Việt mang lượng
-thông tin tương hỗ cục bộ gấp 1,66 đến 2,27 lần tiếng Anh ở cùng số token và
-cùng cách token hoá không sinh từ ngoài từ điển. Tuy nhiên, nhánh đối chứng
-tiếng Anh cho thấy bộ lọc suy ra từ hai ngôn ngữ gần như trùng nhau (lệch tương
-đối trung bình 14,3\%, tương quan log 0,9974), trong khi cùng bộ lọc đó lệch
-75,8\% so với đường cơ sở đặt thủ công. Kết luận trung thực là phần cải thiện,
-nếu có, đến từ tính dựa trên dữ liệu chứ không từ đặc thù ngôn ngữ. Chúng tôi
-báo cáo phát hiện này cùng các ablation và giới hạn của bản tái hiện.
+luyện, thay cho cách đặt thủ công. Ở cùng ngân sách tham số, cùng 50 triệu
+token và cùng siêu tham số, Hyena đạt perplexity thấp hơn Transformer 19,5\%
+trên tiếng Việt và 15,5\% trên tiếng Anh. Về hiệu năng, Hyena vượt kernel
+attention tiết kiệm bộ nhớ 1,88 lần ở độ dài 8192 cho lượt tiến và lùi, tiệm
+cận mức 2 lần mà bài báo gốc công bố. Về đóng góp đề xuất, chúng tôi đo được
+tiếng Việt mang lượng thông tin tương hỗ cục bộ gấp 1,66 đến 2,27 lần tiếng
+Anh, nhưng nhánh đối chứng cho thấy bộ lọc suy ra từ hai ngôn ngữ gần như trùng
+nhau (lệch 14,3\%, tương quan log 0,9974). Thực nghiệm xác nhận dự đoán đó:
+khởi tạo từ corpus chỉ hơn một đường cơ sở cách đều theo thang log 0,285 PPL
+với khoảng tin cậy chồng lấn, trong khi cả hai cùng vượt đường cơ sở đặt tuỳ
+tiện khoảng 1 PPL. Kết luận trung thực là khoảng giá trị của tham số suy giảm
+mới là điều quan trọng, còn việc suy nó từ thống kê corpus không mang lại lợi
+ích đo được ở quy mô này.
 \end{abstract}
 
 % =============================================================================
@@ -394,22 +399,152 @@ phải \emph{thích ứng tiếng Việt có ích}.
 
 \subsection{Perplexity trên mô hình ngôn ngữ}
 
-\chuacoso{E1, đang chạy}
+Bảng~\ref{tab:e1} trình bày kết quả chính. Mỗi cấu hình chạy 3 seed với cùng
+50 triệu token huấn luyện.
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{llrr}
+\toprule
+Ngôn ngữ & Mô hình & PPL & KTC 95\% \\
+\midrule
+Tiếng Việt & Hyena       & \textbf{51,38} $\pm$ 0,13 & [51,05; 51,71] \\
+           & Transformer & 63,86 $\pm$ 0,29 & [63,14; 64,58] \\
+\midrule
+Tiếng Anh  & Hyena       & \textbf{61,51} $\pm$ 0,41 & [60,49; 62,54] \\
+           & Transformer & 72,82 $\pm$ 0,52 & [71,52; 74,12] \\
+\bottomrule
+\end{tabular}
+\caption{Perplexity trên tập kiểm tra, 3 seed cho mỗi cấu hình. Khoảng tin cậy
+tính theo phân phối $t$.}
+\label{tab:e1}
+\end{table}
+
+Hyena vượt Transformer 19,5\% trên tiếng Việt và 15,5\% trên tiếng Anh, với
+khoảng tin cậy tách rời hoàn toàn trong cả hai trường hợp.
+
+Chúng tôi nhấn mạnh rằng kết quả này \emph{mạnh hơn} điều bài báo gốc khẳng
+định. Bài báo gốc chỉ tuyên bố Hyena đạt chất lượng \emph{tương đương}
+Transformer. Cách đọc thận trọng là: ở quy mô nhỏ và ngân sách huấn luyện ngắn
+này, thiên lệch quy nạp của tích chập tỏ ra có lợi. Quan trọng hơn, chúng tôi
+\emph{không} tinh chỉnh siêu tham số riêng cho từng kiến trúc; cả hai dùng
+chung learning rate và lịch huấn luyện để bảo đảm chỉ có một biến thay đổi. Bộ
+siêu tham số dùng chung có thể không phải bộ tối ưu cho Transformer, nên phát
+biểu đúng là "Hyena vượt Transformer ở cùng siêu tham số và cùng quy mô này",
+không phải "Hyena tốt hơn Transformer".
+
+Đáng chú ý là khoảng cách trên tiếng Việt lớn hơn trên tiếng Anh, phù hợp với
+kết quả đo thông tin tương hỗ ở mục trước.
 
 \subsection{Ảnh hưởng của đơn vị token hoá}
 
 Ở cùng lượng ký tự, tiếng Việt sinh nhiều token hơn: 4,101 ký tự trên mỗi token
 so với 5,121 của tiếng Anh, tỉ lệ 1,249.
 
-\chuacoso{E2, đang chạy}
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{lrrr}
+\toprule
+Token hoá & Hyena & Transformer & Tỉ lệ \\
+\midrule
+Âm tiết & 51,38 & 63,86 & 1,243 \\
+BPE     & 80,02 & 96,22 & 1,202 \\
+\bottomrule
+\end{tabular}
+\caption{Perplexity theo đơn vị token hoá, chỉ tiếng Việt, 3 seed. Cột tỉ lệ là
+thương số giữa Transformer và Hyena.}
+\label{tab:e2}
+\end{table}
+
+Ở đây có một cạm bẫy diễn giải cần nêu rõ. Perplexity \emph{không so sánh được
+giữa hai bộ token hoá khác nhau}, vì từ điển khác nhau cho entropy trên mỗi
+token khác nhau. Con số 51,38 với âm tiết và 80,02 với BPE \emph{không} có
+nghĩa là âm tiết tốt hơn.
+
+Đại lượng so sánh được là tỉ lệ giữa hai mô hình trong cùng một bộ token hoá.
+Lợi thế tương đối của Hyena lớn hơn khi token hoá theo âm tiết (1,243) so với
+BPE (1,202), đúng chiều với giả thuyết rằng chuỗi dài hơn làm lợi thế dưới bậc
+hai có giá trị hơn. Tuy nhiên chênh lệch giữa hai tỉ lệ nhỏ và chúng tôi không
+ước lượng khoảng tin cậy cho tỉ lệ, nên đây chỉ là dấu hiệu, chưa phải bằng
+chứng.
 
 \subsection{Ablation các thành phần của Hyena}
 
-\chuacoso{E3, đang chạy}
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{lrrl}
+\toprule
+Cấu hình & PPL & $\Delta$ & Kết luận \\
+\midrule
+Gốc (bậc 2, đủ) & 51,38 & & \\
+\midrule
+Bỏ cửa sổ suy giảm & 53,30 & $+1,92$ & có ý nghĩa \\
+Bậc $N = 1$        & 53,11 & $+1,73$ & có ý nghĩa \\
+Bỏ kích hoạt sine  & 51,80 & $+0,42$ & không kết luận \\
+Bậc $N = 3$        & 51,63 & $+0,25$ & không kết luận \\
+Bỏ positional emb  & 50,79 & $-0,59$ & không kết luận \\
+\bottomrule
+\end{tabular}
+\caption{Ablation trên tiếng Việt, 2 seed cho mỗi nhánh. Cột kết luận cho biết
+khoảng tin cậy 95\% có tách rời khỏi cấu hình gốc hay không.}
+\label{tab:e3}
+\end{table}
+
+Chỉ hai nhánh cho khác biệt có ý nghĩa thống kê.
+
+Bỏ cửa sổ suy giảm gây thiệt hại lớn nhất, xác nhận vai trò của số hạng
+$\mathrm{Window}(t)$ trong công thức~\eqref{eq:filter}. Hạ bậc xuống $N = 1$
+cũng gây thiệt hại rõ, phù hợp với nhận xét trong bài báo gốc rằng Hyena bậc 1
+tương ứng với GSS, vốn yếu hơn H3 trên các tác vụ nhớ.
+
+Ba nhánh còn lại có khoảng tin cậy chồng lấn với cấu hình gốc nên chúng tôi
+\emph{không} kết luận. Đáng chú ý là bỏ positional embedding cho perplexity
+thấp hơn cấu hình gốc, phù hợp với lập luận rằng bộ lọc tích chập đã mang sẵn
+thông tin vị trí, nhưng với 2 seed chúng tôi không đủ căn cứ khẳng định đây là
+cải thiện thật.
 
 \subsection{Khởi tạo bộ lọc từ corpus}
 
-\chuacoso{E4, đang chạy}
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{llrr}
+\toprule
+Ngôn ngữ & Khởi tạo & PPL & KTC 95\% \\
+\midrule
+Tiếng Việt & \textsf{uniform}  & 51,38 & [51,05; 51,71] \\
+           & \textsf{logspace} & 50,48 & [50,33; 50,62] \\
+           & corpus            & \textbf{50,19} & [49,93; 50,45] \\
+\midrule
+Tiếng Anh  & \textsf{uniform}  & 61,51 & [60,49; 62,54] \\
+           & \textsf{logspace} & 60,34 & [60,20; 60,49] \\
+           & corpus            & \textbf{60,18} & [59,89; 60,47] \\
+\bottomrule
+\end{tabular}
+\caption{Ảnh hưởng của cách khởi tạo phân bố suy giảm, 3 seed cho mỗi ô.}
+\label{tab:e4}
+\end{table}
+
+Kết quả trong Bảng~\ref{tab:e4} tách thành hai phần rõ rệt.
+
+Phần thứ nhất là khẳng định được: cả \textsf{logspace} lẫn corpus đều vượt
+\textsf{uniform} với khoảng tin cậy tách rời, trên cả hai ngôn ngữ. Khoảng cách
+là 0,90 PPL với tiếng Việt và 1,17 PPL với tiếng Anh. Nói cách khác, khoảng giá
+trị của $\alpha$ thực sự quan trọng, và một khoảng chọn tuỳ tiện gây thiệt hại
+đo được.
+
+Phần thứ hai là khẳng định \emph{không} được: corpus chỉ hơn \textsf{logspace}
+0,285 PPL trên tiếng Việt và 0,167 PPL trên tiếng Anh, và khoảng tin cậy chồng
+lấn trong cả hai trường hợp. Chúng tôi không có căn cứ kết luận rằng suy phân
+bố suy giảm từ thống kê corpus tốt hơn một lựa chọn cách đều theo thang log.
+
+Thêm nữa, phần cải thiện nhỏ ấy xuất hiện trên \emph{cả hai} ngôn ngữ với mức
+độ tương đương. Đây chính là điều mà phân tích ở mục trước đã dự đoán từ chỗ
+hai bộ lọc gần như trùng nhau, và nó khép lại lập luận: nếu có lợi ích thì lợi
+ích đó không mang tính đặc thù ngôn ngữ.
 
 \subsection{Hiệu năng theo độ dài chuỗi}
 
@@ -426,7 +561,42 @@ lần. Vì vậy chúng tôi báo cáo cả hai đường cơ sở: một cài �
 trận $L \times L$ và một cài đặt dùng kernel tiết kiệm bộ nhớ của PyTorch. Chỉ
 so với đường cơ sở thứ nhất sẽ thổi phồng mức tăng tốc nhiều lần.
 
-\chuacoso{E5, quét độ dài từ 256 tới 8192}
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{lrrrr}
+\toprule
+& \multicolumn{2}{c}{Lượt tiến} & \multicolumn{2}{c}{Lượt tiến và lùi} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}
+$L$ & vs \textsf{sdpa} & vs ngây thơ & vs \textsf{sdpa} & vs ngây thơ \\
+\midrule
+256  & 0,16 & 0,55 & 0,23 & 0,47 \\
+512  & 0,22 & 0,92 & 0,27 & 0,82 \\
+1024 & 0,28 & 1,56 & 0,33 & 1,60 \\
+2048 & 0,37 & 3,77 & 0,56 & 3,13 \\
+4096 & 0,69 & 8,30 & 1,02 & 6,47 \\
+8192 & \textbf{1,19} & OOM & \textbf{1,88} & OOM \\
+\bottomrule
+\end{tabular}
+\caption{Mức tăng tốc của Hyena so với hai đường cơ sở attention (số lớn hơn 1
+nghĩa là Hyena nhanh hơn). Cài đặt ngây thơ hết bộ nhớ ở $L = 8192$.}
+\label{tab:e5}
+\end{table}
+
+Bảng~\ref{tab:e5} cho thấy điểm hoà vốn phụ thuộc mạnh vào đường cơ sở. So với
+cài đặt ngây thơ, Hyena vượt lên từ khoảng $L = 1024$. So với kernel tiết kiệm
+bộ nhớ, Hyena chỉ vượt lên ở $L = 4096$ với lượt tiến và lùi, và ở $L = 8192$
+với lượt tiến.
+
+Con số đáng chú ý nhất là 1,88 lần ở $L = 8192$ cho lượt tiến và lùi. Bài báo
+gốc công bố mức tăng tốc 2 lần so với FlashAttention ở độ dài 8K. Kết quả của
+chúng tôi tiệm cận con số đó, dù dùng \texttt{torch.fft} thuần thay cho CUDA
+kernel tuỳ chỉnh. Đây là phần tái hiện thành công nhất của nghiên cứu này.
+
+Về bộ nhớ, cài đặt ngây thơ tiêu thụ 30,6, 83,1, 283,6, 1074,5 và 4201,6 MB khi
+$L$ tăng gấp đôi từ 256 tới 4096, tức xấp xỉ gấp bốn mỗi lần, đúng dạng bậc
+hai, và hết bộ nhớ ở 8192. Hyena tiêu thụ 36,5, 66,1, 117,7, 224,7, 438,7 và
+865,8 MB, tức xấp xỉ gấp đôi mỗi lần, đúng dạng tuyến tính.
 
 \subsection{Chẩn đoán trí nhớ tầm xa}
 
@@ -464,6 +634,20 @@ Nếu không có nhánh đối chứng, nhóm đã có thể công bố một kh
 tiếng Việt mà chỉ cần áp dụng cùng quy trình lên tiếng Anh là bác bỏ được. Đây
 là lý do thực tế, không chỉ hình thức, để giữ nhóm đối chứng ngay cả khi ngân
 sách tính toán eo hẹp.
+
+Kết quả huấn luyện xác nhận dự đoán rút ra từ phân tích bộ lọc. Trước khi chạy
+thí nghiệm, việc hai bộ lọc lệch nhau chỉ 14,3\% trong khi cùng lệch khoảng
+76\% so với đường cơ sở đã cho thấy phần lớn tác dụng nằm ở việc thoát khỏi
+khoảng $\alpha$ tuỳ tiện, chứ không ở nguồn gốc ngôn ngữ của số liệu. Thực
+nghiệm cho đúng như vậy: chuyển từ \textsf{uniform} sang \textsf{logspace} thu
+được khoảng 1 PPL, còn chuyển tiếp sang corpus chỉ thu thêm 0,17 tới 0,29 PPL
+với khoảng tin cậy chồng lấn.
+
+Việc chúng tôi bổ sung đường cơ sở \textsf{logspace} sau khi phát hiện
+\textsf{uniform} đặt toàn bộ kênh ra ngoài vùng có thông tin là quyết định
+quyết định tới kết luận. Nếu chỉ so với \textsf{uniform}, nhóm đã báo cáo mức
+cải thiện 1,19 PPL và quy toàn bộ cho đóng góp đề xuất, trong khi phần lớn
+trong đó chỉ là hệ quả của việc sửa một đường cơ sở đặt kém.
 
 Phần đặc thù tiếng Việt còn đứng vững nằm ở chỗ khác: tiếng Việt mang lượng
 thông tin tương hỗ cục bộ gấp 1,66 tới 2,27 lần tiếng Anh, và trục âm tiết so
@@ -507,13 +691,21 @@ song ngữ song song, thứ chúng tôi không có.
 \section{Kết luận}
 % =============================================================================
 
-Chúng tôi cài đặt lại toán tử Hyena kèm bằng chứng kiểm thử về tính đúng đắn,
-áp dụng cho mô hình ngôn ngữ tiếng Việt, và đề xuất khởi tạo phân bố suy giảm
-của bộ lọc từ đường cong suy giảm thông tin tương hỗ đo trên chính corpus. Nhánh
-đối chứng tiếng Anh cho thấy bộ lọc thu được gần như không phụ thuộc ngôn ngữ,
-nên phần cải thiện, nếu có, phải được quy cho tính dựa trên dữ liệu chứ không
-cho đặc thù tiếng Việt. Chúng tôi báo cáo kết quả phủ định này cùng toàn bộ
-giới hạn của bản tái hiện.
+Chúng tôi cài đặt lại toán tử Hyena kèm bằng chứng kiểm thử về tính đúng đắn và
+áp dụng cho mô hình ngôn ngữ tiếng Việt. Ở cùng ngân sách tham số và cùng siêu
+tham số, Hyena đạt perplexity thấp hơn Transformer 19,5\% trên tiếng Việt và
+15,5\% trên tiếng Anh, và vượt kernel attention tiết kiệm bộ nhớ 1,88 lần ở độ
+dài 8192 cho lượt tiến và lùi. Ablation cho thấy cửa sổ suy giảm và bậc đệ quy
+là hai thành phần có ảnh hưởng đo được, còn kích hoạt sine và positional
+embedding thì không phân biệt được ở số seed hiện có.
+
+Đóng góp đề xuất cho kết quả hai mặt. Khoảng giá trị của tham số suy giảm thực
+sự quan trọng: chuyển từ một khoảng đặt tuỳ tiện sang một lựa chọn có nguyên
+tắc thu được khoảng 1 PPL. Nhưng việc suy khoảng đó từ thống kê corpus không
+mang lại lợi ích đo được so với một lựa chọn cách đều theo thang log, và phần
+chênh lệch nhỏ còn lại xuất hiện đồng đều trên cả hai ngôn ngữ. Chúng tôi báo
+cáo kết quả phủ định này cùng toàn bộ giới hạn của bản tái hiện, vì chính nhánh
+đối chứng do chúng tôi thiết kế đã dự đoán và sau đó xác nhận nó.
 
 % =============================================================================
 \bibliography{custom}

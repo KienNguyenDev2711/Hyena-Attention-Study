@@ -1,0 +1,28 @@
+{
+  "device": "Tesla T4",
+  "torch_version": "2.10.0+cu128",
+  "config": {
+    "lengths": [
+      256,
+      512,
+      1024,
+      2048,
+      4096,
+      8192
+    ],
+    "ops": [
+      "hyena",
+      "sdpa",
+      "naive"
+    ],
+    "d_model": 256,
+    "n_heads": 8,
+    "order": 2,
+    "batch_size": 8,
+    "dtype": "fp16",
+    "backward": true,
+    "warmup": 5,
+    "iters": 20,
+    "out_dir": "results"
+  }
+}
