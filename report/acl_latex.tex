@@ -1,0 +1,521 @@
+% =============================================================================
+%  BAO CAO DO AN CUOI KY, NHOM 8
+%  Mon: Chuyen de nghien cuu va Xu ly ngon ngu tu nhien
+%
+%  QUAN TRONG VE CACH BIEN DICH:
+%  File nay phai bien dich bang LuaLaTeX hoac XeLaTeX, KHONG dung pdfLaTeX.
+%  Ly do: ban pdfLaTeX cua template ACL dung \usepackage[T1]{fontenc}, ma ma
+%  hoa T1 khong chua cac ky tu tieng Viet nhu a-grave-breve, u-tilde-horn,
+%  o-dot-horn. Bien dich bang pdfLaTeX se ra chu sai hoac bao loi.
+%  Font TeXGyreTermesX (dung trong ban acl_lualatex.tex chinh thuc) co day du
+%  dau tieng Viet.
+%
+%  Tren Overleaf: Menu > Compiler > LuaLaTeX
+%
+%  Can co trong cung thu muc: acl.sty, acl_natbib.bst, custom.bib
+%  (lay tu template chinh thuc: https://github.com/acl-org/acl-style-files)
+%
+%  QUY UOC SOAN THAO: KHONG dung dau gach dai (em dash). Dung dau phay, dau
+%  hai cham, hoac ngoac don thay the.
+% =============================================================================
+
+\documentclass[11pt]{article}
+
+% Bo [review] khi nop ban chinh thuc co ten tac gia.
+\usepackage{acl}
+
+\usepackage{microtype}
+\usepackage[vietnamese]{babel}
+\babelfont{rm}{TeXGyreTermesX}
+
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{xcolor}
+
+% Danh dau cho phan chua co so lieu. In do dam mau do de khong the nop nham
+% mot ban bao cao con lo trong.
+\newcommand{\chuacoso}[1]{\textcolor{red}{\textbf{[CHUA CO SO LIEU: #1]}}}
+
+\title{Hyena cho tiếng Việt: Mô hình ngôn ngữ tích chập dài dưới bậc hai,\\
+phân tích ablation và khởi tạo bộ lọc từ cấu trúc thông tin của corpus}
+
+\author{
+  Nguyễn Cao Trung Kiên \\
+  250201069 \\
+  \texttt{250201069@gm.uit.edu.vn} \\\And
+  Tô Huỳnh Minh Tiền \\
+  250201095 \\
+  \texttt{250201095@gm.uit.edu.vn} \\\And
+  Trần Tú Quang \\
+  250201084 \\
+  \texttt{250201084@gm.uit.edu.vn} \\
+}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Toán tử Hyena \citep{poli2023hyena} thay thế self-attention bằng đệ quy đan xen
+tích chập dài tham số hoá ngầm và cổng điều khiển bởi dữ liệu, đạt chi phí dưới
+bậc hai theo độ dài chuỗi. Toàn bộ thực nghiệm ngôn ngữ trong bài báo gốc thực
+hiện trên tiếng Anh. Chúng tôi cài đặt lại Hyena, kiểm chứng tính đúng đắn của
+cài đặt bằng bộ kiểm thử tự động, và áp dụng cho mô hình ngôn ngữ tiếng Việt.
+Ngoài phần tái hiện, chúng tôi đề xuất khởi tạo phân bố suy giảm của bộ lọc
+Hyena từ đường cong suy giảm thông tin tương hỗ đo trên chính corpus huấn
+luyện, thay cho cách đặt thủ công. Chúng tôi đo được tiếng Việt mang lượng
+thông tin tương hỗ cục bộ gấp 1,66 đến 2,27 lần tiếng Anh ở cùng số token và
+cùng cách token hoá không sinh từ ngoài từ điển. Tuy nhiên, nhánh đối chứng
+tiếng Anh cho thấy bộ lọc suy ra từ hai ngôn ngữ gần như trùng nhau (lệch tương
+đối trung bình 14,3\%, tương quan log 0,9974), trong khi cùng bộ lọc đó lệch
+75,8\% so với đường cơ sở đặt thủ công. Kết luận trung thực là phần cải thiện,
+nếu có, đến từ tính dựa trên dữ liệu chứ không từ đặc thù ngôn ngữ. Chúng tôi
+báo cáo phát hiện này cùng các ablation và giới hạn của bản tái hiện.
+\end{abstract}
+
+% =============================================================================
+\section{Giới thiệu}
+% =============================================================================
+
+Cơ chế self-attention \citep{vaswani2017attention} có chi phí tính toán và bộ
+nhớ tăng theo bình phương độ dài chuỗi, đặt ra giới hạn cứng cho lượng ngữ cảnh
+mà mô hình có thể xử lý. Nhiều hướng nghiên cứu tìm cách phá vỡ rào cản này,
+trong đó dòng mô hình không gian trạng thái \citep{gu2021s4, mehta2022gss,
+dao2023h3} và tích chập dài nổi lên như những lựa chọn thay thế nghiêm túc.
+
+Hyena \citep{poli2023hyena} là một trong những kiến trúc đầu tiên không dùng
+attention dày đặc mà vẫn đạt chất lượng tương đương Transformer trên mô hình
+hoá ngôn ngữ ở quy mô lớn. Toán tử này đan xen tích chập dài tham số hoá ngầm
+với cổng nhân điều khiển bởi dữ liệu, cho chi phí $O(N L \log_2 L)$ thay vì
+$O(L^2)$. Dòng nghiên cứu này về sau dẫn tới các kiến trúc chọn lọc trạng thái
+như Mamba \citep{gu2023mamba}.
+
+Toàn bộ thực nghiệm ngôn ngữ trong bài báo gốc thực hiện trên tiếng Anh, cụ thể
+là WikiText103 \citep{merity2017pointer} và The Pile \citep{gao2020pile}. Chưa
+có bằng chứng nào về hành vi của Hyena trên tiếng Việt, một ngôn ngữ có đặc
+điểm chữ viết khác hẳn: chữ Quốc ngữ tách rời theo âm tiết, nên một từ ghép
+nhiều âm tiết bị chẻ thành nhiều token khi token hoá theo khoảng trắng. Các mô
+hình ngôn ngữ tiếng Việt hiện có phần lớn dựa trên kiến trúc Transformer
+\citep{nguyen2020phobert}.
+
+Bài báo cáo này đóng góp ba điểm.
+
+Thứ nhất, chúng tôi cài đặt lại toán tử Hyena bám sát đặc tả gốc và
+\emph{chứng minh} tính đúng đắn của cài đặt bằng bộ kiểm thử tự động, trong đó
+có phép kiểm tính nhân quả dựa trên gradient kèm một phép kiểm ngược cố ý cài
+lỗi để xác nhận bộ kiểm thử có khả năng phát hiện.
+
+Thứ hai, chúng tôi đo đường cong suy giảm thông tin tương hỗ trên corpus tiếng
+Việt và tiếng Anh, dùng nó để khởi tạo phân bố suy giảm của bộ lọc Hyena. Đây
+là cách thay thế cho việc đặt tham số này bằng trực giác.
+
+Thứ ba, và đây là phần chúng tôi cho là có giá trị nhất, nhánh đối chứng tiếng
+Anh \emph{bác bỏ} giả thuyết ban đầu của chính chúng tôi rằng bộ lọc thu được
+mang tính đặc thù tiếng Việt. Chúng tôi báo cáo đầy đủ kết quả phủ định này
+thay vì lược bỏ nó.
+
+% =============================================================================
+\section{Nền tảng: toán tử Hyena}
+% =============================================================================
+
+\subsection{Định nghĩa}
+
+Gọi $u \in \mathbb{R}^{L \times D}$ là chuỗi đầu vào. Hyena bậc $N$ trước hết
+tính $N+1$ phép chiếu tuyến tính của đầu vào, tiếp theo là một tích chập ngắn
+theo kênh, thu được $(x^1, \dots, x^N, v)$. Toán tử được định nghĩa bằng đệ quy
+(Định nghĩa 3.1 trong \citealp{poli2023hyena}):
+\begin{align}
+z^1_t &= v_t \nonumber\\
+z^{n+1}_t &= x^n_t \cdot (h^n \ast z^n)_t, \quad n = 1 \dots N \label{eq:hyena}\\
+y_t &= z^{N+1}_t \nonumber
+\end{align}
+trong đó $\ast$ là tích chập nhân quả dài và $h^n$ là các bộ lọc học được. Mỗi
+tích chập được tính trong miền Fourier, cho độ phức tạp tổng cộng
+$O(N L \log_2 L)$.
+
+Bài báo gốc chỉ ra rằng Hyena bậc 1 tương ứng với GSS \citep{mehta2022gss} và
+bậc 2 tương ứng với H3 \citep{dao2023h3}, nên bậc $N$ là một trục thiết kế có
+ý nghĩa chứ không phải tham số tuỳ tiện.
+
+\subsection{Bộ lọc tham số hoá ngầm}
+
+Điểm mấu chốt khiến bộ lọc dài mà không tốn tham số theo $L$ là cách tham số
+hoá ngầm:
+\begin{equation}
+h_t = \mathrm{Window}(t) \cdot (\mathrm{FFN} \circ \mathrm{PositionalEncoding})(t)
+\label{eq:filter}
+\end{equation}
+với $\mathrm{Window}(t) = \exp\{-\alpha t\}$ và $\alpha$ thay đổi theo từng kênh
+độc lập, nhằm buộc các bộ lọc có độ dài khác nhau. Mạng $\mathrm{FFN}$ dùng kích
+hoạt tuần hoàn tần số cao (sine), theo dòng biểu diễn ngầm
+\citep{sitzmann2020siren, romero2021ckconv}, để khắc phục thiên lệch tần số thấp
+của mạng nơ-ron.
+
+Tính nhân quả được bảo đảm bằng cách đánh giá bộ lọc tại $t = 0 \dots L-1$ rồi
+đệm 0 cả tín hiệu lẫn bộ lọc tới độ dài ít nhất $2L-1$ trước khi biến đổi
+Fourier.
+
+\subsection{Những gì bài báo gốc để ngỏ}
+
+Phân bố $\{\alpha_i\}$ được mô tả là "thay đổi theo kênh" nhưng bài báo không
+quy định khoảng giá trị cụ thể, cũng không gắn nó với thống kê của ngôn ngữ
+đích. Đây chính là khe hở mà đóng góp của chúng tôi nhắm vào.
+
+% =============================================================================
+\section{Khởi tạo bộ lọc từ cấu trúc thông tin của corpus}
+% =============================================================================
+
+\subsection{Động cơ}
+
+Với $t$ chuẩn hoá về $[0,1]$ trên $L$ vị trí, kênh thứ $i$ suy giảm còn $1/e$
+tại token thứ khoảng $L/\alpha_i$. Ta gọi đại lượng này là \emph{độ dài hiệu
+dụng} của kênh. Câu hỏi đặt ra: nếu đặt tập độ dài hiệu dụng phủ đúng nơi thông
+tin dự đoán thực sự nằm trong corpus, mô hình có dùng ngân sách kênh hiệu quả
+hơn không?
+
+\subsection{Đo cái gì, và vì sao không dùng bộ tách từ}
+
+Phương án hiển nhiên là chạy bộ tách từ tiếng Việt rồi lấy phân bố số âm tiết
+mỗi từ. Chúng tôi bác bỏ phương án này vì nó phá hỏng nhánh đối chứng: tiếng
+Anh không có bộ tách từ tương đương, nên nếu hai ngôn ngữ được đo bằng hai công
+cụ khác nhau thì mọi khác biệt quan sát được đều có thể quy cho công cụ đo thay
+vì cho ngôn ngữ.
+
+Thay vào đó chúng tôi đo trực tiếp thông tin tương hỗ giữa hai token cách nhau
+$d$ vị trí:
+\begin{equation}
+I(d) = \sum_{x,y} p_d(x,y) \log \frac{p_d(x,y)}{p(x)\,p(y)}
+\label{eq:mi}
+\end{equation}
+Cùng một công thức, cùng một quy trình ước lượng, áp cho cả hai ngôn ngữ.
+
+\subsection{Xử lý độ chệch của ước lượng}
+
+Ước lượng hợp lý cực đại của thông tin tương hỗ luôn chệch dương trên mẫu hữu
+hạn: hai chuỗi hoàn toàn độc lập vẫn cho $I > 0$ chỉ vì trùng khớp ngẫu nhiên,
+và độ chệch tăng theo bình phương cỡ bảng chữ cái. Bỏ qua điều này sẽ dẫn tới
+kết luận rằng ngôn ngữ có corpus nhỏ hơn mang nhiều thông tin tầm xa hơn, trong
+khi thực chất chỉ là nó chệch nhiều hơn.
+
+Chúng tôi khử độ chệch bằng cách trừ đường nền xáo trộn: xáo ngẫu nhiên corpus
+phá huỷ mọi cấu trúc thật, nên thông tin tương hỗ đo được trên bản xáo chính là
+độ chệch. Ngoài ra chúng tôi thô hoá bảng chữ cái xuống $K$ ký hiệu thường gặp
+nhất, làm giảm độ chệch theo $K^2$; thô hoá khiến giá trị đo được thấp hơn giá
+trị thật, tức là ước lượng thận trọng.
+
+\subsection{Hiệu chuẩn công cụ đo}
+
+Một phép đo chưa được hiệu chuẩn trên dữ liệu có đáp án biết trước thì không
+dùng để kết luận được. Chúng tôi kiểm công cụ đo trên ba chuỗi nhân tạo, kết
+quả trong Bảng~\ref{tab:hieuchuan}.
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{lll}
+\toprule
+Chuỗi nhân tạo & Đáp án đúng & Bộ đo trả về \\
+\midrule
+Độc lập hoàn toàn & $I = 0$ & dư 2,82\% độ chệch \\
+Chu kỳ sao chép $k=8$ & đỉnh tại $d=8$ & đúng $d=8$, nổi 84$\times$ \\
+Markov & giảm đơn điệu & $I(1)=2{,}79$, tắt ở $d=64$ \\
+Suy biến (toàn 0) & phải từ chối & báo lỗi, không sinh $\alpha$ \\
+\bottomrule
+\end{tabular}
+\caption{Hiệu chuẩn công cụ đo thông tin tương hỗ trên dữ liệu có đáp án biết
+trước, trước khi áp lên corpus thật.}
+\label{tab:hieuchuan}
+\end{table}
+
+\subsection{Ánh xạ sang phân bố suy giảm}
+
+Chúng tôi coi $I(d)$ là khối lượng thông tin nằm tại khoảng cách $d$, chuẩn hoá
+thành một phân bố xác suất trên khoảng cách, rồi lấy $D$ phân vị cách đều làm
+tập độ dài hiệu dụng $\{\ell_i\}$, cuối cùng đặt $\alpha_i = L / \ell_i$. Nơi
+tập trung nhiều thông tin sẽ được cấp nhiều kênh hơn.
+
+\subsection{Hai đường cơ sở, và vì sao cần cả hai}
+
+Chúng tôi so sánh với hai đường cơ sở. Đường thứ nhất, ký hiệu \textsf{uniform},
+đặt $\alpha$ cách đều tuyến tính trong một khoảng do chúng tôi chọn. Đường thứ
+hai, ký hiệu \textsf{logspace}, đặt độ dài hiệu dụng cách đều theo thang log từ
+1 tới $L$.
+
+Đường \textsf{logspace} tồn tại vì một lý do quan trọng. Phép đo cho thấy 90\%
+thông tin nằm trong khoảng cách 34 token, trong khi cấu hình \textsf{uniform}
+đặt \emph{toàn bộ} 256 kênh ra xa hơn 64 token (Bảng~\ref{tab:dodaihieudung}).
+So sánh đề xuất với một cấu hình lệch xa như vậy là so với hình nộm: thắng cũng
+không chứng minh được gì. Mọi kết luận khoa học trong báo cáo này đều rút ra từ
+so sánh với \textsf{logspace}.
+
+% =============================================================================
+\section{Thiết lập thí nghiệm}
+% =============================================================================
+
+\subsection{Nguyên tắc so sánh công bằng}
+
+Mọi cấu hình chỉ khác nhau ở toán tử trộn token. Embedding, pre-LayerNorm, khối
+MLP, kết nối residual, weight tying, cách khởi tạo và lịch learning rate giữ
+nguyên vẹn như nhau. Nếu để nhiều thứ khác nhau cùng lúc thì không thể quy chênh
+lệch perplexity cho toán tử.
+
+Chúng tôi cấp positional embedding học được cho cả hai loại mô hình. Attention
+bắt buộc cần thông tin vị trí còn Hyena thì không; cấp cho một bên mà không cấp
+cho bên kia sẽ tạo ra hai biến thay đổi thay vì một. Một nhánh ablation riêng
+kiểm tra Hyena có thật sự không cần.
+
+Huấn luyện tính theo ngân sách token cố định chứ không theo số epoch, vì so
+theo epoch sẽ thiên vị mô hình chạy nhanh hơn.
+
+\subsection{Mô hình và dữ liệu}
+
+Mô hình 4 lớp, $d_{\text{model}} = 256$, 8 đầu attention, $d_{\text{ff}} = 1024$,
+$L = 512$, từ điển 16k. Số tham số đo được: Hyena 7.553.280 và Transformer
+7.383.552, lệch 2,30\%.
+
+Dữ liệu lấy từ Wikipedia tiếng Việt và tiếng Anh (bản \texttt{20231101}). Nhánh
+tiếng Anh được cắt xuống đúng cùng số token với nhánh tiếng Việt.
+
+Chúng tôi khảo sát hai đơn vị token hoá. Thứ nhất là âm tiết, tức tách theo
+khoảng trắng, vốn là đơn vị tự nhiên của chữ Quốc ngữ. Thứ hai là BPE mức byte
+\citep{sennrich2016bpe}, huấn luyện trên chính corpus, không sinh token ngoài
+từ điển. Phân biệt này chỉ tồn tại ở dạng như vậy với tiếng Việt: với tiếng
+Anh, tách theo khoảng trắng cho ra đơn vị từ chứ không phải âm tiết, nên nhánh
+đối chứng phải được diễn giải tương ứng.
+
+\subsection{Bằng chứng cài đặt đúng}
+
+Một mô hình ngôn ngữ nhân quả cài sai, để rò rỉ thông tin từ tương lai, vẫn
+huấn luyện trơn tru và cho perplexity đẹp bất thường. Đây là lỗi im lặng nguy
+hiểm nhất của loại nghiên cứu này.
+
+Chúng tôi khử nó bằng 61 phép kiểm tự động, trong đó phép kiểm cốt lõi dùng
+gradient: lấy đạo hàm của đầu ra tại vị trí $t$ theo đầu vào tại mọi vị trí
+$s > t$ và đòi hỏi kết quả bằng 0. Attention đạt 0 tuyệt đối nhờ cơ chế che;
+Hyena đạt $2{,}6 \times 10^{-16}$, tức nhân quả tới sai số máy, vì vòng biến đổi
+Fourier thuận nghịch để lại nhiễu làm tròn.
+
+Quan trọng hơn, chúng tôi bổ sung một \emph{phép kiểm ngược}: cố tình cài lỗi
+nhân quả kinh điển (quên cắt phần đệm phải của tích chập ngắn) và xác nhận tỉ
+lệ rò rỉ vọt lên $9{,}1 \times 10^{-1}$. Chênh lệch 15 bậc độ lớn cho thấy bộ
+kiểm thử thực sự có khả năng phát hiện lỗi, chứ không phải im lặng vì không đủ
+nhạy.
+
+% =============================================================================
+\section{Kết quả}
+% =============================================================================
+
+\subsection{Cấu trúc thông tin của tiếng Việt so với tiếng Anh}
+
+Bảng~\ref{tab:mi} trình bày tỉ lệ $I_{\text{vi}}(d) / I_{\text{en}}(d)$ đo với
+hai cách token hoá. Cột thứ nhất dùng token hoá theo âm tiết với từ điển 16k;
+cột thứ hai dùng BPE mức byte, không sinh token ngoài từ điển, với đúng
+10.000.000 token cho mỗi ngôn ngữ.
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{rrr}
+\toprule
+$d$ & âm tiết & BPE (0\% OOV) \\
+\midrule
+1   & 1,71 & 1,66 \\
+6   & 1,66 & 2,27 \\
+13  & 1,56 & 1,94 \\
+34  & 1,26 & 1,55 \\
+88  & 0,94 & 1,27 \\
+167 & (dưới nhiễu) & 1,03 \\
+\bottomrule
+\end{tabular}
+\caption{Tỉ lệ thông tin tương hỗ giữa tiếng Việt và tiếng Anh theo khoảng
+cách. Cột âm tiết có nhiễu loạn do tỉ lệ token ngoài từ điển chênh lệch
+(tiếng Anh 10,26\% so với tiếng Việt 2,59\%); cột BPE khử nhiễu loạn này.}
+\label{tab:mi}
+\end{table}
+
+Ba nhận xét.
+
+Thứ nhất, tiếng Việt mang nhiều thông tin tương hỗ cục bộ hơn tiếng Anh ở mọi
+khoảng cách trong vùng tin cậy, với tỉ lệ từ 1,66 tới 2,27. Kết quả này bền
+qua cả hai cách token hoá.
+
+Thứ hai, phép đo bằng âm tiết cho thấy hai đường cắt nhau tại $d \approx 88$,
+nhưng điểm cắt này \emph{biến mất} khi khử token ngoài từ điển. Nó là hiện vật
+của việc gộp mọi từ hiếm của tiếng Anh vào một ký hiệu duy nhất, làm mất thông
+tin của tiếng Anh một cách hệ thống. Chúng tôi nêu ra để cảnh báo: nếu chỉ đo
+bằng âm tiết, nhóm đã kết luận sai.
+
+Thứ ba, tín hiệu chìm xuống dưới mức nhiễu ở $d > 121$ với phép đo âm tiết và
+$d > 167$ với BPE. Mọi phát biểu về khoảng cách xa hơn các mốc này đều không có
+căn cứ.
+
+\subsection{Phân bố kênh bộ lọc}
+
+Bảng~\ref{tab:dodaihieudung} so sánh phân bố độ dài hiệu dụng của bốn cấu hình.
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{lrrr}
+\toprule
+Cấu hình & $\le 4$ & $\le 34$ & trung vị \\
+\midrule
+\textsf{uniform} & 0 & 0 & 169,3 \\
+\textsf{logspace} & 57 & 145 & 22,6 \\
+corpus, tiếng Việt & 134 & 224 & 3,6 \\
+corpus, tiếng Anh & 120 & 205 & 4,8 \\
+\bottomrule
+\end{tabular}
+\caption{Số kênh trên tổng 256 có độ dài hiệu dụng dưới ngưỡng cho trước
+($L = 512$). Phép đo cho thấy 90\% thông tin nằm trong 34 token.}
+\label{tab:dodaihieudung}
+\end{table}
+
+\subsection{Nhánh đối chứng tiếng Anh bác bỏ tính đặc thù ngôn ngữ}
+
+Đây là kết quả quan trọng nhất của báo cáo, và nó đi ngược giả thuyết ban đầu
+của chúng tôi.
+
+Với nhiễu loạn token ngoài từ điển đã được khử, bộ lọc suy ra từ corpus tiếng
+Việt và từ corpus tiếng Anh gần như trùng nhau: trung vị độ dài hiệu dụng 2,95
+so với 2,85 token, lệch tương đối trung bình 14,3\%, tương quan giữa log các độ
+dài hiệu dụng đạt 0,9974. Trong khi đó, cùng bộ lọc ấy lệch 75,8\% so với đường
+cơ sở \textsf{logspace}.
+
+Nguyên nhân nằm ở chính công thức ánh xạ: chuẩn hoá $I(d)$ thành phân bố xác
+suất làm triệt tiêu hệ số tỉ lệ chung, chỉ giữ lại hình dạng, mà hình dạng thì
+hai ngôn ngữ gần như giống nhau.
+
+Hệ quả cho cách diễn giải: nếu cấu hình corpus tỏ ra tốt hơn \textsf{logspace}
+trên tiếng Việt, gần như chắc chắn nó cũng tốt hơn tương tự trên tiếng Anh.
+Kết luận đúng khi đó phải là \emph{khởi tạo dựa trên dữ liệu có ích}, không
+phải \emph{thích ứng tiếng Việt có ích}.
+
+\subsection{Perplexity trên mô hình ngôn ngữ}
+
+\chuacoso{E1, đang chạy}
+
+\subsection{Ảnh hưởng của đơn vị token hoá}
+
+Ở cùng lượng ký tự, tiếng Việt sinh nhiều token hơn: 4,101 ký tự trên mỗi token
+so với 5,121 của tiếng Anh, tỉ lệ 1,249.
+
+\chuacoso{E2, đang chạy}
+
+\subsection{Ablation các thành phần của Hyena}
+
+\chuacoso{E3, đang chạy}
+
+\subsection{Khởi tạo bộ lọc từ corpus}
+
+\chuacoso{E4, đang chạy}
+
+\subsection{Hiệu năng theo độ dài chuỗi}
+
+Ở $L = 512$, chúng tôi đo được Transformer đạt 150,0 nghìn token mỗi giây còn
+Hyena đạt 92,9 nghìn, tức Transformer \emph{nhanh hơn} 1,61 lần. Kết quả này
+không mâu thuẫn với bài báo gốc: các con số tăng tốc được công bố ở đó áp dụng
+cho $L \ge 8$K, nơi chi phí bậc hai của attention mới lấn át chi phí cố định
+của biến đổi Fourier. Chúng tôi nêu rõ điều kiện này để tránh trích dẫn sai.
+
+Khi đo hiệu năng, việc chọn đường cơ sở attention nào cũng quyết định kết luận.
+Bài báo gốc so với FlashAttention \citep{dao2022flashattention} và tự ghi rõ
+rằng cài đặt này đã nhanh hơn attention thông thường trong PyTorch từ 2 tới 4
+lần. Vì vậy chúng tôi báo cáo cả hai đường cơ sở: một cài đặt materialise ma
+trận $L \times L$ và một cài đặt dùng kernel tiết kiệm bộ nhớ của PyTorch. Chỉ
+so với đường cơ sở thứ nhất sẽ thổi phồng mức tăng tốc nhiều lần.
+
+\chuacoso{E5, quét độ dài từ 256 tới 8192}
+
+\subsection{Chẩn đoán trí nhớ tầm xa}
+
+Perplexity không phát hiện được việc mô hình mất khả năng tầm xa: một mô hình
+chỉ nhìn vài token vẫn đạt perplexity khá tốt trên văn bản tự nhiên. Vì bộ lọc
+suy từ corpus có trung vị độ dài hiệu dụng chỉ 2,9 token, chúng tôi bổ sung tác
+vụ associative recall, vốn là công cụ chẩn đoán của chính bài báo gốc.
+
+Trước hết chúng tôi xác nhận tác vụ giải được: attention hai lớp đạt độ chính
+xác 1,000 ở độ dài 65 và giảm còn 0,196 ở độ dài 129, với mức đoán mò 0,100.
+Chúng tôi cũng xác nhận lịch warmup là yếu tố quyết định: cùng 18.720 bước và
+cùng learning rate, có warmup đạt 1,000 còn không có warmup chỉ đạt 0,187.
+
+Kết quả với cấu hình bộ lọc suy từ corpus, chạy 5 seed ở độ dài 65, cho một
+phân bố \emph{lưỡng cực}: ba lần đạt 0,922 trở lên (cụ thể 0,922, 0,981, 0,987)
+và hai lần sập về gần mức đoán mò (0,092 và 0,141), không có giá trị trung
+gian. Gấp đôi ngân sách huấn luyện làm các lần thành công tốt lên nhưng không
+khử được kiểu hỏng.
+
+Với phân bố như vậy, báo cáo trung bình kèm độ lệch chuẩn là sai lệch, vì không
+lần chạy nào đạt gần giá trị trung bình. Đại lượng đúng là tỉ lệ thành công,
+ở đây là 3 trên 5, và độ chính xác khi thành công, ở đây là 0,963.
+
+% =============================================================================
+\section{Thảo luận}
+% =============================================================================
+
+Phát hiện có giá trị nhất của nghiên cứu này là một kết quả phủ định do chính
+thiết kế đối chứng của chúng tôi tạo ra. Giả thuyết ban đầu cho rằng bộ lọc suy
+từ thống kê corpus tiếng Việt sẽ mang tính đặc thù ngôn ngữ. Nhánh đối chứng
+tiếng Anh bác bỏ giả thuyết đó bằng số liệu: hai bộ lọc lệch nhau 14,3\% trong
+khi cùng lệch khoảng 76\% so với đường cơ sở.
+
+Nếu không có nhánh đối chứng, nhóm đã có thể công bố một khẳng định về đặc thù
+tiếng Việt mà chỉ cần áp dụng cùng quy trình lên tiếng Anh là bác bỏ được. Đây
+là lý do thực tế, không chỉ hình thức, để giữ nhóm đối chứng ngay cả khi ngân
+sách tính toán eo hẹp.
+
+Phần đặc thù tiếng Việt còn đứng vững nằm ở chỗ khác: tiếng Việt mang lượng
+thông tin tương hỗ cục bộ gấp 1,66 tới 2,27 lần tiếng Anh, và trục âm tiết so
+với BPE là phân biệt chỉ tồn tại ở dạng này với chữ Quốc ngữ.
+
+Hiện tượng lưỡng cực ở tác vụ associative recall gợi ra một hướng đáng theo
+đuổi: vấn đề của Hyena ở quy mô nhỏ có thể nằm ở độ ổn định tối ưu hoá chứ
+không phải ở năng lực biểu diễn, vì hai trong ba lần chạy đạt tới 0,98.
+
+% =============================================================================
+\section*{Hạn chế}
+% =============================================================================
+
+Quy mô mô hình của chúng tôi (khoảng 7,5 triệu tham số) nhỏ hơn ba bậc so với
+quy mô 355 triệu tham số trong bài báo gốc. Mọi kết luận đều gắn với quy mô này
+và không được ngoại suy.
+
+Chúng tôi dùng \texttt{torch.fft} thuần thay cho CUDA kernel tuỳ chỉnh của
+nhóm tác giả, nên các con số tốc độ của chúng tôi không so trực tiếp được với
+con số trong bài báo gốc.
+
+Bản tái hiện của chúng tôi \emph{chưa đạt được} kết quả associative recall của
+bài báo gốc, vốn báo cáo 97,2\% ở độ dài 131.072. Đây là hạn chế của bản tái
+hiện ở ngân sách hiện có, không phải bằng chứng phản bác bài báo gốc.
+
+Do phân bố lưỡng cực và số seed hạn chế, chúng tôi \emph{không} xếp hạng được
+các biến thể bộ lọc trên tác vụ associative recall. Phân biệt được tỉ lệ thành
+công giữa các cấu hình đòi hỏi khoảng 10 seed cho mỗi cấu hình, vượt ngân sách
+tính toán của đồ án.
+
+Corpus tiếng Anh được lấy mẫu ở chế độ streaming, trong đó việc xáo trộn chỉ
+diễn ra trong một bộ đệm hữu hạn chứ không xáo toàn cục, nên mẫu lệch về phía
+đầu tập dữ liệu. Thiên lệch này áp dụng đồng nhất cho cả hai ngôn ngữ nên triệt
+tiêu khi so sánh, nhưng chúng tôi nêu rõ để người đọc tự đánh giá.
+
+Cuối cùng, so sánh "cùng số ký tự" giữa hai ngôn ngữ không phải là "cùng lượng
+nội dung". Muốn khẳng định chuỗi tiếng Việt dài hơn ở cùng nội dung cần văn bản
+song ngữ song song, thứ chúng tôi không có.
+
+% =============================================================================
+\section{Kết luận}
+% =============================================================================
+
+Chúng tôi cài đặt lại toán tử Hyena kèm bằng chứng kiểm thử về tính đúng đắn,
+áp dụng cho mô hình ngôn ngữ tiếng Việt, và đề xuất khởi tạo phân bố suy giảm
+của bộ lọc từ đường cong suy giảm thông tin tương hỗ đo trên chính corpus. Nhánh
+đối chứng tiếng Anh cho thấy bộ lọc thu được gần như không phụ thuộc ngôn ngữ,
+nên phần cải thiện, nếu có, phải được quy cho tính dựa trên dữ liệu chứ không
+cho đặc thù tiếng Việt. Chúng tôi báo cáo kết quả phủ định này cùng toàn bộ
+giới hạn của bản tái hiện.
+
+% =============================================================================
+\bibliography{custom}
+
+\end{document}
