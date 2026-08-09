@@ -50,6 +50,27 @@ QUYET DINH CAI DAT (paper khong dac ta chi tiet, day la lua chon cua nhom):
        Voi `unique_keys=True`, moi khoa chi co dung mot lan nen khoang cach truy
        van trai deu tren toan chuoi - do moi la thu can do. Doi lai can
        vocab_size >= n_pairs va tac vu kho hon han.
+
+  (S5) `n_pairs_fixed` - GIU CO DINH so cap, keo dai chuoi bang TOKEN DEM.
+
+       Day la cach dung dan de co lap bien "khoang cach". Neu de so cap tang
+       theo do dai chuoi thi moi lan tang L ta dong thoi thay doi:
+         - khoang cach tu truy van ve khoa (thu MUON do), va
+         - so luong cap phai ghi nho (do KHO cua phep tra cuu), va
+         - neu vocab cung tang theo thi ca so lop dau ra.
+       Ba thu cung doi mot luc => khong the quy ket qua cho trục nao. Da mac
+       dung loi nay ngay 2026-08-08: quet L = 33..257 voi vocab = n_pairs cho
+       ket qua ngang muc doan mo o MOI do dai, khong dien giai duoc gi.
+
+       Voi `n_pairs_fixed`, phep tra cuu giu nguyen do kho (cung so cap, cung
+       vocab), chi co khoang cach thay doi. Cau truc chuoi:
+
+           [k1 v1 k2 v2 ... kP vP] [dem ... dem] [truy van]
+            <--- 2P token --->      <-- F -->      1 token
+
+       Token dem lay ngau nhien tu chinh bang chu cai nen mo hinh khong the
+       nhan ra chung bang mot ky hieu rieng - no buoc phai mang thong tin di
+       qua ca doan dem.
 """
 
 from __future__ import annotations
@@ -64,17 +85,25 @@ class RecallConfig:
     """Sieu tham so cua tac vu associative recall."""
 
     vocab_size: int = 20        # so ky hieu; paper quet 10, 20, 30, 40
-    seq_len: int = 128          # do dai chuoi (ke ca token truy van)
+    seq_len: int = 128          # do dai chuoi (ke ca dem va token truy van)
     n_train: int = 20000
     n_val: int = 2000
     n_test: int = 2000
     seed: int = 0
     unique_keys: bool = False   # xem ghi chu (S4)
+    n_pairs_fixed: int | None = None   # xem ghi chu (S5)
 
     @property
     def n_pairs(self) -> int:
-        """So cap (khoa, gia tri) nhet vua vao chuoi."""
+        """So cap (khoa, gia tri) trong chuoi."""
+        if self.n_pairs_fixed is not None:
+            return self.n_pairs_fixed
         return (self.seq_len - 1) // 2
+
+    @property
+    def n_filler(self) -> int:
+        """So token dem chen giua khoi cap va token truy van. Xem (S5)."""
+        return max(0, self.seq_len - 2 * self.n_pairs - 1)
 
     def __post_init__(self) -> None:
         if self.vocab_size < 4:
@@ -100,8 +129,8 @@ def make_recall_split(cfg: RecallConfig, n_samples: int,
 
     Cach dung: mo hinh doc x, du doan tai VI TRI CUOI, so voi y.
     """
-    V, P = cfg.vocab_size, cfg.n_pairs
-    L = 2 * P + 1
+    V, P, F = cfg.vocab_size, cfg.n_pairs, cfg.n_filler
+    L = 2 * P + F + 1
 
     x = np.empty((n_samples, L), dtype=np.int64)
     y = np.empty(n_samples, dtype=np.int64)
@@ -119,6 +148,9 @@ def make_recall_split(cfg: RecallConfig, n_samples: int,
 
         x[i, 0:2 * P:2] = keys
         x[i, 1:2 * P:2] = vals
+        if F:
+            # (S5) token dem lay tu chinh bang chu cai, khong phai ky hieu rieng
+            x[i, 2 * P:2 * P + F] = rng.integers(0, V, size=F)
 
         q = int(rng.choice(keys))       # truy van phai la khoa DA xuat hien
         x[i, -1] = q
@@ -137,21 +169,28 @@ def build_recall_dataset(cfg: RecallConfig) -> dict[str, tuple[np.ndarray, np.nd
     }
 
 
-def query_distance(x: np.ndarray) -> np.ndarray:
+def query_distance(x: np.ndarray, n_pairs: int | None = None) -> np.ndarray:
     """Khoang cach tu token truy van nguoc ve LAN XUAT HIEN CUOI cua cung khoa.
 
     Dung de phan tich: gom do chinh xac theo khoang cach cho biet mo hinh nho xa
     duoc bao nhieu. Mot mo hinh chi nhin 4 token se dat gan 100% khi khoang cach
     ngan va roi ve muc doan mo khi khoang cach dai - chinh la dau hieu can tim.
 
+    Args:
+        x: (n_samples, L)
+        n_pairs: so cap khoa-gia tri. BAT BUOC truyen khi chuoi co token dem,
+            vi khoa chi nam trong 2*n_pairs vi tri dau. Neu bo trong, ham gia
+            dinh chuoi khong co dem (L = 2P+1) - dung voi cau hinh mac dinh.
+
     Tra ve mang (n_samples,) so token tinh tu vi tri truy van nguoc ve khoa do.
     """
     n, L = x.shape
+    P = n_pairs if n_pairs is not None else (L - 1) // 2
     out = np.full(n, -1, dtype=np.int64)
     for i in range(n):
         q = x[i, -1]
-        # duyet nguoc, bo qua chinh token truy van; khoa nam o cac vi tri chan
-        for pos in range(L - 3, -1, -2):
+        # khoa chi nam o vi tri chan trong khoi 2P dau; token dem KHONG tinh
+        for pos in range(2 * P - 2, -1, -2):
             if x[i, pos] == q:
                 out[i] = (L - 1) - pos
                 break

@@ -136,6 +136,45 @@ def test_splits_have_right_shapes():
     return True
 
 
+def test_filler_isolates_distance_from_task_difficulty():
+    """Token dem phai keo dai khoang cach MA KHONG doi do kho cua phep tra cuu.
+
+    Day la ly do ky thuat de co `n_pairs_fixed`. Neu de so cap tang theo do dai
+    chuoi thi moi lan tang L ta doi dong thoi ca khoang cach LAN so cap phai ghi
+    nho, nen khong quy duoc ket qua cho truc nao. Da mac dung loi do ngay
+    2026-08-08 va lam hong ca mot lan chay Kaggle.
+    """
+    P, V = 8, 10
+    rng = np.random.default_rng(0)
+    lengths = [2 * P + 1, 2 * P + 33, 2 * P + 97]
+    means = []
+    for L in lengths:
+        cfg = RecallConfig(vocab_size=V, seq_len=L, n_pairs_fixed=P)
+        assert cfg.n_pairs == P, "so cap phai giu nguyen khi keo dai chuoi"
+        assert cfg.n_filler == L - 2 * P - 1
+        x, y = make_recall_split(cfg, 300, rng)
+        assert x.shape[1] == L, f"do dai chuoi sai: {x.shape[1]} != {L}"
+
+        # tac vu van dung dinh nghia du co dem
+        for i in range(len(x)):
+            q = x[i, -1]
+            pos = [p for p in range(0, 2 * P, 2) if x[i, p] == q]
+            assert pos, f"mau {i}: khoa truy van bien mat"
+            assert int(x[i, pos[-1] + 1]) == int(y[i]), f"mau {i}: nhan sai"
+
+        d = query_distance(x, n_pairs=P)
+        assert (d > 0).all(), f"L={L}: co mau khong tinh duoc khoang cach"
+        means.append(float(d.mean()))
+
+    # khoang cach phai tang gan dung bang phan dem them vao
+    for (L1, m1), (L2, m2) in zip(zip(lengths, means), zip(lengths[1:], means[1:])):
+        grew, expected = m2 - m1, L2 - L1
+        assert abs(grew - expected) < 1.0, (
+            f"chen them {expected} token dem nhung khoang cach chi tang {grew:.1f}"
+        )
+    return means[-1]
+
+
 # -----------------------------------------------------------------------------
 # R5 - tac vu CO GIAI DUOC khong
 # -----------------------------------------------------------------------------
@@ -159,15 +198,18 @@ def test_task_is_actually_solvable_by_attention():
     torch.manual_seed(0)
     np.random.seed(0)
 
-    # NGAN SACH HUAN LUYEN DUOC CHOT BANG THUC NGHIEM, khong phai doan.
+    # CONG THUC HUAN LUYEN DUOC CHOT BANG THUC NGHIEM, khong phai doan.
     # Quet tren Kaggle T4 ngay 2026-08-08 (notebooks/kaggle_E6_recall.ipynb):
-    #   vocab=10, L=33, AA,   744 buoc -> do chinh xac 0,194  (doan mo 0,100)
-    #   vocab=10, L=33, AA, 18720 buoc -> do chinh xac 1,000
-    #   vocab=10, L=33, AAA,18720 buoc -> do chinh xac 1,000
-    # Ket luan: R5 that bai truoc day KHONG phai do tac vu hong ma do NGAN SACH
-    # HUAN LUYEN qua nho. Moi chuoi chi cho dung mot nhan, nen co che tra cuu
-    # trong ngu canh can rat nhieu buoc moi hinh thanh.
+    #   vocab=10, L=33, AA,   744 buoc, CO warmup    -> 0,194  (doan mo 0,100)
+    #   vocab=10, L=33, AA, 18720 buoc, CO warmup    -> 1,000
+    #   vocab=10, L=33, AA, 18720 buoc, KHONG warmup -> 0,187
+    #
+    # Hai dong cuoi chi khac nhau DUNG MOT bien: lich warmup. Ban dau bo test
+    # nay chi copy so epoch va learning rate ma bo quen warmup, nen no that bai
+    # o 0,187 trong khi cung ngan sach do dat 1,000 o notebook. AdamW voi
+    # lr=1e-3 ngay tu buoc 0 pha vo cau truc tra cuu truoc khi no kip hinh thanh.
     EPOCHS, N_TRAIN = 60, 20000            # = 18720 buoc, ~90 giay tren T4
+    WARMUP_FRAC = 0.05
     cfg = RecallConfig(vocab_size=10, seq_len=33, n_train=N_TRAIN, n_val=1000,
                        n_test=1000, seed=0)
     data = build_recall_dataset(cfg)
@@ -183,12 +225,18 @@ def test_task_is_actually_solvable_by_attention():
     opt = torch.optim.AdamW(model.parameters(), lr=1e-3)
 
     bs = 64
+    total_steps = EPOCHS * (len(xtr) // bs)
+    warmup = max(int(total_steps * WARMUP_FRAC), 1)
+    step = 0
     for epoch in range(EPOCHS):
         perm = np.random.permutation(len(xtr))
         for i in range(0, len(xtr) - bs + 1, bs):
             idx = perm[i:i + bs]
             xb = torch.from_numpy(xtr[idx]).to(dev)
             yb = torch.from_numpy(ytr[idx]).to(dev)
+            for g in opt.param_groups:      # warmup - BAT BUOC, xem ghi chu tren
+                g["lr"] = 1e-3 * min(1.0, (step + 1) / warmup)
+            step += 1
             loss = F.cross_entropy(model(xb)[:, -1, :], yb)
             opt.zero_grad(set_to_none=True)
             loss.backward()
@@ -262,6 +310,7 @@ def main() -> int:
         ("R4  Muc doan mo = 1/V", test_chance_accuracy_matches_empirical),
         ("R4b Shape cac tap du lieu", test_splits_have_right_shapes),
         ("R4c unique_keys trai deu khoang cach", test_unique_keys_spreads_query_distance),
+        ("R4d Token dem co lap duoc khoang cach", test_filler_isolates_distance_from_task_difficulty),
         ("R5  TAC VU GIAI DUOC (attention)", test_task_is_actually_solvable_by_attention),
     ]
     n_fail = n_skip = 0
