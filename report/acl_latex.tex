@@ -339,11 +339,22 @@ cách. Cột âm tiết có nhiễu loạn do tỉ lệ token ngoài từ điể
 \label{tab:mi}
 \end{table}
 
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{figures/fig_mi_decay.pdf}
+\caption{Suy giảm thông tin tương hỗ theo khoảng cách. Đường chấm mảnh là nền
+nhiễu ước lượng; phần đường cong nằm dưới nó không mang thông tin. Với token
+hoá âm tiết (trái), hai đường cắt nhau quanh $d \approx 88$; khi khử token
+ngoài từ điển bằng BPE (phải), điểm cắt biến mất và tiếng Việt nằm trên tiếng
+Anh trong toàn vùng tin cậy.}
+\label{fig:mi}
+\end{figure*}
+
 Ba nhận xét.
 
 Thứ nhất, tiếng Việt mang nhiều thông tin tương hỗ cục bộ hơn tiếng Anh ở mọi
 khoảng cách trong vùng tin cậy, với tỉ lệ từ 1,66 tới 2,27. Kết quả này bền
-qua cả hai cách token hoá.
+qua cả hai cách token hoá. Hình~\ref{fig:mi} cho thấy trực tiếp điều đó.
 
 Thứ hai, phép đo bằng âm tiết cho thấy hai đường cắt nhau tại $d \approx 88$,
 nhưng điểm cắt này \emph{biến mất} khi khử token ngoài từ điển. Nó là hiện vật
@@ -376,6 +387,24 @@ corpus, tiếng Anh & 120 & 205 & 4,8 \\
 ($L = 512$). Phép đo cho thấy 90\% thông tin nằm trong 34 token.}
 \label{tab:dodaihieudung}
 \end{table}
+
+% ---------------------------------------------------------------------------
+% NEU VUOT QUA 8 TRANG: CAT HINH NAY TRUOC TIEN.
+% No trung noi dung voi Bang \ref{tab:dodaihieudung} ngay phia tren, chi khac
+% la trinh bay theo phan bo thay vi theo con so. Hai hinh con lai (fig:mi va
+% fig:eff) khong the cat vi khong co bang nao thay the duoc.
+% Cat bang cach xoa khoi block \begin{figure} toi \end{figure} nay va bo cau
+% tham chieu Hinh~\ref{fig:efflen} trong doan van ben duoi.
+% ---------------------------------------------------------------------------
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{figures/fig_effective_lengths.pdf}
+\caption{Phân bố độ dài hiệu dụng của 256 kênh bộ lọc. Cấu hình
+\textsf{uniform} đặt toàn bộ kênh sang phải đường kẻ, tức ra ngoài vùng chứa
+90\% thông tin. Đây là lý do phải bổ sung đường cơ sở \textsf{logspace} trước
+khi rút ra bất kỳ kết luận nào về đề xuất.}
+\label{fig:efflen}
+\end{figure}
 
 \subsection{Nhánh đối chứng tiếng Anh bác bỏ tính đặc thù ngôn ngữ}
 
@@ -583,10 +612,21 @@ nghĩa là Hyena nhanh hơn). Cài đặt ngây thơ hết bộ nhớ ở $L = 8
 \label{tab:e5}
 \end{table}
 
-Bảng~\ref{tab:e5} cho thấy điểm hoà vốn phụ thuộc mạnh vào đường cơ sở. So với
-cài đặt ngây thơ, Hyena vượt lên từ khoảng $L = 1024$. So với kernel tiết kiệm
-bộ nhớ, Hyena chỉ vượt lên ở $L = 4096$ với lượt tiến và lùi, và ở $L = 8192$
-với lượt tiến.
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{figures/fig_efficiency.pdf}
+\caption{Trái: mức tăng tốc của Hyena theo độ dài chuỗi, so với hai đường cơ
+sở attention. Điểm hoà vốn phụ thuộc mạnh vào đường cơ sở được chọn. Phải: bộ
+nhớ đỉnh. Cài đặt ngây thơ tăng xấp xỉ gấp bốn mỗi lần độ dài gấp đôi, đúng
+dạng bậc hai, và hết bộ nhớ ở $L = 8192$; Hyena tăng xấp xỉ gấp đôi, đúng dạng
+tuyến tính.}
+\label{fig:eff}
+\end{figure*}
+
+Bảng~\ref{tab:e5} và Hình~\ref{fig:eff} cho thấy điểm hoà vốn phụ thuộc mạnh
+vào đường cơ sở. So với cài đặt ngây thơ, Hyena vượt lên từ khoảng $L = 1024$.
+So với kernel tiết kiệm bộ nhớ, Hyena chỉ vượt lên ở $L = 4096$ với lượt tiến
+và lùi, và ở $L = 8192$ với lượt tiến.
 
 Con số đáng chú ý nhất là 1,88 lần ở $L = 8192$ cho lượt tiến và lùi. Bài báo
 gốc công bố mức tăng tốc 2 lần so với FlashAttention ở độ dài 8K. Kết quả của

@@ -18,6 +18,13 @@
 *.rtf
 *.pdf
 
+# NGOẠI LỆ: hình của báo cáo BẮT BUỘC phải nằm trong repo.
+# Chúng là .pdf nên bị luật trên chặn, và nếu thiếu thì ai clone repo về sẽ
+# biên dịch LaTeX lỗi "file not found" mà không hiểu vì sao. Đây là hình sinh
+# tự động từ results/ bằng `python -m hyena_study.figures`, không phải tài liệu.
+!report/figures/
+!report/figures/*.pdf
+
 # Trình chiếu
 *.ppt
 *.pptx
