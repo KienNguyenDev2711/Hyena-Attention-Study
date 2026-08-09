@@ -274,19 +274,25 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--d_model", type=int, default=256)
     p.add_argument("--seq_len", type=int, default=512)
     p.add_argument("--data_seed", type=int, default=0)
-    p.add_argument("--cache_dir", default=None)
+    p.add_argument("--cache_dir", default=None,
+                   help="thu muc cache cua HuggingFace (khong phai cache token)")
+    p.add_argument("--token_cache", default="data_cache",
+                   help="thu muc cache dong token da xu ly, dung chung voi train.py")
+    p.add_argument("--no_cache", action="store_true")
     p.add_argument("--out", default=None, help="đường dẫn JSON alpha; mặc định alpha_<lang>.json")
     p.add_argument("--out_dir", default="results")
     args = p.parse_args(argv)
 
-    from .data import build_token_stream, load_wiki_texts
+    from .data import cached_token_stream
 
     print(f"[E0-b/{args.lang}] nạp {args.n_docs} bài ...")
-    texts = load_wiki_texts(args.lang, args.n_docs, seed=args.data_seed,
-                            cache_dir=args.cache_dir)
-    train_ids, _, _, tok, stats = build_token_stream(
-        texts, tokenizer_kind=args.tokenizer, vocab_size=args.vocab_size,
-        max_tokens=args.max_tokens, lang=args.lang,
+    # Dung chung cache voi train.py: chay lai E0-b voi top_k khac khong phai
+    # token hoa lai corpus tu dau.
+    train_ids, _, _, tok, stats = cached_token_stream(
+        lang=args.lang, tokenizer=args.tokenizer, vocab_size=args.vocab_size,
+        n_docs=args.n_docs, data_seed=args.data_seed,
+        max_tokens=args.max_tokens, cache_root=args.token_cache,
+        use_cache=not args.no_cache, hf_cache_dir=args.cache_dir,
     )
     print(f"[E0-b/{args.lang}] đo trên {len(train_ids):,} token "
           f"(vocab {tok.vocab_size:,}, thô hoá còn {args.top_k})")

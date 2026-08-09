@@ -33,7 +33,7 @@ import torch
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
 
-from .data import LMWindowDataset, build_token_stream, load_wiki_texts, stats_to_dict
+from .data import LMWindowDataset, cached_token_stream, stats_to_dict
 from .models import HyenaFilterConfig, LMConfig, SequenceLM
 
 
@@ -115,11 +115,15 @@ def train(args: argparse.Namespace) -> dict:
 
     # -- Dữ liệu -------------------------------------------------------------
     print(f"[{run_name}] nạp corpus {args.lang} ({args.n_docs} bài) ...")
-    texts = load_wiki_texts(args.lang, args.n_docs, seed=args.data_seed,
-                            cache_dir=args.cache_dir)
-    train_ids, val_ids, test_ids, tok, stats = build_token_stream(
-        texts, tokenizer_kind=args.tokenizer, vocab_size=args.vocab_size,
-        max_tokens=args.token_budget, lang=args.lang,
+    # Dùng cache dòng token: token hoá lại corpus ở MỖI lần chạy tốn khoảng 10
+    # phút cho một lần chạy 50M token, nhân với ~36 lần chạy là ~6 giờ GPU đốt
+    # vô ích. Cache khoá theo (lang, tokenizer, vocab, n_docs, data_seed) nên
+    # mọi seed và mọi kiến trúc dùng chung một lần token hoá.
+    train_ids, val_ids, test_ids, tok, stats = cached_token_stream(
+        lang=args.lang, tokenizer=args.tokenizer, vocab_size=args.vocab_size,
+        n_docs=args.n_docs, data_seed=args.data_seed,
+        max_tokens=args.token_budget, cache_root=args.token_cache,
+        use_cache=not args.no_cache, hf_cache_dir=args.cache_dir,
     )
     print(f"[{run_name}] token: train={len(train_ids):,} val={len(val_ids):,} "
           f"test={len(test_ids):,} | vocab={tok.vocab_size:,} "
@@ -300,7 +304,13 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     g.add_argument("--vocab_size", type=int, default=16000)
     g.add_argument("--n_docs", type=int, default=20000)
     g.add_argument("--seq_len", type=int, default=512)
-    g.add_argument("--cache_dir", default=None)
+    g.add_argument("--cache_dir", default=None,
+                   help="thư mục cache của HuggingFace (không phải cache token)")
+    g.add_argument("--token_cache", default="data_cache",
+                   help="thư mục cache dòng token đã xử lý; dùng chung cho mọi "
+                        "seed và mọi kiến trúc, tiết kiệm ~10 phút mỗi lần chạy")
+    g.add_argument("--no_cache", action="store_true",
+                   help="bỏ qua cache token, token hoá lại từ đầu")
     g.add_argument("--data_seed", type=int, default=0,
                    help="seed chọn tài liệu — GIỮ CỐ ĐỊNH giữa các lần chạy so sánh")
 
