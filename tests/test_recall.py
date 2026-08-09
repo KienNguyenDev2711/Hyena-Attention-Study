@@ -159,26 +159,36 @@ def test_task_is_actually_solvable_by_attention():
     torch.manual_seed(0)
     np.random.seed(0)
 
-    cfg = RecallConfig(vocab_size=10, seq_len=33, n_train=6000, n_val=1000,
+    # NGAN SACH HUAN LUYEN DUOC CHOT BANG THUC NGHIEM, khong phai doan.
+    # Quet tren Kaggle T4 ngay 2026-08-08 (notebooks/kaggle_E6_recall.ipynb):
+    #   vocab=10, L=33, AA,   744 buoc -> do chinh xac 0,194  (doan mo 0,100)
+    #   vocab=10, L=33, AA, 18720 buoc -> do chinh xac 1,000
+    #   vocab=10, L=33, AAA,18720 buoc -> do chinh xac 1,000
+    # Ket luan: R5 that bai truoc day KHONG phai do tac vu hong ma do NGAN SACH
+    # HUAN LUYEN qua nho. Moi chuoi chi cho dung mot nhan, nen co che tra cuu
+    # trong ngu canh can rat nhieu buoc moi hinh thanh.
+    EPOCHS, N_TRAIN = 60, 20000            # = 18720 buoc, ~90 giay tren T4
+    cfg = RecallConfig(vocab_size=10, seq_len=33, n_train=N_TRAIN, n_val=1000,
                        n_test=1000, seed=0)
     data = build_recall_dataset(cfg)
     xtr, ytr = data["train"]
     xte, yte = data["test"]
     L = xtr.shape[1]
 
+    dev = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = SequenceLM(LMConfig(
         vocab_size=cfg.vocab_size, d_model=64, layer_spec="AA",
         max_seq_len=L, dropout=0.0, n_heads=4,
-    ))
-    opt = torch.optim.AdamW(model.parameters(), lr=3e-3)
+    )).to(dev)
+    opt = torch.optim.AdamW(model.parameters(), lr=1e-3)
 
     bs = 64
-    for epoch in range(8):
+    for epoch in range(EPOCHS):
         perm = np.random.permutation(len(xtr))
         for i in range(0, len(xtr) - bs + 1, bs):
             idx = perm[i:i + bs]
-            xb = torch.from_numpy(xtr[idx])
-            yb = torch.from_numpy(ytr[idx])
+            xb = torch.from_numpy(xtr[idx]).to(dev)
+            yb = torch.from_numpy(ytr[idx]).to(dev)
             loss = F.cross_entropy(model(xb)[:, -1, :], yb)
             opt.zero_grad(set_to_none=True)
             loss.backward()
@@ -187,16 +197,60 @@ def test_task_is_actually_solvable_by_attention():
 
     model.eval()
     with torch.no_grad():
-        pred = model(torch.from_numpy(xte))[:, -1, :].argmax(-1).numpy()
+        pred = model(torch.from_numpy(xte).to(dev))[:, -1, :].argmax(-1).cpu().numpy()
     acc = float((pred == yte).mean())
     chance = chance_accuracy(cfg)
 
     assert acc > chance + 0.30, (
         f"attention chi dat {acc:.3f} so voi muc doan mo {chance:.3f}. "
-        "Tac vu co the bi cai sai hoac qua kho - KHONG duoc dung no de ket luan "
-        "ve kha nang tam xa cho toi khi moc doi chieu nay dat."
+        "Tac vu co the bi cai sai hoac ngan sach huan luyen qua nho - KHONG duoc "
+        "dung E6 de ket luan ve kha nang tam xa cho toi khi moc doi chieu nay dat."
     )
     return acc
+
+
+def test_unique_keys_spreads_query_distance():
+    """Voi unique_keys=True, khoang cach truy van phai trai deu tren toan chuoi.
+
+    Day la ly do ky thuat de co lua chon do. Khi lay khoa CO HOAN LAI tu bang chu
+    cai nho, chuoi cang dai thi moi khoa cang xuat hien nhieu lan, nen ban sao gan
+    nhat cang GAN - tang do dai chuoi lai lam GIAM khoang cach can nho. Do la do
+    sai dai luong khi muon danh gia kha nang tam xa.
+    """
+    P = 24
+    L = 2 * P + 1
+    rng = np.random.default_rng(0)
+
+    rep = make_recall_split(RecallConfig(vocab_size=10, seq_len=L), 400, rng)[0]
+    uniq = make_recall_split(
+        RecallConfig(vocab_size=64, seq_len=L, unique_keys=True), 400, rng)[0]
+
+    d_rep = query_distance(rep)
+    d_uniq = query_distance(uniq)
+    assert (d_uniq > 0).all(), "unique_keys: co mau khong tim thay khoa truy van"
+
+    # Kiem bang GIA TRI LY THUYET chu khong bang mot ty le tuy tien:
+    # moi khoa xuat hien dung mot lan tai vi tri chan 0,2,...,2P-2, truy van chon
+    # deu trong so do, nen khoang cach nhan cac gia tri 2,4,...,2P deu nhau
+    # => trung binh = P + 1.
+    expected = P + 1
+    assert abs(d_uniq.mean() - expected) < 3.0, (
+        f"unique_keys: khoang cach trung binh {d_uniq.mean():.1f}, "
+        f"ly thuyet {expected} - phan bo khong deu nhu mong doi"
+    )
+    assert d_uniq.max() >= 2 * P - 2, (
+        f"unique_keys: khoang cach xa nhat chi {d_uniq.max()}, chua phu het chuoi"
+    )
+    # va phai dai hon han so voi lay co hoan lai (do la ca ly do ton tai cua co nay)
+    assert d_uniq.mean() > 1.5 * d_rep.mean(), (
+        f"unique_keys khong trai duoc khoang cach: trung binh {d_uniq.mean():.1f} "
+        f"so voi {d_rep.mean():.1f} khi lay co hoan lai"
+    )
+    # moi khoa dung mot lan
+    for i in range(len(uniq)):
+        keys = uniq[i, 0:2 * P:2]
+        assert len(set(keys.tolist())) == P, f"mau {i}: khoa bi lap du unique_keys=True"
+    return float(d_uniq.mean())
 
 
 # -----------------------------------------------------------------------------
@@ -207,6 +261,7 @@ def main() -> int:
         ("R3  Khoang cach truy van dung", test_query_distance_is_correct),
         ("R4  Muc doan mo = 1/V", test_chance_accuracy_matches_empirical),
         ("R4b Shape cac tap du lieu", test_splits_have_right_shapes),
+        ("R4c unique_keys trai deu khoang cach", test_unique_keys_spreads_query_distance),
         ("R5  TAC VU GIAI DUOC (attention)", test_task_is_actually_solvable_by_attention),
     ]
     n_fail = n_skip = 0

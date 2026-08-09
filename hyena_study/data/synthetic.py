@@ -36,6 +36,20 @@ QUYET DINH CAI DAT (paper khong dac ta chi tiet, day la lua chon cua nhom):
        appear in the prompt").
   (S3) Ham mat mat chi tinh tren VI TRI CUOI CUNG. Tinh tren moi vi tri se lam
        loang tin hieu bang phan du doan cac token dem.
+  (S4) `unique_keys` - moi khoa xuat hien DUNG MOT LAN trong chuoi.
+
+       Vi sao can co lua chon nay: khi lay khoa co hoan lai tu mot bang chu cai
+       nho, chuoi cang DAI thi moi khoa cang xuat hien NHIEU LAN, nen ban sao gan
+       nhat cua khoa truy van lai cang GAN. Nghia la tang do dai chuoi khong he
+       lam tang khoang cach can nho - no lam GIAM. Dung cau hinh do de do kha
+       nang tam xa la do sai dai luong.
+
+       Vi du: vocab=10, 64 cap => moi khoa xuat hien khoang 6,4 lan, ban sao gan
+       nhat thuong chi cach vai token.
+
+       Voi `unique_keys=True`, moi khoa chi co dung mot lan nen khoang cach truy
+       van trai deu tren toan chuoi - do moi la thu can do. Doi lai can
+       vocab_size >= n_pairs va tac vu kho hon han.
 """
 
 from __future__ import annotations
@@ -55,6 +69,7 @@ class RecallConfig:
     n_val: int = 2000
     n_test: int = 2000
     seed: int = 0
+    unique_keys: bool = False   # xem ghi chu (S4)
 
     @property
     def n_pairs(self) -> int:
@@ -67,6 +82,11 @@ class RecallConfig:
         if self.n_pairs < 1:
             raise ValueError(
                 f"seq_len={self.seq_len} qua ngan, khong chua noi mot cap khoa-gia tri"
+            )
+        if self.unique_keys and self.vocab_size < self.n_pairs:
+            raise ValueError(
+                f"unique_keys=True can vocab_size >= n_pairs ({self.n_pairs}), "
+                f"dang co {self.vocab_size}"
             )
 
 
@@ -89,8 +109,12 @@ def make_recall_split(cfg: RecallConfig, n_samples: int,
     for i in range(n_samples):
         # (S1) hoan vi ngau nhien => anh xa khoa -> gia tri luon don tri
         mapping = rng.permutation(V)
-        # (S2) lay khoa co hoan lai
-        keys = rng.integers(0, V, size=P)
+        if cfg.unique_keys:
+            # (S4) moi khoa dung mot lan => khoang cach truy van trai deu
+            keys = rng.choice(V, size=P, replace=False)
+        else:
+            # (S2) lay khoa co hoan lai
+            keys = rng.integers(0, V, size=P)
         vals = mapping[keys]
 
         x[i, 0:2 * P:2] = keys
