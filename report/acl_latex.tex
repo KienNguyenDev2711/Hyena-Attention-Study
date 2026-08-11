@@ -3,14 +3,12 @@
 %  Mon: Chuyen de nghien cuu va Xu ly ngon ngu tu nhien
 %
 %  QUAN TRONG VE CACH BIEN DICH:
-%  File nay phai bien dich bang LuaLaTeX hoac XeLaTeX, KHONG dung pdfLaTeX.
-%  Ly do: ban pdfLaTeX cua template ACL dung \usepackage[T1]{fontenc}, ma ma
-%  hoa T1 khong chua cac ky tu tieng Viet nhu a-grave-breve, u-tilde-horn,
-%  o-dot-horn. Bien dich bang pdfLaTeX se ra chu sai hoac bao loi.
-%  Font TeXGyreTermesX (dung trong ban acl_lualatex.tex chinh thuc) co day du
-%  dau tieng Viet.
+%  Nen chon LuaLaTeX tren Overleaf: Menu > Compiler > LuaLaTeX.
+%  Ly do: ma hoa T1 mac dinh cua template ACL khong chua cac ky tu tieng Viet
+%  nhu a-grave-breve, u-tilde-horn, o-dot-horn.
 %
-%  Tren Overleaf: Menu > Compiler > LuaLaTeX
+%  Tu 2026-08-11 file da co khoi \ifPDFTeX nen bien dich bang pdfLaTeX cung
+%  ra ban dung (nhanh do nap ma hoa T5 cua vntex). Chi tiet o phan mo dau.
 %
 %  Can co trong cung thu muc: acl.sty, acl_natbib.bst, custom.bib
 %  (lay tu template chinh thuc: https://github.com/acl-org/acl-style-files)
@@ -25,8 +23,41 @@
 \usepackage{acl}
 
 \usepackage{microtype}
+
+% ---------------------------------------------------------------------------
+% CHON FONT THEO BO BIEN DICH. Doc ky truoc khi sua.
+%
+% LOI DA GAP (bien ban 2026-08-11): ban truoc goi thang \babelfont{rm}{...}.
+% \babelfont CHI ton tai voi LuaTeX va XeTeX. Khi bien dich bang pdfLaTeX,
+% babel khong dung lai ma DAT THONG DIEP LOI VAO TRANG GIAY, tai thoi diem
+% \begin{document}. Doan chu la "only-lua-xermTeXGyreTermesX" nhin thay tren
+% ban in chinh la thong diep do: ma loi "only-lua-xe" noi lien hai tham so
+% "rm" va ten font.
+%
+% Va vi \maketitle cua acl.sty goi \twocolumn, ma \twocolumn luon ngat sang
+% trang moi, nen doan chu loi do chiem tron trang 1 con tieu de bi day xuong
+% trang 2. Trang trang o dau bao cao va doan chu la la CUNG MOT LOI.
+%
+% Khoi \ifPDFTeX duoi day lam file chay duoc voi ca hai bo bien dich, nen
+% chon nham compiler khong con sinh ra ban in hong nua. Du vay VAN NEN chon
+% LuaLaTeX tren Overleaf (Menu > Compiler > LuaLaTeX) vi nhanh fontspec cho
+% chu tieng Viet dep hon.
+% ---------------------------------------------------------------------------
+\usepackage{iftex}
+\ifPDFTeX
+  % pdfLaTeX: phai dung ma hoa T5 cua vntex. T1 KHONG chua ky tu tieng Viet.
+  % Dat sau \usepackage{acl} nen T5 la ma hoa mac dinh (lenh nap sau thang).
+  \usepackage[T5]{fontenc}
+\else
+  % LuaLaTeX hoac XeLaTeX. Ba font TeX Gyre di cung mot goi trong TeX Live
+  % nen neu thieu thi thieu ca ba; khi do chi can chu thich ca ba dong,
+  % Latin Modern mac dinh cung co day du dau tieng Viet.
+  \usepackage{fontspec}
+  \setmainfont{TeX Gyre Termes}
+  \setsansfont{TeX Gyre Heros}
+  \setmonofont{TeX Gyre Cursor}
+\fi
 \usepackage[vietnamese]{babel}
-\babelfont{rm}{TeXGyreTermesX}
 
 \usepackage{graphicx}
 \usepackage{booktabs}
@@ -43,19 +74,21 @@
 % mot ban bao cao con lo trong.
 \newcommand{\chuacoso}[1]{\textcolor{red}{\textbf{[CHUA CO SO LIEU: #1]}}}
 
-\title{Hyena cho tiếng Việt: Mô hình ngôn ngữ tích chập dài dưới bậc hai,\\
+% KHONG dat \\ trong tieu de. Tieu de dai hon mot dong nen dau ngat tay roi
+% vao giua dong, de lai mot dong chi co hai chu "hai," va mot dong chi co
+% "corpus". De LaTeX tu ngat thi ba dong can nhau.
+\title{Hyena cho tiếng Việt: Mô hình ngôn ngữ tích chập dài dưới bậc hai,
 phân tích ablation và khởi tạo bộ lọc từ cấu trúc thông tin của corpus}
 
+% Ban truoc dung \And de xep ba tac gia thanh ba cot canh nhau. Moi dia chi
+% thu dien tu dai 25 ky tu, ba dia chi canh nhau vuot chieu ngang trang nen
+% chung dinh lien vao nhau khong con khoang trong. Ca nhom cung mot don vi
+% nen gop lam mot khoi va viet chung ten mien, dung cach thong dung cua ACL.
+% Ma so hoc vien khong mat di vi no chinh la phan dau dia chi thu.
 \author{
-  Nguyễn Cao Trung Kiên \\
-  250201069 \\
-  \texttt{250201069@grad.uit.edu.vn} \\\And
-  Tô Huỳnh Minh Tiền \\
-  250201095 \\
-  \texttt{250201095@grad.uit.edu.vn} \\\And
-  Trần Tú Quang \\
-  250201084 \\
-  \texttt{250201084@grad.uit.edu.vn} \\
+  Nguyễn Cao Trung Kiên \quad Tô Huỳnh Minh Tiến \quad Trần Tú Quang \\
+  Trường Đại học Công nghệ Thông tin, ĐHQG-HCM \\
+  \texttt{\{250201069, 250201095, 250201084\}@grad.uit.edu.vn}
 }
 
 \begin{document}
