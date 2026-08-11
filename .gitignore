@@ -16,7 +16,6 @@
 *.docx
 *.odt
 *.rtf
-*.pdf
 
 # NGOẠI LỆ: hình của báo cáo BẮT BUỘC phải nằm trong repo.
 # Chúng là .pdf nên bị luật trên chặn, và nếu thiếu thì ai clone repo về sẽ
