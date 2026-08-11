@@ -34,6 +34,11 @@
 \usepackage{amssymb}
 \usepackage{xcolor}
 
+% Thu hep khoang cach giua cac cot cua bang. Mac dinh 6pt lam nhieu bang so
+% lieu rong hon mot cot cua bo cuc hai cot, khien chung tran sang cot ben canh
+% va de len chu. 4pt du thoang ma van vua.
+\setlength{\tabcolsep}{4pt}
+
 % Danh dau cho phan chua co so lieu. In do dam mau do de khong the nop nham
 % mot ban bao cao con lo trong.
 \newcommand{\chuacoso}[1]{\textcolor{red}{\textbf{[CHUA CO SO LIEU: #1]}}}
@@ -44,13 +49,13 @@ phân tích ablation và khởi tạo bộ lọc từ cấu trúc thông tin c�
 \author{
   Nguyễn Cao Trung Kiên \\
   250201069 \\
-  \texttt{250201069@gm.uit.edu.vn} \\\And
+  \texttt{250201069@grad.uit.edu.vn} \\\And
   Tô Huỳnh Minh Tiền \\
   250201095 \\
-  \texttt{250201095@gm.uit.edu.vn} \\\And
+  \texttt{250201095@grad.uit.edu.vn} \\\And
   Trần Tú Quang \\
   250201084 \\
-  \texttt{250201084@gm.uit.edu.vn} \\
+  \texttt{250201084@grad.uit.edu.vn} \\
 }
 
 \begin{document}
@@ -215,7 +220,10 @@ Một phép đo chưa được hiệu chuẩn trên dữ liệu có đáp án bi
 dùng để kết luận được. Chúng tôi kiểm công cụ đo trên ba chuỗi nhân tạo, kết
 quả trong Bảng~\ref{tab:hieuchuan}.
 
-\begin{table}[t]
+% Bang nay co BA cot chu dai nen KHONG vua mot cot cua bo cuc hai cot; de
+% \begin{table} thi no tran sang cot ben canh va de len chu. Dung table* de
+% trai het chieu ngang trang.
+\begin{table*}[t]
 \centering
 \small
 \begin{tabular}{lll}
@@ -223,7 +231,7 @@ quả trong Bảng~\ref{tab:hieuchuan}.
 Chuỗi nhân tạo & Đáp án đúng & Bộ đo trả về \\
 \midrule
 Độc lập hoàn toàn & $I = 0$ & dư 2,82\% độ chệch \\
-Chu kỳ sao chép $k=8$ & đỉnh tại $d=8$ & đúng $d=8$, nổi 84$\times$ \\
+Chu kỳ sao chép $k=8$ & đỉnh tại $d=8$ & đúng $d=8$, nổi 84$\times$ trên nền \\
 Markov & giảm đơn điệu & $I(1)=2{,}79$, tắt ở $d=64$ \\
 Suy biến (toàn 0) & phải từ chối & báo lỗi, không sinh $\alpha$ \\
 \bottomrule
@@ -231,7 +239,7 @@ Suy biến (toàn 0) & phải từ chối & báo lỗi, không sinh $\alpha$ \\
 \caption{Hiệu chuẩn công cụ đo thông tin tương hỗ trên dữ liệu có đáp án biết
 trước, trước khi áp lên corpus thật.}
 \label{tab:hieuchuan}
-\end{table}
+\end{table*}
 
 \subsection{Ánh xạ sang phân bố suy giảm}
 
@@ -504,21 +512,22 @@ chứng.
 \begin{table}[t]
 \centering
 \small
-\begin{tabular}{lrrl}
+\begin{tabular}{lrrc}
 \toprule
-Cấu hình & PPL & $\Delta$ & Kết luận \\
+Cấu hình & PPL & $\Delta$ & Tách rời \\
 \midrule
 Gốc (bậc 2, đủ) & 51,38 & & \\
 \midrule
-Bỏ cửa sổ suy giảm & 53,30 & $+1,92$ & có ý nghĩa \\
-Bậc $N = 1$        & 53,11 & $+1,73$ & có ý nghĩa \\
-Bỏ kích hoạt sine  & 51,80 & $+0,42$ & không kết luận \\
-Bậc $N = 3$        & 51,63 & $+0,25$ & không kết luận \\
-Bỏ positional emb  & 50,79 & $-0,59$ & không kết luận \\
+Bỏ cửa sổ suy giảm & 53,30 & $+1,92$ & có \\
+Bậc $N = 1$        & 53,11 & $+1,73$ & có \\
+Bỏ kích hoạt sine  & 51,80 & $+0,42$ & không \\
+Bậc $N = 3$        & 51,63 & $+0,25$ & không \\
+Bỏ positional emb  & 50,79 & $-0,59$ & không \\
 \bottomrule
 \end{tabular}
-\caption{Ablation trên tiếng Việt, 2 seed cho mỗi nhánh. Cột kết luận cho biết
-khoảng tin cậy 95\% có tách rời khỏi cấu hình gốc hay không.}
+\caption{Ablation trên tiếng Việt, 2 seed cho mỗi nhánh. Cột cuối cho biết
+khoảng tin cậy 95\% có tách rời khỏi cấu hình gốc hay không; chỉ những dòng ghi
+"có" mới được rút ra kết luận.}
 \label{tab:e3}
 \end{table}
 
@@ -593,11 +602,13 @@ so với đường cơ sở thứ nhất sẽ thổi phồng mức tăng tốc n
 \begin{table}[t]
 \centering
 \small
+% Tieu de cot rut gon toi da: ban dai "vs sdpa / vs ngay tho" lam bang rong
+% hon mot cot cua bo cuc hai cot va tran sang cot ben canh.
 \begin{tabular}{lrrrr}
 \toprule
-& \multicolumn{2}{c}{Lượt tiến} & \multicolumn{2}{c}{Lượt tiến và lùi} \\
+& \multicolumn{2}{c}{tiến} & \multicolumn{2}{c}{tiến và lùi} \\
 \cmidrule(lr){2-3}\cmidrule(lr){4-5}
-$L$ & vs \textsf{sdpa} & vs ngây thơ & vs \textsf{sdpa} & vs ngây thơ \\
+$L$ & \textsf{sdpa} & ngây thơ & \textsf{sdpa} & ngây thơ \\
 \midrule
 256  & 0,16 & 0,55 & 0,23 & 0,47 \\
 512  & 0,22 & 0,92 & 0,27 & 0,82 \\
@@ -607,8 +618,10 @@ $L$ & vs \textsf{sdpa} & vs ngây thơ & vs \textsf{sdpa} & vs ngây thơ \\
 8192 & \textbf{1,19} & OOM & \textbf{1,88} & OOM \\
 \bottomrule
 \end{tabular}
-\caption{Mức tăng tốc của Hyena so với hai đường cơ sở attention (số lớn hơn 1
-nghĩa là Hyena nhanh hơn). Cài đặt ngây thơ hết bộ nhớ ở $L = 8192$.}
+\caption{Mức tăng tốc của Hyena so với hai đường cơ sở attention, tính bằng
+thương số thời gian chạy (số lớn hơn 1 nghĩa là Hyena nhanh hơn). Cột
+\textsf{sdpa} là kernel tiết kiệm bộ nhớ của PyTorch, cột "ngây thơ" là cài đặt
+materialise ma trận $L \times L$. Cài đặt ngây thơ hết bộ nhớ ở $L = 8192$.}
 \label{tab:e5}
 \end{table}
 
