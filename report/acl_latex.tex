@@ -108,8 +108,9 @@ trên tiếng Việt và 15,5\% trên tiếng Anh. Về hiệu năng, Hyena vư�
 attention tiết kiệm bộ nhớ 1,88 lần ở độ dài 8192 cho lượt tiến và lùi, tiệm
 cận mức 2 lần mà bài báo gốc công bố. Về đóng góp đề xuất, chúng tôi đo được
 tiếng Việt mang lượng thông tin tương hỗ cục bộ gấp 1,66 đến 2,27 lần tiếng
-Anh, nhưng nhánh đối chứng cho thấy bộ lọc suy ra từ hai ngôn ngữ gần như trùng
-nhau (lệch 14,3\%, tương quan log 0,9974). Thực nghiệm xác nhận dự đoán đó:
+Anh, nhưng nhánh đối chứng cho thấy bộ lọc suy ra từ hai ngôn ngữ gần nhau:
+chênh lệch tương đối trung bình là 14,3\% nếu lấy độ dài hiệu dụng tiếng Anh
+làm mẫu số. Thực nghiệm xác nhận dự đoán đó:
 khởi tạo từ corpus chỉ hơn một đường cơ sở cách đều theo thang log 0,285 PPL
 với khoảng tin cậy chồng lấn, trong khi cả hai cùng vượt đường cơ sở đặt tuỳ
 tiện khoảng 1 PPL. Kết luận trung thực là khoảng giá trị của tham số suy giảm
@@ -280,6 +281,15 @@ Chúng tôi coi $I(d)$ là khối lượng thông tin nằm tại khoảng cách
 thành một phân bố xác suất trên khoảng cách, rồi lấy $D$ phân vị cách đều làm
 tập độ dài hiệu dụng $\{\ell_i\}$, cuối cùng đặt $\alpha_i = L / \ell_i$. Nơi
 tập trung nhiều thông tin sẽ được cấp nhiều kênh hơn.
+
+Trong các lần chạy E4, file $\alpha$ của nhánh corpus được sinh từ phép đo BPE
+với $K=500$, nhưng mô hình ngôn ngữ chính lại huấn luyện với đơn vị âm tiết.
+Do đó độ dài hiệu dụng đang được chuyển nguyên từ token BPE sang vị trí token
+âm tiết. Tỉ lệ ký tự trên mỗi token trong file đo là 3,851 so với 4,118 ở nhánh
+huấn luyện tiếng Việt, và 4,155 so với 5,115 ở nhánh tiếng Anh. Đây là lệch
+thang đơn vị khoảng 6,5\% và 19\%, nhưng chúng tôi chỉ xem nó là một hạn chế về
+diễn giải, không diễn giải trực tiếp thành sai số perplexity vì chưa có thí
+nghiệm cô lập yếu tố này.
 
 \subsection{Hai đường cơ sở, và vì sao cần cả hai}
 
@@ -454,9 +464,15 @@ của chúng tôi.
 
 Với nhiễu loạn token ngoài từ điển đã được khử, bộ lọc suy ra từ corpus tiếng
 Việt và từ corpus tiếng Anh gần như trùng nhau: trung vị độ dài hiệu dụng 2,95
-so với 2,85 token, lệch tương đối trung bình 14,3\%, tương quan giữa log các độ
-dài hiệu dụng đạt 0,9974. Trong khi đó, cùng bộ lọc ấy lệch 75,8\% so với đường
-cơ sở \textsf{logspace}.
+so với 2,85 token. Cụ thể, trên 256 kênh đã sắp theo phân vị, độ lệch tương
+đối trung bình $\mathrm{mean}(|\ell_{\text{vi}}-\ell_{\text{en}}|/
+\ell_{\text{en}})$ bằng 14,3\%; nếu đổi mẫu số sang $\ell_{\text{vi}}$ thì con
+số là 22,3\%, và thước đo đối xứng cho 17,3\%. Tương quan Pearson giữa
+$\log \ell_{\text{vi}}$ và $\log \ell_{\text{en}}$ là 0,9974, nhưng chỉ nên xem
+nó là mô tả hình dạng của hai vector phân vị đơn điệu, vì cặp corpus tiếng Việt
+với đường cơ sở \textsf{logspace} vẫn đạt tương quan log 0,9377 dù độ lệch tương
+đối trung bình đã là 75,8\% khi lấy \textsf{logspace} làm mẫu số. Các số này
+được tái sinh bởi \texttt{python3 -m hyena\_study.analyze}.
 
 Nguyên nhân nằm ở chính công thức ánh xạ: chuẩn hoá $I(d)$ thành phân bố xác
 suất làm triệt tiêu hệ số tỉ lệ chung, chỉ giữ lại hình dạng, mà hình dạng thì
@@ -781,6 +797,37 @@ Corpus tiếng Anh được lấy mẫu ở chế độ streaming, trong đó vi
 diễn ra trong một bộ đệm hữu hạn chứ không xáo toàn cục, nên mẫu lệch về phía
 đầu tập dữ liệu. Thiên lệch này áp dụng đồng nhất cho cả hai ngôn ngữ nên triệt
 tiêu khi so sánh, nhưng chúng tôi nêu rõ để người đọc tự đánh giá.
+
+Một hạn chế riêng của cách sinh $\alpha$ nằm ở phép ánh xạ từ $I(d)$ sang phân
+bố độ dài hiệu dụng. Hàm \texttt{alphas\_from\_mi} hiện coi mỗi điểm trên lưới
+log của $d$ là một khối lượng xác suất rồi chuẩn hoá trực tiếp, tức chưa nhân
+với bề rộng ô quanh từng điểm. Vì lưới log dày ở khoảng cách ngắn và thưa ở
+khoảng cách dài, quy ước này kéo phân bố về phía các lag nhỏ. Bảng dưới là phân
+tích độ nhạy từ cùng các file \texttt{E0b\_mi\_decay\_*\_bpe\_k500.csv}; hàng có
+trọng số bề rộng ô chỉ là kiểm tra độ nhạy, không phải kết quả huấn luyện mới.
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{llrrr}
+\toprule
+Ngôn ngữ & Cách tính & trung vị & $\le 4$ & $\le 34$ \\
+\midrule
+VI & lưới log như khối lượng & 2,95 & 142 & 227 \\
+VI & nhân bề rộng ô & 90,54 & 39 & 87 \\
+EN & lưới log như khối lượng & 2,85 & 141 & 214 \\
+EN & nhân bề rộng ô & 160,45 & 27 & 57 \\
+\bottomrule
+\end{tabular}
+\caption{Độ nhạy của phân bố độ dài hiệu dụng khi đổi quy ước khối lượng xác
+suất trên lưới lag. Các hàng đầu là đúng artifact đã dùng trong E4; các hàng
+nhân bề rộng ô chỉ kiểm tra độ nhạy của diễn giải.}
+\label{tab:alpha_sensitivity}
+\end{table}
+
+Vì vậy phát biểu "bộ lọc corpus có trung vị khoảng 3 token" phải được hiểu theo
+đúng quy ước rời rạc đang dùng trong code, không phải kết luận duy nhất về nơi
+toàn bộ thông tin dự đoán của corpus nằm trong thang khoảng cách liên tục.
 
 Cuối cùng, so sánh "cùng số ký tự" giữa hai ngôn ngữ không phải là "cùng lượng
 nội dung". Muốn khẳng định chuỗi tiếng Việt dài hơn ở cùng nội dung cần văn bản

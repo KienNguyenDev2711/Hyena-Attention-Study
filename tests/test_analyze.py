@@ -25,11 +25,16 @@ import sys
 import tempfile
 from pathlib import Path
 
+import numpy as np
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from hyena_study.analyze import (  # noqa: E402
+    alpha_comparison_metrics,
+    alpha_mapping_sensitivity,
     detect_bimodal,
     group_key,
+    lag_bin_widths,
     latex_table,
     load_lm_runs,
     main,
@@ -211,6 +216,50 @@ def test_runs_end_to_end_on_empty_results():
         shutil.rmtree(tmp, ignore_errors=True)
 
 
+def test_lag_width_sensitivity_reproduces_report_numbers():
+    """T5/Tien: log-grid atoms and width-weighted MI mass give different medians."""
+    results = Path(__file__).resolve().parents[1] / "results"
+    rows = alpha_mapping_sensitivity(results)
+    by = {(r["lang"], r["method"]): r for r in rows}
+
+    assert abs(by[("vi", "log-grid-atoms")]["median"] - 2.95) < 0.01
+    assert by[("vi", "log-grid-atoms")]["le4"] == 142
+    assert by[("vi", "log-grid-atoms")]["le34"] == 227
+    assert abs(by[("vi", "width-weighted")]["median"] - 90.54) < 0.01
+    assert by[("vi", "width-weighted")]["le4"] == 39
+    assert by[("vi", "width-weighted")]["le34"] == 87
+
+    assert abs(by[("en", "log-grid-atoms")]["median"] - 2.85) < 0.01
+    assert by[("en", "log-grid-atoms")]["le4"] == 141
+    assert by[("en", "log-grid-atoms")]["le34"] == 214
+    assert abs(by[("en", "width-weighted")]["median"] - 160.45) < 0.01
+    assert by[("en", "width-weighted")]["le4"] == 27
+    assert by[("en", "width-weighted")]["le34"] == 57
+    return len(rows)
+
+
+def test_lag_bin_widths_are_midpoint_bins():
+    widths = lag_bin_widths(np.array([1, 2, 4, 8]))
+    assert np.allclose(widths, [1.0, 1.5, 3.0, 4.0])
+    return True
+
+
+def test_alpha_comparison_metrics_reproduce_report_numbers():
+    """T10/Tien: every headline alpha-comparison number must come from code."""
+    results = Path(__file__).resolve().parents[1] / "results"
+    m = alpha_comparison_metrics(results)
+    assert m["n_channels"] == 256
+    assert abs(m["vi_median"] - 2.95) < 0.01
+    assert abs(m["en_median"] - 2.85) < 0.01
+    assert abs(m["vi_en_mean_abs_rel_den_en_pct"] - 14.35) < 0.01
+    assert abs(m["vi_en_mean_abs_rel_den_vi_pct"] - 22.29) < 0.01
+    assert abs(m["vi_en_symmetric_pct"] - 17.27) < 0.01
+    assert abs(m["vi_en_corr_log"] - 0.9974) < 0.0001
+    assert abs(m["vi_logspace_mean_abs_rel_den_logspace_pct"] - 75.81) < 0.01
+    assert abs(m["vi_logspace_corr_log"] - 0.9377) < 0.0001
+    return m["n_channels"]
+
+
 # -----------------------------------------------------------------------------
 def main_runner() -> int:
     tests = [
@@ -224,6 +273,9 @@ def main_runner() -> int:
         ("A8 Bang LaTeX khong co gach dai", test_latex_table_has_no_em_dash),
         ("A9 Danh dau nhom luong cuc trong bang", test_bimodal_group_is_flagged_in_latex),
         ("A10 Chay duoc tren thu muc rong", test_runs_end_to_end_on_empty_results),
+        ("A11 T5 sensitivity tai sinh so report", test_lag_width_sensitivity_reproduces_report_numbers),
+        ("A12 Be rong o lag dung midpoint", test_lag_bin_widths_are_midpoint_bins),
+        ("A13 T10 metric alpha tai sinh so report", test_alpha_comparison_metrics_reproduce_report_numbers),
     ]
     n_fail = 0
     for name, fn in tests:

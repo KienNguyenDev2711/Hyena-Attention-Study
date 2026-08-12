@@ -327,6 +327,163 @@ def analyse_recall(results_dir: Path) -> None:
 
 
 # -----------------------------------------------------------------------------
+def _load_effective_lengths(path: Path) -> np.ndarray:
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    return np.asarray(payload["effective_lengths"], dtype=float)
+
+
+def _load_mi_curve(path: Path) -> tuple[np.ndarray, np.ndarray]:
+    with path.open(encoding="utf-8") as fh:
+        rows = list(csv.DictReader(fh))
+    lags = np.asarray([int(r["lag"]) for r in rows], dtype=float)
+    mi = np.asarray([float(r["mi_corrected_nats"]) for r in rows], dtype=float)
+    return lags, mi
+
+
+def lag_bin_widths(lags: np.ndarray) -> np.ndarray:
+    """Voronoi bin widths for a sampled lag grid.
+
+    T5/Tien: sensitivity analysis for the report limitation about treating a
+    log-spaced MI grid as probability atoms without multiplying by bin width.
+
+    The current alpha mapping treats each sampled lag as one probability atom.
+    For sensitivity analysis, this helper approximates the continuous mass around
+    each lag by the distance between midpoints to neighbouring sampled lags.
+    """
+    lags = np.asarray(lags, dtype=float)
+    if lags.ndim != 1 or len(lags) < 2:
+        raise ValueError("can it nhat hai lag de tinh be rong o")
+    edges = np.empty(len(lags) + 1, dtype=float)
+    edges[1:-1] = (lags[:-1] + lags[1:]) / 2.0
+    edges[0] = max(0.0, lags[0] - (lags[1] - lags[0]) / 2.0)
+    edges[-1] = lags[-1] + (lags[-1] - lags[-2]) / 2.0
+    return np.diff(edges)
+
+
+def effective_length_summary(eff: np.ndarray) -> dict:
+    eff = np.asarray(eff, dtype=float)
+    return {
+        "median": float(np.median(eff)),
+        "le4": int(np.sum(eff <= 4.0)),
+        "le34": int(np.sum(eff <= 34.0)),
+    }
+
+
+def alpha_mapping_sensitivity(results_dir: Path, d_model: int = 256,
+                              seq_len: int = 512) -> list[dict]:
+    """Reproduce the T5 sensitivity check for corpus alpha files used in E4.
+
+    T5/Tien: this intentionally does not change the alpha files used in training.
+    It only quantifies how much the interpretation changes if MI mass is weighted
+    by lag-bin width.
+
+    Rows compare the shipped alpha artifact against a width-weighted variant
+    built from the same MI CSV. The width-weighted row is a sensitivity analysis,
+    not a new training result.
+    """
+    from .morphology import alphas_from_mi
+
+    rows = []
+    for lang in ("vi", "en"):
+        alpha_path = results_dir / f"alpha_{lang}_bpe500.json"
+        mi_path = results_dir / f"E0b_mi_decay_{lang}_bpe_k500.csv"
+        if not alpha_path.exists() or not mi_path.exists():
+            continue
+
+        eff = _load_effective_lengths(alpha_path)
+        rows.append({
+            "lang": lang,
+            "method": "log-grid-atoms",
+            **effective_length_summary(eff),
+        })
+
+        lags, mi = _load_mi_curve(mi_path)
+        weighted = alphas_from_mi(
+            lags, mi * lag_bin_widths(lags), d_model=d_model, seq_len=seq_len
+        )
+        rows.append({
+            "lang": lang,
+            "method": "width-weighted",
+            **effective_length_summary(np.asarray(weighted.effective_lengths, dtype=float)),
+        })
+    return rows
+
+
+def alpha_comparison_metrics(results_dir: Path, d_model: int = 256,
+                             seq_len: int = 512) -> dict:
+    """Reproduce the T10 numbers comparing effective-length vectors.
+
+    T10/Tien: keep denominator, metric, sample size, and correlation variables
+    explicit so the report's 14.3% and 0.9974 claims are reproducible.
+
+    All comparisons use the 256 sorted effective lengths in
+    `alpha_vi_bpe500.json`, `alpha_en_bpe500.json`, and the logspace baseline.
+    Relative differences are means over channels. `*_den_*` names state the
+    denominator explicitly.
+    """
+    from .morphology import logspaced_alphas
+
+    vi = _load_effective_lengths(results_dir / "alpha_vi_bpe500.json")
+    en = _load_effective_lengths(results_dir / "alpha_en_bpe500.json")
+    logspace = np.asarray(
+        logspaced_alphas(d_model, seq_len=seq_len).effective_lengths, dtype=float
+    )
+
+    def rel(a: np.ndarray, b: np.ndarray) -> float:
+        return float(np.mean(np.abs(a - b) / b) * 100.0)
+
+    def corr_log(a: np.ndarray, b: np.ndarray) -> float:
+        return float(np.corrcoef(np.log(a), np.log(b))[0, 1])
+
+    return {
+        "n_channels": int(len(vi)),
+        "vi_median": float(np.median(vi)),
+        "en_median": float(np.median(en)),
+        "vi_en_mean_abs_rel_den_en_pct": rel(vi, en),
+        "vi_en_mean_abs_rel_den_vi_pct": rel(en, vi),
+        "vi_en_symmetric_pct": float(np.mean(2.0 * np.abs(vi - en) / (vi + en)) * 100.0),
+        "vi_en_corr_log": corr_log(vi, en),
+        "vi_logspace_mean_abs_rel_den_logspace_pct": rel(vi, logspace),
+        "en_logspace_mean_abs_rel_den_logspace_pct": rel(en, logspace),
+        "vi_logspace_corr_log": corr_log(vi, logspace),
+        "en_logspace_corr_log": corr_log(en, logspace),
+    }
+
+
+def analyse_alpha_diagnostics(results_dir: Path) -> None:
+    """Print diagnostics for the alpha-method claims in the report."""
+    sens = alpha_mapping_sensitivity(results_dir)
+    if not sens:
+        print("  (thieu alpha/MI artifact de phan tich sensitivity)")
+    else:
+        print("  T5 sensitivity: anh xa I(d) sang do dai hieu dung")
+        print(f"  {'lang':<4}{'cach tinh':<18}{'trung vi':>10}{'<=4':>8}{'<=34':>8}")
+        for r in sens:
+            print(f"  {r['lang']:<4}{r['method']:<18}{r['median']:>10.2f}"
+                  f"{r['le4']:>8}{r['le34']:>8}")
+
+    try:
+        m = alpha_comparison_metrics(results_dir)
+    except FileNotFoundError:
+        print("\n  (thieu alpha artifact de so sanh bo loc)")
+        return
+    print("\n  T10 effective-length comparison (n = "
+          f"{m['n_channels']} kenh, metric = mean absolute relative difference)")
+    print(f"  VI median {m['vi_median']:.2f}, EN median {m['en_median']:.2f}")
+    print("  VI vs EN: "
+          f"{m['vi_en_mean_abs_rel_den_en_pct']:.2f}% (denominator EN), "
+          f"{m['vi_en_mean_abs_rel_den_vi_pct']:.2f}% (denominator VI), "
+          f"{m['vi_en_symmetric_pct']:.2f}% (symmetric)")
+    print("  corr(log ell): "
+          f"VI-EN {m['vi_en_corr_log']:.4f}; "
+          f"VI-logspace {m['vi_logspace_corr_log']:.4f}; "
+          f"EN-logspace {m['en_logspace_corr_log']:.4f}")
+    print("  corpus vs logspace mean abs rel (denominator logspace): "
+          f"VI {m['vi_logspace_mean_abs_rel_den_logspace_pct']:.2f}%, "
+          f"EN {m['en_logspace_mean_abs_rel_den_logspace_pct']:.2f}%")
+
+
+# -----------------------------------------------------------------------------
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(description="Tong hop ket qua thanh bang bao cao")
     p.add_argument("--results", default="results")
@@ -355,6 +512,10 @@ def main(argv: list[str] | None = None) -> int:
         print("E6: ASSOCIATIVE RECALL")
         print("=" * 86)
         analyse_recall(d)
+        print("\n" + "=" * 86)
+        print("ALPHA DIAGNOSTICS")
+        print("=" * 86)
+        analyse_alpha_diagnostics(d)
 
     tex = []
     for tag, cap, lab in [
