@@ -257,6 +257,31 @@ def test_lr_schedule_shape():
     return True
 
 
+def test_max_train_tokens_flag_parses():
+    """Cờ --max_train_tokens phải tồn tại, mặc định None (giữ hành vi cũ)."""
+    from hyena_study.train import parse_args
+    assert parse_args([]).max_train_tokens is None
+    assert parse_args(["--max_train_tokens", "38250964"]).max_train_tokens == 38_250_964
+    return True
+
+
+def test_max_train_tokens_decoupled_from_budget():
+    """Cắt corpus phải TÁCH RỜI khỏi đếm bước huấn luyện (T13).
+
+    Không truyền cờ thì cắt theo token_budget như cũ — mọi kết quả E1--E4 cũ vẫn
+    tái lập được. Truyền cờ thì corpus bị cắt theo cờ nhưng token_budget (quyết
+    định số bước) giữ nguyên — đây chính là nhánh đối chứng "cùng số token":
+    corpus EN cắt xuống đúng 38.250.964 token của VI, vẫn huấn luyện đủ 50M.
+    """
+    from hyena_study.train import parse_args, resolve_max_train_tokens
+    a = parse_args(["--token_budget", "50000000"])
+    assert resolve_max_train_tokens(a) == 50_000_000, "hành vi cũ bị đổi"
+    a = parse_args(["--token_budget", "50000000", "--max_train_tokens", "38250964"])
+    assert resolve_max_train_tokens(a) == 38_250_964, "cờ không có tác dụng"
+    assert a.token_budget == 50_000_000, "cờ không được đụng vào token_budget"
+    return True
+
+
 # -----------------------------------------------------------------------------
 def main() -> int:
     tests = [
@@ -271,6 +296,8 @@ def main() -> int:
         ("P3d Hyena học được KHÔNG cần pos-emb", test_hyena_learns_without_positional_embedding),
         ("P4a Đường ống alpha-corpus (E4)", test_corpus_alpha_pathway_works_and_validates),
         ("P4b Lịch learning rate", test_lr_schedule_shape),
+        ("P4c Cờ --max_train_tokens tồn tại", test_max_train_tokens_flag_parses),
+        ("P4d Cắt corpus tách rời ngân sách bước", test_max_train_tokens_decoupled_from_budget),
     ]
     n_fail = 0
     for name, fn in tests:

@@ -57,6 +57,17 @@ def get_device() -> torch.device:
     return torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
+def resolve_max_train_tokens(args: argparse.Namespace) -> int:
+    """Số token TRAIN giữ lại sau khi cắt. Mặc định bằng token_budget (hành vi cũ).
+
+    --max_train_tokens tách việc CẮT CORPUS khỏi việc ĐẾM BƯỚC: dùng cho nhánh
+    đối chứng "cùng số token" (T13) — corpus EN bị cắt xuống đúng số token duy
+    nhất của nhánh VI, nhưng tổng token huấn luyện vẫn theo token_budget nên số
+    bước và số epoch tương đương giữa hai nhánh.
+    """
+    return args.token_budget if args.max_train_tokens is None else args.max_train_tokens
+
+
 # -----------------------------------------------------------------------------
 # Lịch learning rate
 # -----------------------------------------------------------------------------
@@ -122,7 +133,7 @@ def train(args: argparse.Namespace) -> dict:
     train_ids, val_ids, test_ids, tok, stats = cached_token_stream(
         lang=args.lang, tokenizer=args.tokenizer, vocab_size=args.vocab_size,
         n_docs=args.n_docs, data_seed=args.data_seed,
-        max_tokens=args.token_budget, cache_root=args.token_cache,
+        max_tokens=resolve_max_train_tokens(args), cache_root=args.token_cache,
         use_cache=not args.no_cache, hf_cache_dir=args.cache_dir,
     )
     print(f"[{run_name}] token: train={len(train_ids):,} val={len(val_ids):,} "
@@ -313,6 +324,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
                    help="bỏ qua cache token, token hoá lại từ đầu")
     g.add_argument("--data_seed", type=int, default=0,
                    help="seed chọn tài liệu — GIỮ CỐ ĐỊNH giữa các lần chạy so sánh")
+    g.add_argument("--max_train_tokens", type=int, default=None,
+                   help="cắt tập TRAIN xuống đúng số token này, ĐỘC LẬP với "
+                        "--token_budget (số bước vẫn tính theo budget). Dùng cho "
+                        "nhánh đối chứng cùng số token (T13). Bỏ trống = cắt "
+                        "theo token_budget như cũ.")
 
     g = p.add_argument_group("tối ưu")
     g.add_argument("--token_budget", type=int, default=40_000_000,

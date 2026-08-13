@@ -212,7 +212,7 @@ Thời gian: 2 phút.
 
 ## T8. Hạ giọng dòng "Bậc N = 1" ở Bảng 6 — VỪA
 
-- [ ] Chưa làm
+- [x] Đã làm (Quang, 2026-08-13) — sửa cả ba chỗ: dòng Bảng 6 + chú thích, mục 4.1, mục 5.6
 
 **Vấn đề 1:** với n = 2, t(df = 1) = 12,706. KTC của `order1` là [51,724; 54,488]; KTC của
 cấu hình gốc là [51,052; 51,708]. Khoảng hở chỉ **0,016 PPL**. Một seed thứ ba gần như
@@ -238,7 +238,7 @@ Thời gian: 20 phút.
 
 ## T9. Thêm cột khoảng tin cậy vào Bảng 6 — NHẸ
 
-- [ ] Chưa làm
+- [x] Đã làm (Quang, 2026-08-13) — cột KTC 95% tính từ `test_ppl` trong `results/`, caption ghi rõ n và t
 
 Hiện chỉ có cột "có / không", người đọc không kiểm được. In khoảng cụ thể cho từng nhánh
 (n = 2, t = 12,706).
@@ -339,7 +339,9 @@ Thời gian: 30 phút.
 
 ## T13. (Tuỳ chọn, cần GPU) Chạy lại nhánh tiếng Anh cùng số token
 
-- [ ] Chưa làm
+- [ ] Hạ tầng xong (Quang, 2026-08-13): cờ `--max_train_tokens` trong `train.py` + notebook
+  `notebooks/colab_E1_en_matched.ipynb`. Còn chờ: push lên GitHub → chạy Colab (~1h GPU) →
+  đưa `E1_en_matched_results.zip` về tích hợp vào `results/`
 
 Chỉ làm nếu muốn **giữ nguyên** khẳng định "cùng số token" ở T1 thay vì viết lại.
 

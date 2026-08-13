@@ -311,10 +311,14 @@ so sánh với \textsf{logspace}.
 
 \subsection{Nguyên tắc so sánh công bằng}
 
-Mọi cấu hình chỉ khác nhau ở toán tử trộn token. Embedding, pre-LayerNorm, khối
-MLP, kết nối residual, weight tying, cách khởi tạo và lịch learning rate giữ
-nguyên vẹn như nhau. Nếu để nhiều thứ khác nhau cùng lúc thì không thể quy chênh
-lệch perplexity cho toán tử.
+Trong so sánh chính giữa Hyena và Transformer, mọi cấu hình chỉ khác nhau ở
+toán tử trộn token. Embedding, pre-LayerNorm, khối MLP, kết nối residual,
+weight tying, cách khởi tạo và lịch learning rate giữ nguyên vẹn như nhau. Nếu
+để nhiều thứ khác nhau cùng lúc thì không thể quy chênh lệch perplexity cho
+toán tử. Riêng các nhánh ablation thay đổi cấu trúc bên trong toán tử nên
+không giữ nguyên tổng tham số: bậc $N = 1$ ít hơn cấu hình gốc 4,4\%, bậc
+$N = 3$ nhiều hơn 4,4\%, bỏ positional embedding ít hơn 1,7\% (xem
+Bảng~\ref{tab:e3}).
 
 Chúng tôi cấp positional embedding học được cho cả hai loại mô hình. Attention
 bắt buộc cần thông tin vị trí còn Hyena thì không; cấp cho một bên mà không cấp
@@ -561,22 +565,25 @@ chứng.
 \begin{table}[t]
 \centering
 \small
-\begin{tabular}{lrrc}
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lrrcc}
 \toprule
-Cấu hình & PPL & $\Delta$ & Tách rời \\
+Cấu hình & PPL & $\Delta$ & KTC 95\% & Tách rời \\
 \midrule
-Gốc (bậc 2, đủ) & 51,38 & & \\
+Gốc (bậc 2, đủ) & 51,38 & & [51,05; 51,71] & \\
 \midrule
-Bỏ cửa sổ suy giảm & 53,30 & $+1,92$ & có \\
-Bậc $N = 1$        & 53,11 & $+1,73$ & có \\
-Bỏ kích hoạt sine  & 51,80 & $+0,42$ & không \\
-Bậc $N = 3$        & 51,63 & $+0,25$ & không \\
-Bỏ positional emb  & 50,79 & $-0,59$ & không \\
+Bỏ cửa sổ suy giảm & 53,30 & $+1,92$ & [52,24; 54,35] & có \\
+Bậc $N = 1$        & 53,11 & $+1,73$ & [51,72; 54,49] & có\textsuperscript{*} \\
+Bỏ kích hoạt sine  & 51,80 & $+0,42$ & [51,49; 52,10] & không \\
+Bậc $N = 3$        & 51,63 & $+0,25$ & [49,51; 53,76] & không \\
+Bỏ positional emb  & 50,79 & $-0,59$ & [50,14; 51,45] & không \\
 \bottomrule
 \end{tabular}
-\caption{Ablation trên tiếng Việt, 2 seed cho mỗi nhánh. Cột cuối cho biết
-khoảng tin cậy 95\% có tách rời khỏi cấu hình gốc hay không; chỉ những dòng ghi
-"có" mới được rút ra kết luận.}
+\caption{Ablation trên tiếng Việt, 2 seed cho mỗi nhánh (cấu hình gốc: 3
+seed). Khoảng tin cậy 95\% theo phân phối $t$ ($n = 2$: $t = 12{,}706$;
+$n = 3$: $t = 4{,}303$); chỉ những dòng có khoảng tách rời khỏi cấu hình gốc
+mới được rút ra kết luận. \textsuperscript{*}Tách rời nhưng biên rất sát
+(0,016 PPL).}
 \label{tab:e3}
 \end{table}
 
@@ -584,8 +591,13 @@ Chỉ hai nhánh cho khác biệt có ý nghĩa thống kê.
 
 Bỏ cửa sổ suy giảm gây thiệt hại lớn nhất, xác nhận vai trò của số hạng
 $\mathrm{Window}(t)$ trong công thức~\eqref{eq:filter}. Hạ bậc xuống $N = 1$
-cũng gây thiệt hại rõ, phù hợp với nhận xét trong bài báo gốc rằng Hyena bậc 1
-tương ứng với GSS, vốn yếu hơn H3 trên các tác vụ nhớ.
+cũng gây thiệt hại, phù hợp với nhận xét trong bài báo gốc rằng Hyena bậc 1
+tương ứng với GSS, vốn yếu hơn H3 trên các tác vụ nhớ. Tuy nhiên kết luận này
+mong manh hơn nhiều: khoảng tin cậy của $N = 1$ chỉ tách khỏi cấu hình gốc
+0,016 PPL, nên thêm một seed hoàn toàn có thể làm hai khoảng chồng lấn trở
+lại. Ngoài ra, hạ bậc xuống $N = 1$ cũng làm mất 331.776 tham số (4,4\% mô
+hình), nên thiệt hại +1,73 PPL trộn lẫn hai nguyên nhân --- mất một tầng cổng
+đệ quy và mất tham số --- mà thiết kế hiện tại không tách riêng được.
 
 Ba nhánh còn lại có khoảng tin cậy chồng lấn với cấu hình gốc nên chúng tôi
 \emph{không} kết luận. Đáng chú ý là bỏ positional embedding cho perplexity
