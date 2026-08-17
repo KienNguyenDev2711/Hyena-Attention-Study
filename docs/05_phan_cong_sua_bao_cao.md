@@ -156,11 +156,35 @@ Phụ lục trang 5 của file gốc, các dòng sau tôi đã tính lại từ 
 | Mục 3.2, ghi chú phép kiểm ngược | "bản đúng rò rỉ 1e-16, bản cố tình sai 9e-1" | "bản đúng rò rỉ dưới 1e-15, bản cố tình sai vượt ngưỡng 1e-6". Hai con số cũ lấy từ test **không đặt seed**; tôi chạy lại ra 3,78e-16 và 1,98 |
 | Mục 3.1, hạng mục biên dịch | "Bắt buộc dùng LuaLaTeX" | Ghi rõ hạng mục này **chưa hoàn thành**: PDF hiện tại biên dịch bằng pdfTeX |
 
-### 4.3. Chưa xác minh được
+### 4.3. Con số "44 lần chạy" — đã xác minh (Quang, 2026-08-13)
 
-| Vị trí | Vấn đề |
-|---|---|
-| Phụ lục, "Tổng số lần chạy thí nghiệm: 44" | Tôi đếm từ `results/`: E1 12 + E2 6 + E3 10 + E4 12 = **40** lần chạy mô hình ngôn ngữ; cộng E0a là 42. E6 có 8 + 3 = 11 lần chạy, E5 là 1 lần benchmark. Không có cách đếm nào tôi thử cho ra đúng 44. **Nhóm cần nói rõ quy ước đếm**, tôi không tự sửa vì không biết ý định. |
+Kiểm kê đầy đủ từ `results/` (kể cả `NGUON_GOC_E6.txt`):
+
+| Nhóm | Đếm được | Ghi chú |
+|---|---|---|
+| E1 | 12 | 2 ngôn ngữ × 2 mô hình × 3 seed |
+| E2 | 6 | BPE × 2 mô hình × 3 seed |
+| E3 | 10 | 5 nhánh ablation × 2 seed |
+| E4 | 12 | {corpus, logspace} × 2 ngôn ngữ × 3 seed |
+| **Huấn luyện LM chính thức** | **40** | |
+| E0a | 2 | chạy hiệu chỉnh (3M token) |
+| E0b | 4 | lần đo MI: {vi, en} × {âm tiết, BPE500} |
+| E5 | 1 phiên (2 CSV) | benchmark fwd + bwd, 22 ô đo |
+| E6 | 11 giữ lại | 8 (lần 2) + 3 (lần 3); phiên đầu thêm 8 lần nhưng bị loại vì bão hoà |
+
+Con số 44 ra được theo **ba** quy ước khác nhau: (a) 40 + 4 E0b; (b) 40 + 2 E0a + 2 lượt
+benchmark E5; (c) 40 + 2 E0a + 2 phiên E6 giữ lại. Vì không quy ước nào trội hơn, con số
+44 trơ trọi là không bảo vệ được — người đếm kiểu khác sẽ ra 40, 42, 58, thậm chí 66.
+
+**Sửa dòng trong phụ lục `Task_Nhóm 8.pdf` thành bản phân rã tường minh:**
+
+> Tổng số lần chạy: **40 lần huấn luyện LM chính thức** (E1: 12, E2: 6, E3: 10, E4: 12),
+> cộng 2 lần hiệu chỉnh E0-a, 4 lần đo thông tin tương hỗ E0-b, 1 phiên benchmark E5
+> (22 ô đo) và 11 lần chạy recall E6 (8 + 3; phiên đầu 8 lần bị loại vì bão hoà, ghi
+> trong `NGUON_GOC_E6.txt`).
+
+Nếu bắt buộc giữ một con số duy nhất: dùng **42** ("lần huấn luyện mô hình ngôn ngữ, kể cả
+2 lần hiệu chỉnh") — quy ước ít tranh cãi nhất.
 
 ---
 
