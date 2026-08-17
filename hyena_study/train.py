@@ -255,6 +255,14 @@ def train(args: argparse.Namespace) -> dict:
     print(f"[{run_name}] XONG · test PPL {test_ppl:.3f} · {wall:.0f}s "
           f"· đỉnh bộ nhớ {peak_mem:.0f} MB")
 
+    # Mẫu Wikipedia lấy qua streaming shuffle THAY ĐỔI theo phiên bản `datasets`
+    # (cùng seed, khác phiên bản -> khác tài liệu -> khác số token). Phải ghi lại
+    # phiên bản thì sau này mới truy được corpus sinh ra từ môi trường nào.
+    try:
+        from datasets import __version__ as datasets_version
+    except Exception:  # pragma: no cover
+        datasets_version = None
+
     summary = {
         "run_name": run_name,
         "test_loss": test_loss, "test_ppl": test_ppl,
@@ -266,6 +274,7 @@ def train(args: argparse.Namespace) -> dict:
         "corpus": stats_to_dict(stats),
         "config": {**vars(args), "layer_spec": cfg.layer_spec},
         "torch_version": torch.__version__,
+        "datasets_version": datasets_version,
     }
     (out_dir / f"{run_name}.json").write_text(
         json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8")
