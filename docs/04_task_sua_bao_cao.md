@@ -28,7 +28,7 @@ Tổng thời gian phần không cần GPU: khoảng 3 giờ.
 
 ## T1. Sửa câu sai về dữ liệu, mục 4.2 — NẶNG
 
-- [ ] Chưa làm
+- [x] Da lam (Kien, 2026-08-18) - muc 4.2 viet lai theo T13: 110.000 tai lieu, cat xuong 38.250.964 token, cung 49.995.776 token va ~1,31 epoch; doan Han che ve streaming da viet lai theo phien ban datasets
 
 **Hiện có:** "Nhánh tiếng Anh được cắt xuống đúng cùng số token với nhánh tiếng Việt."
 
@@ -54,7 +54,7 @@ Thời gian: 10 phút.
 
 ## T2. Sửa hai dòng corpus của Bảng 3 — NẶNG
 
-- [ ] Chưa làm
+- [x] Da lam (Kien, 2026-08-18) - Bang 3: corpus VI 142/227/2,95 va corpus EN 141/214/2,85
 
 **Vấn đề:** Bảng 3 in số của `alpha_vi.json` / `alpha_en.json` (đo bằng âm tiết,
 top_k = 1000), nhưng E4 huấn luyện bằng `alpha_vi_bpe500.json` / `alpha_en_bpe500.json`
@@ -77,7 +77,7 @@ Thời gian: 5 phút.
 
 ## T3. Sửa "90% thông tin nằm trong 34 token" — NẶNG
 
-- [ ] Chưa làm
+- [x] Da lam (Kien, 2026-08-18) - doi 90% thanh 80% toi 90% o ca 3 cho (muc 3.6, chu thich Bang 3, chu thich Hinh 2). CHUA sinh lai Hinh 2, chu trong hinh van la 90%
 
 **Số thật**, tính theo đúng quy ước của nhóm:
 
@@ -104,7 +104,7 @@ Thời gian: 10 phút.
 
 ## T4. Sửa "1,66 tới 2,27 lần ở mọi khoảng cách" — NẶNG
 
-- [ ] Chưa làm
+- [x] Da lam (Kien, 2026-08-18) - muc 5.1 viet lai theo tung moc d, bo cum "ben qua ca hai cach token hoa"; Tom tat va muc 6 doi sang 1,7-2,3 o khoang cach ngan
 
 **Vấn đề:** câu này mâu thuẫn với Bảng 2 nằm ngay cạnh. Cột BPE: d = 34 cho 1,55;
 d = 88 cho 1,27; d = 167 cho 1,03. Dải thật trong vùng tin cậy (d <= 167) là **1,03 đến
@@ -163,7 +163,7 @@ Thời gian: 30 phút.
 
 ## T6. Sửa số throughput ở mục 5.8 — VỪA
 
-- [ ] Chưa làm
+- [x] Da lam (Kien, 2026-08-18) - muc 5.8 dung so E1 tieng Viet 138,5k/92,0k ty le 1,51, them mot cau cho nhanh EN tren Colab 122,4k/85,7k ty le 1,43
 
 **Hiện có:** "Transformer đạt 150,0 nghìn token mỗi giây còn Hyena đạt 92,9 nghìn, tức
 Transformer nhanh hơn 1,61 lần."
@@ -189,7 +189,7 @@ Thời gian: 10 phút.
 
 ## T7. Sửa "61 phép kiểm tự động" thành 62 — VỪA
 
-- [ ] Chưa làm
+- [x] Da lam (Kien, 2026-08-18) - doi 61 thanh 67 (pytest --collect-only dem 67 ngay 2026-08-18)
 
 `python -m pytest tests/ --collect-only -q` đếm được **62**:
 
@@ -375,3 +375,55 @@ Không cần sửa file, nhưng phải chuẩn bị câu trả lời.
    tín hiệu **bằng** độ chệch. Và `n_shuffle = 1` (mặc định, `hyena_study/morphology.py:114`)
    nên đường nền nhiễu không có thanh sai số. Nên gọi là "vùng tín hiệu trên nền" và tăng
    số lần xáo.
+
+---
+
+## T14. Viết lại mục 5.7 sau khi có số EN khớp token — ĐÃ LÀM (Kiên, 2026-08-18)
+
+- [x] Đã làm
+
+Task này không có trong danh sách 13 task ban đầu. Nó phát sinh vì T13 làm đổi
+kết luận của mục 5.7.
+
+**Vì sao không làm theo `docs/06` mục 3.** `docs/06` đề xuất viết "trên tiếng Anh
+cùng chiều nhưng khoảng tin cậy chồng lấn", tức hạ kết quả xuống mức không kết
+luận được. Nhưng khoảng tin cậy chồng lấn **không** đồng nghĩa với không có ý
+nghĩa thống kê: tiêu chí hai khoảng tin cậy không chồng lấn bảo thủ hơn hẳn kiểm
+định hai mẫu ở cùng mức alpha.
+
+**Kiểm định Welch hai mẫu** chạy trên đúng các file trong `results/`
+(scipy, phương sai không giả định bằng nhau):
+
+| Cặp so sánh | Chênh (PPL) | t | df | p | KTC |
+|---|---|---|---|---|---|
+| VI uniform vs logspace | +0,902 | 10,813 | 2,77 | **0,0024** | tách rời |
+| VI uniform vs corpus | +1,187 | 12,174 | 3,81 | **0,0003** | tách rời |
+| VI logspace vs corpus | +0,285 | 4,085 | 3,14 | 0,0243 | chồng lấn |
+| EN uniform vs logspace | +0,852 | 3,867 | 2,83 | 0,0338 | chồng lấn |
+| EN uniform vs corpus | +0,904 | 4,146 | 2,75 | 0,0301 | chồng lấn |
+| EN logspace vs corpus | +0,052 | 0,408 | 3,99 | 0,7040 | chồng lấn |
+
+**Hai hệ quả.**
+
+1. Trên tiếng Anh, `logspace` và `corpus` vẫn hơn `uniform` có ý nghĩa
+   (p khoảng 0,03). Viết "không tách rời" rồi dừng lại là tự hạ thấp kết quả quá
+   tay.
+2. Nguy hiểm hơn: trên **tiếng Việt**, `corpus` hơn `logspace` cũng đạt
+   p = 0,024. Nếu ai đó chạy kiểm định hai mẫu ở mức 0,05 thì kết luận âm trung
+   tâm của cả báo cáo bị lật.
+
+**Cách xử lý đã chọn.** Không đổi kết luận, mà **nói rõ tiêu chí**. Mục 5.7 bây
+giờ mở đầu bằng một đoạn khai báo: nhóm dùng tiêu chí hai khoảng tin cậy 95%
+không chồng lấn, và tiêu chí đó bảo thủ hơn kiểm định hai mẫu ở mức 0,05. Sau đó
+mục 5.7 nêu thẳng cả hai con số p gây tranh cãi, kèm lý do vì sao chúng không đủ:
+mục này thực hiện **sáu** phép so sánh cặp, hiệu chỉnh Bonferroni cho
+alpha = 0,05/6 = 0,0083, và ở ngưỡng đó chỉ hai dòng VI uniform sống sót
+(p = 0,0024 và p = 0,0003).
+
+**Vì sao phải viết ra thay vì im lặng.** Đây đúng là câu hỏi phản biện mà một
+người đọc kỹ sẽ đặt: "sao tôi tính Welch ra p nhỏ hơn 0,05 mà nhóm bảo không kết
+luận được?". Nêu trước và trả lời trước thì mạnh hơn nhiều so với bị hỏi.
+
+**Số cần sửa trong `docs/06`.** `docs/06` mục 3 ghi chênh lệch corpus so với
+logspace trên tiếng Anh là 0,055 PPL. Số thật là **0,053** (54,9663 trừ 54,9133
+bằng 0,0524). Bản `.tex` đã dùng 0,05.

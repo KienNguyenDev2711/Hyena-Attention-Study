@@ -104,16 +104,17 @@ Ngoài phần tái hiện, chúng tôi đề xuất khởi tạo phân bố suy 
 Hyena từ đường cong suy giảm thông tin tương hỗ đo trên chính corpus huấn
 luyện, thay cho cách đặt thủ công. Ở cùng ngân sách tham số, cùng 50 triệu
 token và cùng siêu tham số, Hyena đạt perplexity thấp hơn Transformer 19,5\%
-trên tiếng Việt và 15,5\% trên tiếng Anh. Về hiệu năng, Hyena vượt kernel
+trên tiếng Việt và 14,7\% trên tiếng Anh. Về hiệu năng, Hyena vượt kernel
 attention tiết kiệm bộ nhớ 1,88 lần ở độ dài 8192 cho lượt tiến và lùi, tiệm
 cận mức 2 lần mà bài báo gốc công bố. Về đóng góp đề xuất, chúng tôi đo được
-tiếng Việt mang lượng thông tin tương hỗ cục bộ gấp 1,66 đến 2,27 lần tiếng
-Anh, nhưng nhánh đối chứng cho thấy bộ lọc suy ra từ hai ngôn ngữ gần nhau:
+tiếng Việt mang lượng thông tin tương hỗ cục bộ gấp 1,7 đến 2,3 lần tiếng Anh
+ở khoảng cách ngắn và giảm dần về khoảng 1,0 ở rìa vùng đo được, nhưng
+nhánh đối chứng cho thấy bộ lọc suy ra từ hai ngôn ngữ gần nhau:
 chênh lệch tương đối trung bình là 14,3\% nếu lấy độ dài hiệu dụng tiếng Anh
 làm mẫu số. Thực nghiệm xác nhận dự đoán đó:
 khởi tạo từ corpus chỉ hơn một đường cơ sở cách đều theo thang log 0,285 PPL
 với khoảng tin cậy chồng lấn, trong khi cả hai cùng vượt đường cơ sở đặt tuỳ
-tiện khoảng 1 PPL. Kết luận trung thực là khoảng giá trị của tham số suy giảm
+tiện khoảng 0,9 PPL. Kết luận trung thực là khoảng giá trị của tham số suy giảm
 mới là điều quan trọng, còn việc suy nó từ thống kê corpus không mang lại lợi
 ích đo được ở quy mô này.
 \end{abstract}
@@ -298,8 +299,9 @@ Chúng tôi so sánh với hai đường cơ sở. Đường thứ nhất, ký h
 hai, ký hiệu \textsf{logspace}, đặt độ dài hiệu dụng cách đều theo thang log từ
 1 tới $L$.
 
-Đường \textsf{logspace} tồn tại vì một lý do quan trọng. Phép đo cho thấy 90\%
-thông tin nằm trong khoảng cách 34 token, trong khi cấu hình \textsf{uniform}
+Đường \textsf{logspace} tồn tại vì một lý do quan trọng. Phép đo cho thấy 80\%
+tới 90\% thông tin nằm trong khoảng cách 34 token, tuỳ ngôn ngữ và bộ token
+hoá, trong khi cấu hình \textsf{uniform}
 đặt \emph{toàn bộ} 256 kênh ra xa hơn 64 token (Bảng~\ref{tab:dodaihieudung}).
 So sánh đề xuất với một cấu hình lệch xa như vậy là so với hình nộm: thắng cũng
 không chứng minh được gì. Mọi kết luận khoa học trong báo cáo này đều rút ra từ
@@ -334,8 +336,11 @@ Mô hình 4 lớp, $d_{\text{model}} = 256$, 8 đầu attention, $d_{\text{ff}} 
 $L = 512$, từ điển 16k. Số tham số đo được: Hyena 7.553.280 và Transformer
 7.383.552, lệch 2,30\%.
 
-Dữ liệu lấy từ Wikipedia tiếng Việt và tiếng Anh (bản \texttt{20231101}). Nhánh
-tiếng Anh được cắt xuống đúng cùng số token với nhánh tiếng Việt.
+Dữ liệu lấy từ Wikipedia tiếng Việt và tiếng Anh (bản \texttt{20231101}).
+Nhánh tiếng Anh được lấy dư 110.000 tài liệu rồi cắt xuống đúng 38.250.964
+token của nhánh tiếng Việt, nên hai nhánh có cùng số token huấn luyện duy nhất.
+Cả hai sau đó huấn luyện trên cùng 49.995.776 token, tức cùng 6.103 bước và
+cùng khoảng 1,31 epoch.
 
 Chúng tôi khảo sát hai đơn vị token hoá. Thứ nhất là âm tiết, tức tách theo
 khoảng trắng, vốn là đơn vị tự nhiên của chữ Quốc ngữ. Thứ hai là BPE mức byte
@@ -350,7 +355,7 @@ Một mô hình ngôn ngữ nhân quả cài sai, để rò rỉ thông tin từ
 huấn luyện trơn tru và cho perplexity đẹp bất thường. Đây là lỗi im lặng nguy
 hiểm nhất của loại nghiên cứu này.
 
-Chúng tôi khử nó bằng 61 phép kiểm tự động, trong đó phép kiểm cốt lõi dùng
+Chúng tôi khử nó bằng 67 phép kiểm tự động, trong đó phép kiểm cốt lõi dùng
 gradient: lấy đạo hàm của đầu ra tại vị trí $t$ theo đầu vào tại mọi vị trí
 $s > t$ và đòi hỏi kết quả bằng 0. Attention đạt 0 tuyệt đối nhờ cơ chế che;
 Hyena đạt $2{,}6 \times 10^{-16}$, tức nhân quả tới sai số máy, vì vòng biến đổi
@@ -407,9 +412,12 @@ Anh trong toàn vùng tin cậy.}
 
 Ba nhận xét.
 
-Thứ nhất, tiếng Việt mang nhiều thông tin tương hỗ cục bộ hơn tiếng Anh ở mọi
-khoảng cách trong vùng tin cậy, với tỉ lệ từ 1,66 tới 2,27. Kết quả này bền
-qua cả hai cách token hoá. Hình~\ref{fig:mi} cho thấy trực tiếp điều đó.
+Thứ nhất, với phép đo BPE, tiếng Việt mang nhiều thông tin tương hỗ cục bộ hơn
+tiếng Anh ở mọi khoảng cách trong vùng đo được, nhưng ưu thế đó tập trung ở
+khoảng cách ngắn: tỉ lệ đạt 1,66 tới 2,27 ở $d \le 13$, rồi giảm còn 1,55 ở
+$d = 34$, 1,27 ở $d = 88$ và 1,03 ở $d = 167$. Với phép đo âm tiết, ưu thế đảo
+chiều từ $d \approx 88$ (xem nhận xét thứ hai), nên phát biểu này chỉ vững với
+phép đo BPE. Hình~\ref{fig:mi} cho thấy trực tiếp điều đó.
 
 Thứ hai, phép đo bằng âm tiết cho thấy hai đường cắt nhau tại $d \approx 88$,
 nhưng điểm cắt này \emph{biến mất} khi khử token ngoài từ điển. Nó là hiện vật
@@ -434,12 +442,13 @@ Cấu hình & $\le 4$ & $\le 34$ & trung vị \\
 \midrule
 \textsf{uniform} & 0 & 0 & 169,3 \\
 \textsf{logspace} & 57 & 145 & 22,6 \\
-corpus, tiếng Việt & 134 & 224 & 3,6 \\
-corpus, tiếng Anh & 120 & 205 & 4,8 \\
+corpus, tiếng Việt & 142 & 227 & 2,95 \\
+corpus, tiếng Anh & 141 & 214 & 2,85 \\
 \bottomrule
 \end{tabular}
 \caption{Số kênh trên tổng 256 có độ dài hiệu dụng dưới ngưỡng cho trước
-($L = 512$). Phép đo cho thấy 90\% thông tin nằm trong 34 token.}
+($L = 512$). Phép đo cho thấy 80\% tới 90\% thông tin nằm trong 34 token, tuỳ
+ngôn ngữ và bộ token hoá.}
 \label{tab:dodaihieudung}
 \end{table}
 
@@ -456,7 +465,8 @@ corpus, tiếng Anh & 120 & 205 & 4,8 \\
 \includegraphics[width=\columnwidth]{figures/fig_effective_lengths.pdf}
 \caption{Phân bố độ dài hiệu dụng của 256 kênh bộ lọc. Cấu hình
 \textsf{uniform} đặt toàn bộ kênh sang phải đường kẻ, tức ra ngoài vùng chứa
-90\% thông tin. Đây là lý do phải bổ sung đường cơ sở \textsf{logspace} trước
+80\% tới 90\% thông tin (đường kẻ vẽ ở mốc 90\% của nhánh tiếng Việt). Đây là
+lý do phải bổ sung đường cơ sở \textsf{logspace} trước
 khi rút ra bất kỳ kết luận nào về đề xuất.}
 \label{fig:efflen}
 \end{figure}
@@ -502,8 +512,8 @@ Ngôn ngữ & Mô hình & PPL & KTC 95\% \\
 Tiếng Việt & Hyena       & \textbf{51,38} $\pm$ 0,13 & [51,05; 51,71] \\
            & Transformer & 63,86 $\pm$ 0,29 & [63,14; 64,58] \\
 \midrule
-Tiếng Anh  & Hyena       & \textbf{61,51} $\pm$ 0,41 & [60,49; 62,54] \\
-           & Transformer & 72,82 $\pm$ 0,52 & [71,52; 74,12] \\
+Tiếng Anh  & Hyena       & \textbf{55,82} $\pm$ 0,35 & [54,96; 56,68] \\
+           & Transformer & 65,43 $\pm$ 0,18 & [64,99; 65,87] \\
 \bottomrule
 \end{tabular}
 \caption{Perplexity trên tập kiểm tra, 3 seed cho mỗi cấu hình. Khoảng tin cậy
@@ -511,7 +521,7 @@ tính theo phân phối $t$.}
 \label{tab:e1}
 \end{table}
 
-Hyena vượt Transformer 19,5\% trên tiếng Việt và 15,5\% trên tiếng Anh, với
+Hyena vượt Transformer 19,5\% trên tiếng Việt và 14,7\% trên tiếng Anh, với
 khoảng tin cậy tách rời hoàn toàn trong cả hai trường hợp.
 
 Chúng tôi nhấn mạnh rằng kết quả này \emph{mạnh hơn} điều bài báo gốc khẳng
@@ -618,9 +628,9 @@ Tiếng Việt & \textsf{uniform}  & 51,38 & [51,05; 51,71] \\
            & \textsf{logspace} & 50,48 & [50,33; 50,62] \\
            & corpus            & \textbf{50,19} & [49,93; 50,45] \\
 \midrule
-Tiếng Anh  & \textsf{uniform}  & 61,51 & [60,49; 62,54] \\
-           & \textsf{logspace} & 60,34 & [60,20; 60,49] \\
-           & corpus            & \textbf{60,18} & [59,89; 60,47] \\
+Tiếng Anh  & \textsf{uniform}  & 55,82 & [54,96; 56,68] \\
+           & \textsf{logspace} & 54,97 & [54,56; 55,37] \\
+           & corpus            & \textbf{54,91} & [54,53; 55,29] \\
 \bottomrule
 \end{tabular}
 \caption{Ảnh hưởng của cách khởi tạo phân bố suy giảm, 3 seed cho mỗi ô.}
@@ -629,26 +639,44 @@ Tiếng Anh  & \textsf{uniform}  & 61,51 & [60,49; 62,54] \\
 
 Kết quả trong Bảng~\ref{tab:e4} tách thành hai phần rõ rệt.
 
+Trước hết cần nói rõ tiêu chí. Chúng tôi coi một khác biệt là kết luận được
+khi hai khoảng tin cậy 95\% không chồng lấn. Đây là tiêu chí bảo thủ hơn kiểm
+định hai mẫu ở mức 0,05; với số phép so sánh trong mục này, nó xấp xỉ một mức
+đã hiệu chỉnh cho so sánh bội.
+
 Phần thứ nhất là khẳng định được: cả \textsf{logspace} lẫn corpus đều vượt
-\textsf{uniform} với khoảng tin cậy tách rời, trên cả hai ngôn ngữ. Khoảng cách
-là 0,90 PPL với tiếng Việt và 1,17 PPL với tiếng Anh. Nói cách khác, khoảng giá
-trị của $\alpha$ thực sự quan trọng, và một khoảng chọn tuỳ tiện gây thiệt hại
-đo được.
+\textsf{uniform} trên cả hai ngôn ngữ. Với tiếng Việt khoảng cách là 0,90 PPL
+và hai khoảng tin cậy tách rời. Với tiếng Anh khoảng cách là 0,85 PPL cho
+\textsf{logspace} và 0,90 PPL cho corpus, cùng chiều và cùng độ lớn, nhưng hai
+khoảng tin cậy chồng lấn vì ba seed của \textsf{uniform} phân tán rộng hơn;
+kiểm định Welch hai mẫu cho $p \approx 0{,}03$, tức vẫn có ý nghĩa nếu xét một
+mình ở mức 0,05 nhưng không qua được tiêu chí bảo thủ nói trên. Nói cách khác,
+khoảng giá trị của $\alpha$ thực sự quan trọng, và một khoảng chọn tuỳ tiện gây
+thiệt hại đo được.
 
 Phần thứ hai là khẳng định \emph{không} được: corpus chỉ hơn \textsf{logspace}
-0,285 PPL trên tiếng Việt và 0,167 PPL trên tiếng Anh, và khoảng tin cậy chồng
+0,285 PPL trên tiếng Việt và 0,05 PPL trên tiếng Anh, và khoảng tin cậy chồng
 lấn trong cả hai trường hợp. Chúng tôi không có căn cứ kết luận rằng suy phân
 bố suy giảm từ thống kê corpus tốt hơn một lựa chọn cách đều theo thang log.
+Chúng tôi nêu rõ một điểm có thể bị chất vấn: riêng trên tiếng Việt, kiểm định
+Welch cho $p = 0{,}024$, tức sẽ có ý nghĩa nếu xét một mình ở mức 0,05. Nhưng
+mục này thực hiện sáu phép so sánh cặp, và sau hiệu chỉnh Bonferroni
+($\alpha = 0{,}0083$) con số đó không còn qua ngưỡng, trong khi hai phép so sánh
+với \textsf{uniform} trên tiếng Việt thì qua ($p = 0{,}0024$ và $p = 0{,}0003$).
+Vì vậy chúng tôi giữ kết luận phủ định.
 
-Thêm nữa, phần cải thiện nhỏ ấy xuất hiện trên \emph{cả hai} ngôn ngữ với mức
-độ tương đương. Đây chính là điều mà phân tích ở mục trước đã dự đoán từ chỗ
-hai bộ lọc gần như trùng nhau, và nó khép lại lập luận: nếu có lợi ích thì lợi
-ích đó không mang tính đặc thù ngôn ngữ.
+Thêm nữa, phần cải thiện nhỏ ấy xuất hiện trên \emph{cả hai} ngôn ngữ, cùng
+chiều tuy không cùng độ lớn. Đây chính là điều mà phân tích ở mục trước đã dự
+đoán từ chỗ hai bộ lọc gần như trùng nhau, và nó khép lại lập luận: nếu có lợi
+ích thì lợi ích đó không mang tính đặc thù ngôn ngữ.
 
 \subsection{Hiệu năng theo độ dài chuỗi}
 
-Ở $L = 512$, chúng tôi đo được Transformer đạt 150,0 nghìn token mỗi giây còn
-Hyena đạt 92,9 nghìn, tức Transformer \emph{nhanh hơn} 1,61 lần. Kết quả này
+Ở $L = 512$, trên chính các lần chạy tiếng Việt của Bảng~\ref{tab:e1}
+(Tesla T4), chúng tôi đo được Transformer đạt 138,5 nghìn token mỗi giây còn
+Hyena đạt 92,0 nghìn, tức Transformer \emph{nhanh hơn} 1,51 lần. Nhánh tiếng
+Anh chạy trên một máy chủ khác cho cùng chiều với biên độ nhỏ hơn: 122,4 nghìn
+so với 85,7 nghìn, tức 1,43 lần. Kết quả này
 không mâu thuẫn với bài báo gốc: các con số tăng tốc được công bố ở đó áp dụng
 cho $L \ge 8$K, nơi chi phí bậc hai của attention mới lấn át chi phí cố định
 của biến đổi Fourier. Chúng tôi nêu rõ điều kiện này để tránh trích dẫn sai.
@@ -767,7 +795,7 @@ thí nghiệm, việc hai bộ lọc lệch nhau chỉ 14,3\% trong khi cùng l�
 76\% so với đường cơ sở đã cho thấy phần lớn tác dụng nằm ở việc thoát khỏi
 khoảng $\alpha$ tuỳ tiện, chứ không ở nguồn gốc ngôn ngữ của số liệu. Thực
 nghiệm cho đúng như vậy: chuyển từ \textsf{uniform} sang \textsf{logspace} thu
-được khoảng 1 PPL, còn chuyển tiếp sang corpus chỉ thu thêm 0,17 tới 0,29 PPL
+được khoảng 0,9 PPL, còn chuyển tiếp sang corpus chỉ thu thêm 0,05 tới 0,29 PPL
 với khoảng tin cậy chồng lấn.
 
 Việc chúng tôi bổ sung đường cơ sở \textsf{logspace} sau khi phát hiện
@@ -776,8 +804,9 @@ quyết định tới kết luận. Nếu chỉ so với \textsf{uniform}, nhóm
 cải thiện 1,19 PPL và quy toàn bộ cho đóng góp đề xuất, trong khi phần lớn
 trong đó chỉ là hệ quả của việc sửa một đường cơ sở đặt kém.
 
-Phần đặc thù tiếng Việt còn đứng vững nằm ở chỗ khác: tiếng Việt mang lượng
-thông tin tương hỗ cục bộ gấp 1,66 tới 2,27 lần tiếng Anh, và trục âm tiết so
+Phần đặc thù tiếng Việt còn đứng vững nằm ở chỗ khác: ở khoảng cách ngắn tiếng
+Việt mang lượng thông tin tương hỗ cục bộ gấp 1,7 tới 2,3 lần tiếng Anh, và
+trục âm tiết so
 với BPE là phân biệt chỉ tồn tại ở dạng này với chữ Quốc ngữ.
 
 Hiện tượng lưỡng cực ở tác vụ associative recall gợi ra một hướng đáng theo
@@ -805,10 +834,15 @@ các biến thể bộ lọc trên tác vụ associative recall. Phân biệt đ
 công giữa các cấu hình đòi hỏi khoảng 10 seed cho mỗi cấu hình, vượt ngân sách
 tính toán của đồ án.
 
-Corpus tiếng Anh được lấy mẫu ở chế độ streaming, trong đó việc xáo trộn chỉ
-diễn ra trong một bộ đệm hữu hạn chứ không xáo toàn cục, nên mẫu lệch về phía
-đầu tập dữ liệu. Thiên lệch này áp dụng đồng nhất cho cả hai ngôn ngữ nên triệt
-tiêu khi so sánh, nhưng chúng tôi nêu rõ để người đọc tự đánh giá.
+Corpus được lấy mẫu ở chế độ streaming, trong đó việc xáo trộn chỉ diễn ra
+trong một bộ đệm hữu hạn chứ không xáo toàn cục, nên mẫu lệch về phía đầu tập
+dữ liệu. Nặng hơn, phép lấy mẫu này không tái lập được giữa các phiên bản thư
+viện \texttt{datasets}: cùng một seed nhưng khác phiên bản cho ra bộ tài liệu
+khác. Vì vậy nhánh tiếng Anh phải được lấy mẫu lại (110.000 tài liệu,
+\texttt{datasets} phiên bản 4.0.0, ghi trong mỗi tệp kết quả) rồi cắt xuống
+đúng ngân sách token của nhánh tiếng Việt, trong khi nhánh tiếng Việt giữ
+nguyên mẫu gốc. Nhờ đó phép so sánh chính chặt hơn trước (cùng số token duy
+nhất, cùng số bước), đổi lại hai ngôn ngữ không còn chung một lần lấy mẫu.
 
 Một hạn chế riêng của cách sinh $\alpha$ nằm ở phép ánh xạ từ $I(d)$ sang phân
 bố độ dài hiệu dụng. Hàm \texttt{alphas\_from\_mi} hiện coi mỗi điểm trên lưới
@@ -852,16 +886,17 @@ song ngữ song song, thứ chúng tôi không có.
 Chúng tôi cài đặt lại toán tử Hyena kèm bằng chứng kiểm thử về tính đúng đắn và
 áp dụng cho mô hình ngôn ngữ tiếng Việt. Ở cùng ngân sách tham số và cùng siêu
 tham số, Hyena đạt perplexity thấp hơn Transformer 19,5\% trên tiếng Việt và
-15,5\% trên tiếng Anh, và vượt kernel attention tiết kiệm bộ nhớ 1,88 lần ở độ
+14,7\% trên tiếng Anh, và vượt kernel attention tiết kiệm bộ nhớ 1,88 lần ở độ
 dài 8192 cho lượt tiến và lùi. Ablation cho thấy cửa sổ suy giảm và bậc đệ quy
 là hai thành phần có ảnh hưởng đo được, còn kích hoạt sine và positional
 embedding thì không phân biệt được ở số seed hiện có.
 
 Đóng góp đề xuất cho kết quả hai mặt. Khoảng giá trị của tham số suy giảm thực
 sự quan trọng: chuyển từ một khoảng đặt tuỳ tiện sang một lựa chọn có nguyên
-tắc thu được khoảng 1 PPL. Nhưng việc suy khoảng đó từ thống kê corpus không
+tắc thu được khoảng 0,9 PPL. Nhưng việc suy khoảng đó từ thống kê corpus không
 mang lại lợi ích đo được so với một lựa chọn cách đều theo thang log, và phần
-chênh lệch nhỏ còn lại xuất hiện đồng đều trên cả hai ngôn ngữ. Chúng tôi báo
+chênh lệch nhỏ còn lại tuy cùng chiều trên cả hai ngôn ngữ nhưng không cùng
+độ lớn (0,285 PPL với tiếng Việt, 0,05 PPL với tiếng Anh). Chúng tôi báo
 cáo kết quả phủ định này cùng toàn bộ giới hạn của bản tái hiện, vì chính nhánh
 đối chứng do chúng tôi thiết kế đã dự đoán và sau đó xác nhận nó.
 
