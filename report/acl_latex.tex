@@ -450,6 +450,9 @@ Bảng~\ref{tab:e1} trình bày kết quả chính. Mỗi cấu hình chạy 3 s
 
 \begin{table}[t]
 \centering
+% Ban build 2026-08-18 16:19: bang nay o cot trai chay den x = 297,9 pt, tuc
+% tran 6,9 pt vao khoang giua hai cot. Siet tabcolsep cho vua.
+\setlength{\tabcolsep}{2pt}
 \small
 \begin{tabular}{llrr}
 \toprule
@@ -502,14 +505,13 @@ bằng chứng.
 \begin{table}[t]
 \centering
 \footnotesize
-% Do tren ban build 2026-08-18: bang nay chay den x = 552,6 pt trong khi
-% cot chu ket thuc o x = 526 pt, tuc tran 26,6 pt ra le phai. Hien no dang
-% noi o cot phai nen chi tho vao le giay, nhung neu LaTeX day no sang cot
-% trai thi no se de len cot ben canh.
-\setlength{\tabcolsep}{3pt}
+% Do tren ban build 2026-08-18 16:19: bang nay chay den x = 543,7 pt trong khi
+% cot chu ket thuc o x = 526 pt, tuc tran 17,7 pt ra le giay. Siet tabcolsep va
+% rut tieu de cot cuoi; chi doi chieu rong nen khong doi so trang.
+\setlength{\tabcolsep}{2pt}
 \begin{tabular}{lrrcc}
 \toprule
-Cấu hình & PPL & $\Delta$ & KTC 95\% & Tách rời \\
+Cấu hình & PPL & $\Delta$ & KTC 95\% & Tách \\
 \midrule
 Gốc (bậc 2, đủ) & 51,38 & & [51,05; 51,71] & \\
 \midrule
