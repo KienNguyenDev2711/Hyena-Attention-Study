@@ -564,7 +564,7 @@ Notes:
 
 1. **Quy ước lưới I(d):** chuẩn hoá trên lưới log không nhân bề rộng ô; trung vị độ dài hiệu dụng nhạy với quy ước (2,95 ↔ 90,5 token).
 2. **KTC chỉ bắt nhiễu khởi tạo:** 3 seed (2 với ablation) trên một tập test duy nhất, không bootstrap; nền nhiễu I(d) dựng từ **một** lần xáo trộn.
-3. **Lệch đơn vị:** $\alpha$ đo trên corpus BPE nhưng huấn luyện bằng âm tiết (lệch thang ~6,5% VI, ~19% EN).
+3. **Lệch đơn vị:** $\alpha$ đo trên corpus BPE nhưng huấn luyện bằng âm tiết (lệch thang ~6,5% VI, ~18,5% EN).
 4. **Chưa so cùng thời gian thực:** Hyena chậm hơn 1,50×/token → cùng giờ GPU, Transformer thấy nhiều token hơn.
 5. **Mẫu dữ liệu phụ thuộc phiên bản `datasets`:** nhánh EN phải lấy mẫu lại (110k tài liệu, cắt về đúng ngân sách VI); phiên bản thư viện nay được ghi vào mọi artifact.
 

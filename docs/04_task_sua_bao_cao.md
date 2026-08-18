@@ -128,7 +128,7 @@ Thời gian: 15 phút.
 
 ## T5. Thêm mục Hạn chế về lưới lấy mẫu I(d) — NẶNG
 
-- [ ] Chưa làm
+- [x] Đã làm (Tiến, 2026-08-18) — `report/acl_latex.tex` đã có Bảng `tab:alpha_sensitivity`; `hyena_study/analyze.py` có `alpha_mapping_sensitivity`; `tests/test_analyze.py` khóa các số VI 2,95/90,54 và EN 2,85/160,45
 
 **Vấn đề kỹ thuật:** `hyena_study/morphology.py:132` lấy mẫu `lags` theo thang log
 (`np.logspace(0, log10(512), 40)`), hoàn toàn hợp lý cho việc đo.
@@ -249,7 +249,7 @@ Thời gian: 15 phút.
 
 ## T10. Sửa cách trình bày 14,3% và tương quan 0,9974 — VỪA
 
-- [ ] Chưa làm
+- [x] Đã làm (Tiến, 2026-08-18) — mục 5.3 đã nêu metric, mẫu số, 256 kênh và tương quan log; `hyena_study/analyze.py` có `alpha_comparison_metrics`; test tái sinh 14,35%, 22,29%, 17,27%, 0,9974 và 75,81%
 
 **Điểm 1 — quy ước của 14,3%.** Công thức đã tái lập được là
 `mean(|ell_vi - ell_en| / ell_en)` = 14,35%. Nhưng đổi mẫu số sang `ell_vi` cho **22,29%**,
@@ -273,7 +273,7 @@ Thời gian: 20 phút (chưa tính phần viết hàm).
 
 ## T11. Ghi chú lệch đơn vị BPE và âm tiết — NHẸ
 
-- [ ] Chưa làm
+- [x] Đã làm (Tiến, 2026-08-18) — mục 3.5 đã ghi mismatch BPE-token sang syllable-token; cập nhật theo EN matched: 4,155 so với 5,100, lệch khoảng 18,5%, không diễn giải thành sai số PPL trực tiếp
 
 `E4_corpus_vi` dùng `alpha_vi_bpe500.json`, đo trên corpus BPE (3,851 ký tự mỗi token),
 nhưng huấn luyện với `tokenizer: syllable` (4,118 ký tự mỗi token). Độ dài hiệu dụng tính
@@ -282,7 +282,7 @@ bằng **token BPE** được áp thẳng lên **vị trí token âm tiết**.
 | Ngôn ngữ | ký tự/token khi đo (BPE) | ký tự/token khi huấn luyện (âm tiết) | lệch thang |
 |---|---|---|---|
 | VI | 3,851 | 4,118 | khoảng 6,5% |
-| EN | 4,155 | 5,115 | khoảng 19% |
+| EN | 4,155 | 5,100 | khoảng 18,5% |
 
 Nhỏ so với T5, nhưng với một đóng góp mà toàn bộ ý tưởng là khớp độ dài bộ lọc với khoảng
 cách thông tin, việc không nêu phép quy đổi đơn vị là chỗ phản biện sẽ nhắm vào.
