@@ -194,7 +194,7 @@ def fig_effective_lengths(results: Path, out: Path) -> Path | None:
                 edgecolor="white", lw=0.3)
     ax.axvline(34, color="k", ls=":", lw=1.0)
     # Chu dat BEN TRAI duong ke, can le phai: dat ben phai se bi chu giai che.
-    ax.text(30, ax.get_ylim()[1] * 0.5, "90% thông tin\nnằm bên trái",
+    ax.text(30, ax.get_ylim()[1] * 0.5, "80-90% thông tin\nnằm bên trái",
             fontsize=6, ha="right")
     ax.set_xscale("log")
     ax.set_xlabel("độ dài hiệu dụng của kênh (token)", fontsize=8)
