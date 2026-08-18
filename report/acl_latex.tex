@@ -147,18 +147,14 @@ hình ngôn ngữ tiếng Việt hiện có phần lớn dựa trên kiến trú
 Bài báo cáo này đóng góp ba điểm.
 
 Thứ nhất, chúng tôi cài đặt lại toán tử Hyena bám sát đặc tả gốc và
-\emph{chứng minh} tính đúng đắn của cài đặt bằng bộ kiểm thử tự động, trong đó
-có phép kiểm tính nhân quả dựa trên gradient kèm một phép kiểm ngược cố ý cài
-lỗi để xác nhận bộ kiểm thử có khả năng phát hiện.
-
+\emph{chứng minh} tính đúng đắn của cài đặt bằng bộ kiểm thử tự động, trong đó có
+phép kiểm tính nhân quả dựa trên gradient kèm một phép kiểm ngược cố ý cài lỗi.
 Thứ hai, chúng tôi đo đường cong suy giảm thông tin tương hỗ trên corpus tiếng
-Việt và tiếng Anh, dùng nó để khởi tạo phân bố suy giảm của bộ lọc Hyena. Đây
-là cách thay thế cho việc đặt tham số này bằng trực giác.
-
-Thứ ba, và đây là phần chúng tôi cho là có giá trị nhất, nhánh đối chứng tiếng
-Anh \emph{bác bỏ} giả thuyết ban đầu của chính chúng tôi rằng bộ lọc thu được
-mang tính đặc thù tiếng Việt. Chúng tôi báo cáo đầy đủ kết quả phủ định này
-thay vì lược bỏ nó.
+Việt và tiếng Anh, dùng nó để khởi tạo phân bố suy giảm của bộ lọc Hyena thay
+cho việc đặt tham số này bằng trực giác. Thứ ba, và đây là phần chúng tôi cho
+là có giá trị nhất, nhánh đối chứng tiếng Anh \emph{bác bỏ} giả thuyết ban đầu
+của chính chúng tôi rằng bộ lọc thu được mang tính đặc thù tiếng Việt; chúng
+tôi báo cáo đầy đủ kết quả phủ định này thay vì lược bỏ nó.
 
 % =============================================================================
 \section{Nền tảng: toán tử Hyena}
@@ -238,43 +234,22 @@ Cùng một công thức, cùng một quy trình ước lượng, áp cho cả h
 \subsection{Xử lý độ chệch của ước lượng}
 
 Ước lượng hợp lý cực đại của thông tin tương hỗ luôn chệch dương trên mẫu hữu
-hạn: hai chuỗi hoàn toàn độc lập vẫn cho $I > 0$ chỉ vì trùng khớp ngẫu nhiên,
-và độ chệch tăng theo bình phương cỡ bảng chữ cái. Bỏ qua điều này sẽ dẫn tới
-kết luận rằng ngôn ngữ có corpus nhỏ hơn mang nhiều thông tin tầm xa hơn, trong
-khi thực chất chỉ là nó chệch nhiều hơn.
-
+hạn, và độ chệch tăng theo bình phương cỡ bảng chữ cái; bỏ qua điều này sẽ dẫn
+tới kết luận rằng ngôn ngữ có corpus nhỏ hơn mang nhiều thông tin tầm xa hơn.
 Chúng tôi khử độ chệch bằng cách trừ đường nền xáo trộn: xáo ngẫu nhiên corpus
-phá huỷ mọi cấu trúc thật, nên thông tin tương hỗ đo được trên bản xáo chính là
-độ chệch. Ngoài ra chúng tôi thô hoá bảng chữ cái xuống $K$ ký hiệu thường gặp
-nhất, làm giảm độ chệch theo $K^2$; thô hoá khiến giá trị đo được thấp hơn giá
-trị thật, tức là ước lượng thận trọng.
+phá huỷ mọi cấu trúc thật, nên thông tin tương hỗ đo trên bản xáo chính là độ
+chệch. Ngoài ra chúng tôi thô hoá bảng chữ cái xuống $K$ ký hiệu thường gặp
+nhất, làm giảm độ chệch theo $K^2$; thô hoá cho ước lượng thận trọng.
 
 \subsection{Hiệu chuẩn công cụ đo}
 
 Một phép đo chưa được hiệu chuẩn trên dữ liệu có đáp án biết trước thì không
-dùng để kết luận được. Chúng tôi kiểm công cụ đo trên ba chuỗi nhân tạo, kết
-quả trong Bảng~\ref{tab:hieuchuan}.
-
-% Bang nay co BA cot chu dai nen KHONG vua mot cot cua bo cuc hai cot; de
-% \begin{table} thi no tran sang cot ben canh va de len chu. Dung table* de
-% trai het chieu ngang trang.
-\begin{table*}[t]
-\centering
-\small
-\begin{tabular}{lll}
-\toprule
-Chuỗi nhân tạo & Đáp án đúng & Bộ đo trả về \\
-\midrule
-Độc lập hoàn toàn & $I = 0$ & dư 2,82\% độ chệch \\
-Chu kỳ sao chép $k=8$ & đỉnh tại $d=8$ & đúng $d=8$, nổi 84$\times$ trên nền \\
-Markov & giảm đơn điệu & $I(1)=2{,}79$, tắt ở $d=64$ \\
-Suy biến (toàn 0) & phải từ chối & báo lỗi, không sinh $\alpha$ \\
-\bottomrule
-\end{tabular}
-\caption{Hiệu chuẩn công cụ đo thông tin tương hỗ trên dữ liệu có đáp án biết
-trước, trước khi áp lên corpus thật.}
-\label{tab:hieuchuan}
-\end{table*}
+dùng để kết luận được. Chúng tôi kiểm công cụ đo trên bốn chuỗi nhân tạo. Trên
+chuỗi độc lập hoàn toàn, đáp án đúng là $I = 0$ và bộ đo còn dư 2,82\% độ chệch.
+Trên chuỗi sao chép chu kỳ $k = 8$, nó đặt đỉnh đúng tại $d = 8$ và đỉnh đó nổi
+84 lần trên nền. Trên chuỗi Markov, nó cho $I(1) = 2{,}79$, giảm đơn điệu và tắt
+ở $d = 64$. Trên chuỗi suy biến toàn 0, nó báo lỗi và từ chối sinh $\alpha$ thay
+vì trả về một phân bố vô nghĩa.
 
 \subsection{Ánh xạ sang phân bố suy giảm}
 
@@ -284,13 +259,12 @@ tập độ dài hiệu dụng $\{\ell_i\}$, cuối cùng đặt $\alpha_i = L /
 tập trung nhiều thông tin sẽ được cấp nhiều kênh hơn.
 
 Trong các lần chạy E4, file $\alpha$ của nhánh corpus được sinh từ phép đo BPE
-với $K=500$, nhưng mô hình ngôn ngữ chính lại huấn luyện với đơn vị âm tiết.
-Do đó độ dài hiệu dụng đang được chuyển nguyên từ token BPE sang vị trí token
-âm tiết. Tỉ lệ ký tự trên mỗi token trong file đo là 3,851 so với 4,118 ở nhánh
-huấn luyện tiếng Việt, và 4,155 so với 5,115 ở nhánh tiếng Anh. Đây là lệch
-thang đơn vị khoảng 6,5\% và 19\%, nhưng chúng tôi chỉ xem nó là một hạn chế về
-diễn giải, không diễn giải trực tiếp thành sai số perplexity vì chưa có thí
-nghiệm cô lập yếu tố này.
+với $K=500$, nhưng mô hình ngôn ngữ chính lại huấn luyện với đơn vị âm tiết, nên
+độ dài hiệu dụng đang được chuyển nguyên từ token BPE sang vị trí token âm tiết.
+Tỉ lệ ký tự trên mỗi token trong file đo là 3,851 so với 4,118 ở nhánh tiếng
+Việt và 4,155 so với 5,115 ở nhánh tiếng Anh, tức lệch thang khoảng 6,5\% và
+19\%. Chúng tôi xem đây là hạn chế về diễn giải, không quy trực tiếp thành sai
+số perplexity vì chưa có thí nghiệm cô lập yếu tố này.
 
 \subsection{Hai đường cơ sở, và vì sao cần cả hai}
 
@@ -447,31 +421,11 @@ corpus, tiếng Anh & 141 & 214 & 2,85 \\
 \bottomrule
 \end{tabular}
 \caption{Số kênh trên tổng 256 có độ dài hiệu dụng dưới ngưỡng cho trước
-($L = 512$). Phép đo cho thấy 80\% tới 90\% thông tin nằm trong 34 token, tuỳ
-ngôn ngữ và bộ token hoá.}
+($L = 512$). Ngưỡng 34 token là nơi chứa 87,5\% thông tin với tiếng Việt và
+79,9\% với tiếng Anh khi đo bằng âm tiết, 88,7\% và 83,5\% khi đo bằng BPE.}
 \label{tab:dodaihieudung}
 \end{table}
 
-% ---------------------------------------------------------------------------
-% NEU VUOT QUA 8 TRANG: CAT HINH NAY TRUOC TIEN.
-% No trung noi dung voi Bang \ref{tab:dodaihieudung} ngay phia tren, chi khac
-% la trinh bay theo phan bo thay vi theo con so. Hai hinh con lai (fig:mi va
-% fig:eff) khong the cat vi khong co bang nao thay the duoc.
-% Cat bang cach xoa khoi block \begin{figure} toi \end{figure} nay va bo cau
-% tham chieu Hinh~\ref{fig:efflen} trong doan van ben duoi.
-% ---------------------------------------------------------------------------
-\begin{figure}[t]
-\centering
-\includegraphics[width=\columnwidth]{figures/fig_effective_lengths.pdf}
-\caption{Phân bố độ dài hiệu dụng của 256 kênh bộ lọc. Cấu hình
-\textsf{uniform} đặt toàn bộ kênh sang phải đường kẻ, tức ra ngoài vùng chứa
-80\% tới 90\% thông tin. Đường kẻ nằm ở $d = 34$ token; phần thông tin nằm
-bên trái nó là 87,5\% với tiếng Việt và 79,9\% với tiếng Anh khi đo bằng âm tiết,
-88,7\% và 83,5\% khi đo bằng BPE. Đây là
-lý do phải bổ sung đường cơ sở \textsf{logspace} trước
-khi rút ra bất kỳ kết luận nào về đề xuất.}
-\label{fig:efflen}
-\end{figure}
 
 \subsection{Nhánh đối chứng tiếng Anh bác bỏ tính đặc thù ngôn ngữ}
 
@@ -493,11 +447,6 @@ với đường cơ sở \textsf{logspace} vẫn đạt tương quan log 0,9377 
 Nguyên nhân nằm ở chính công thức ánh xạ: chuẩn hoá $I(d)$ thành phân bố xác
 suất làm triệt tiêu hệ số tỉ lệ chung, chỉ giữ lại hình dạng, mà hình dạng thì
 hai ngôn ngữ gần như giống nhau.
-
-Hệ quả cho cách diễn giải: nếu cấu hình corpus tỏ ra tốt hơn \textsf{logspace}
-trên tiếng Việt, gần như chắc chắn nó cũng tốt hơn tương tự trên tiếng Anh.
-Kết luận đúng khi đó phải là \emph{khởi tạo dựa trên dữ liệu có ích}, không
-phải \emph{thích ứng tiếng Việt có ích}.
 
 \subsection{Perplexity trên mô hình ngôn ngữ}
 
@@ -527,14 +476,11 @@ Hyena vượt Transformer 19,5\% trên tiếng Việt và 14,7\% trên tiếng A
 khoảng tin cậy tách rời hoàn toàn trong cả hai trường hợp.
 
 Chúng tôi nhấn mạnh rằng kết quả này \emph{mạnh hơn} điều bài báo gốc khẳng
-định. Bài báo gốc chỉ tuyên bố Hyena đạt chất lượng \emph{tương đương}
-Transformer. Cách đọc thận trọng là: ở quy mô nhỏ và ngân sách huấn luyện ngắn
-này, thiên lệch quy nạp của tích chập tỏ ra có lợi. Quan trọng hơn, chúng tôi
-\emph{không} tinh chỉnh siêu tham số riêng cho từng kiến trúc; cả hai dùng
-chung learning rate và lịch huấn luyện để bảo đảm chỉ có một biến thay đổi. Bộ
-siêu tham số dùng chung có thể không phải bộ tối ưu cho Transformer, nên phát
-biểu đúng là "Hyena vượt Transformer ở cùng siêu tham số và cùng quy mô này",
-không phải "Hyena tốt hơn Transformer".
+định, vốn chỉ tuyên bố Hyena đạt chất lượng \emph{tương đương} Transformer. Cách
+đọc thận trọng là ở quy mô nhỏ và ngân sách ngắn này, thiên lệch quy nạp của
+tích chập tỏ ra có lợi. Quan trọng hơn, cả hai kiến trúc dùng chung learning
+rate và lịch huấn luyện chứ không tinh chỉnh riêng, nên phát biểu đúng là
+"Hyena vượt Transformer ở cùng siêu tham số và cùng quy mô này".
 
 Đáng chú ý là khoảng cách trên tiếng Việt lớn hơn trên tiếng Anh, phù hợp với
 kết quả đo thông tin tương hỗ ở mục trước.
@@ -720,18 +666,7 @@ materialise ma trận $L \times L$. Cài đặt ngây thơ hết bộ nhớ ở 
 \label{tab:e5}
 \end{table}
 
-\begin{figure*}[t]
-\centering
-\includegraphics[width=\textwidth]{figures/fig_efficiency.pdf}
-\caption{Trái: mức tăng tốc của Hyena theo độ dài chuỗi, so với hai đường cơ
-sở attention. Điểm hoà vốn phụ thuộc mạnh vào đường cơ sở được chọn. Phải: bộ
-nhớ đỉnh. Cài đặt ngây thơ tăng xấp xỉ gấp bốn mỗi lần độ dài gấp đôi, đúng
-dạng bậc hai, và hết bộ nhớ ở $L = 8192$; Hyena tăng xấp xỉ gấp đôi, đúng dạng
-tuyến tính.}
-\label{fig:eff}
-\end{figure*}
-
-Bảng~\ref{tab:e5} và Hình~\ref{fig:eff} cho thấy điểm hoà vốn phụ thuộc mạnh
+Bảng~\ref{tab:e5} cho thấy điểm hoà vốn phụ thuộc mạnh
 vào đường cơ sở. So với cài đặt ngây thơ, Hyena vượt lên từ khoảng $L = 1024$.
 So với kernel tiết kiệm bộ nhớ, Hyena chỉ vượt lên ở $L = 4096$ với lượt tiến
 và lùi, và ở $L = 8192$ với lượt tiến.
@@ -754,32 +689,26 @@ suy từ corpus có trung vị độ dài hiệu dụng chỉ 2,9 token, chúng 
 vụ associative recall, vốn là công cụ chẩn đoán của chính bài báo gốc.
 
 Trước hết chúng tôi xác nhận tác vụ giải được: attention hai lớp đạt độ chính
-xác 1,000 ở độ dài 65 và giảm còn 0,196 ở độ dài 129, với mức đoán mò 0,100.
-Chúng tôi cũng xác nhận lịch warmup là yếu tố quyết định: cùng 18.720 bước và
-cùng learning rate, có warmup đạt 1,000 còn không có warmup chỉ đạt 0,187.
-
-Ở độ dài 65, attention đạt 1,000 với độ lệch bằng 0, còn mọi cấu hình Hyena đều
-kém hơn hẳn và dao động rất mạnh giữa các seed: 0,564 với \textsf{uniform} và
-0,170 với \textsf{logspace} (2 seed mỗi cấu hình). Độ lệch giữa các seed lớn
-hơn khoảng cách giữa bất kỳ cặp cấu hình nào, nên chúng tôi \emph{không} xếp
-hạng được các biến thể bộ lọc trên tác vụ này.
+xác 1,000 ở độ dài 65 và giảm còn 0,196 ở độ dài 129, với mức đoán mò 0,100;
+và lịch warmup là yếu tố quyết định, vì cùng 18.720 bước và cùng learning rate,
+có warmup đạt 1,000 còn không có warmup chỉ đạt 0,187. Ở độ dài 65, mọi cấu
+hình Hyena đều kém hơn attention và dao động rất mạnh giữa các seed: 0,564 với
+\textsf{uniform} và 0,170 với \textsf{logspace} (2 seed mỗi cấu hình). Độ lệch
+giữa các seed lớn hơn khoảng cách giữa bất kỳ cặp cấu hình nào, nên chúng tôi
+\emph{không} xếp hạng được các biến thể bộ lọc trên tác vụ này.
 
 Với cấu hình suy từ corpus, chúng tôi gộp 5 seed từ hai ngân sách huấn luyện
 (2 seed ở 18.720 bước và 3 seed ở 37.440 bước, cùng độ dài 65 và cùng cấu hình
-tác vụ). Việc gộp này được nêu rõ vì nó là một lựa chọn phương pháp, không phải
-một lần chạy đồng nhất. Phân bố thu được \emph{lưỡng cực}: ba lần đạt từ 0,922
-trở lên (0,922; 0,981; 0,987) và hai lần sập về gần mức đoán mò (0,092 và
-0,141), không có giá trị trung gian.
-
-Gấp đôi ngân sách huấn luyện làm các lần thành công tốt lên (từ 0,922 lên 0,98)
-nhưng \emph{không} khử được kiểu hỏng: độ lệch chỉ giảm từ 0,415 xuống 0,397.
-Đây là dấu hiệu của thất bại tối ưu hoá chứ không phải hội tụ chậm. Nói cách
-khác, Hyena có đủ năng lực biểu diễn cho tác vụ này ở độ dài 65, vì hai lần
-chạy đạt tới 0,98; vấn đề nằm ở độ ổn định huấn luyện.
-
-Với phân bố như vậy, báo cáo trung bình kèm độ lệch chuẩn là sai lệch, vì không
-lần chạy nào đạt gần giá trị trung bình. Đại lượng đúng là tỉ lệ thành công, ở
-đây là 3 trên 5, và độ chính xác khi thành công, ở đây là 0,963.
+tác vụ); việc gộp này là một lựa chọn phương pháp nên chúng tôi nêu rõ. Phân bố
+thu được \emph{lưỡng cực}: ba lần đạt 0,922; 0,981; 0,987 và hai lần sập về
+0,092 và 0,141, không có giá trị trung gian. Gấp đôi ngân sách làm các lần thành
+công tốt lên (0,922 lên 0,98) nhưng \emph{không} khử được kiểu hỏng: độ lệch chỉ
+giảm từ 0,415 xuống 0,397. Đây là dấu hiệu của thất bại tối ưu hoá chứ không
+phải hội tụ chậm; Hyena có đủ năng lực biểu diễn ở độ dài 65 vì hai lần chạy
+đạt tới 0,98, vấn đề nằm ở độ ổn định huấn luyện. Với phân bố như vậy, báo cáo
+trung bình kèm độ lệch chuẩn là sai lệch vì không lần chạy nào đạt gần giá trị
+trung bình; đại lượng đúng là tỉ lệ thành công, ở đây 3 trên 5, và độ chính xác
+khi thành công, ở đây 0,963.
 
 % =============================================================================
 \section{Thảo luận}
@@ -796,19 +725,15 @@ tiếng Việt mà chỉ cần áp dụng cùng quy trình lên tiếng Anh là 
 là lý do thực tế, không chỉ hình thức, để giữ nhóm đối chứng ngay cả khi ngân
 sách tính toán eo hẹp.
 
-Kết quả huấn luyện xác nhận dự đoán rút ra từ phân tích bộ lọc. Trước khi chạy
-thí nghiệm, việc hai bộ lọc lệch nhau chỉ 14,3\% trong khi cùng lệch khoảng
-76\% so với đường cơ sở đã cho thấy phần lớn tác dụng nằm ở việc thoát khỏi
-khoảng $\alpha$ tuỳ tiện, chứ không ở nguồn gốc ngôn ngữ của số liệu. Thực
-nghiệm cho đúng như vậy: chuyển từ \textsf{uniform} sang \textsf{logspace} thu
-được khoảng 0,9 PPL, còn chuyển tiếp sang corpus chỉ thu thêm 0,05 tới 0,29 PPL
-với khoảng tin cậy chồng lấn.
+Kết quả huấn luyện xác nhận đúng dự đoán rút ra từ phân tích bộ lọc trước khi
+chạy thí nghiệm: chuyển từ \textsf{uniform} sang \textsf{logspace} thu được
+khoảng 0,9 PPL, còn chuyển tiếp sang corpus chỉ thêm 0,05 tới 0,29 PPL với
+khoảng tin cậy chồng lấn.
 
-Việc chúng tôi bổ sung đường cơ sở \textsf{logspace} sau khi phát hiện
-\textsf{uniform} đặt toàn bộ kênh ra ngoài vùng có thông tin là quyết định
-quyết định tới kết luận. Nếu chỉ so với \textsf{uniform}, nhóm đã báo cáo mức
-cải thiện 1,19 PPL và quy toàn bộ cho đóng góp đề xuất, trong khi phần lớn
-trong đó chỉ là hệ quả của việc sửa một đường cơ sở đặt kém.
+Việc bổ sung đường cơ sở \textsf{logspace} sau khi phát hiện \textsf{uniform} đặt
+toàn bộ kênh ra ngoài vùng có thông tin là quyết định tới kết luận: nếu chỉ so
+với \textsf{uniform}, nhóm đã quy cả 1,19 PPL cho đóng góp đề xuất trong khi phần
+lớn chỉ là hệ quả của việc sửa một đường cơ sở đặt kém.
 
 Phần đặc thù tiếng Việt còn đứng vững nằm ở chỗ khác: ở khoảng cách ngắn tiếng
 Việt mang lượng thông tin tương hỗ cục bộ gấp 1,7 tới 2,3 lần tiếng Anh, và
@@ -843,45 +768,25 @@ tính toán của đồ án.
 Corpus được lấy mẫu ở chế độ streaming, trong đó việc xáo trộn chỉ diễn ra
 trong một bộ đệm hữu hạn chứ không xáo toàn cục, nên mẫu lệch về phía đầu tập
 dữ liệu. Nặng hơn, phép lấy mẫu này không tái lập được giữa các phiên bản thư
-viện \texttt{datasets}: cùng một seed nhưng khác phiên bản cho ra bộ tài liệu
-khác. Vì vậy nhánh tiếng Anh phải được lấy mẫu lại (110.000 tài liệu,
-\texttt{datasets} phiên bản 4.0.0, ghi trong mỗi tệp kết quả) rồi cắt xuống
-đúng ngân sách token của nhánh tiếng Việt, trong khi nhánh tiếng Việt giữ
-nguyên mẫu gốc. Nhờ đó phép so sánh chính chặt hơn trước (cùng số token duy
-nhất, cùng số bước), đổi lại hai ngôn ngữ không còn chung một lần lấy mẫu.
+viện \texttt{datasets}. Vì vậy nhánh tiếng Anh phải được lấy mẫu lại (110.000
+tài liệu, \texttt{datasets} phiên bản 4.0.0, ghi trong mỗi tệp kết quả) rồi cắt
+xuống đúng ngân sách token của nhánh tiếng Việt, còn nhánh tiếng Việt giữ mẫu
+gốc; đổi lại hai ngôn ngữ không còn chung một lần lấy mẫu.
 
 Một hạn chế riêng của cách sinh $\alpha$ nằm ở phép ánh xạ từ $I(d)$ sang phân
 bố độ dài hiệu dụng. Hàm \texttt{alphas\_from\_mi} hiện coi mỗi điểm trên lưới
 log của $d$ là một khối lượng xác suất rồi chuẩn hoá trực tiếp, tức chưa nhân
 với bề rộng ô quanh từng điểm. Vì lưới log dày ở khoảng cách ngắn và thưa ở
-khoảng cách dài, quy ước này kéo phân bố về phía các lag nhỏ. Bảng dưới là phân
-tích độ nhạy từ cùng các file \texttt{E0b\_mi\_decay\_*\_bpe\_k500.csv}; hàng có
-trọng số bề rộng ô chỉ là kiểm tra độ nhạy, không phải kết quả huấn luyện mới.
-
-\begin{table}[t]
-\centering
-\footnotesize
-% Cung ly do nhu Bang 6: ban build 2026-08-18 chay den x = 540,4 pt.
-\setlength{\tabcolsep}{3pt}
-\begin{tabular}{llrrr}
-\toprule
-Ngôn ngữ & Cách tính & trung vị & $\le 4$ & $\le 34$ \\
-\midrule
-VI & lưới log như khối lượng & 2,95 & 142 & 227 \\
-VI & nhân bề rộng ô & 90,54 & 39 & 87 \\
-EN & lưới log như khối lượng & 2,85 & 141 & 214 \\
-EN & nhân bề rộng ô & 160,45 & 27 & 57 \\
-\bottomrule
-\end{tabular}
-\caption{Độ nhạy của phân bố độ dài hiệu dụng khi đổi quy ước khối lượng xác
-suất trên lưới lag. Các hàng đầu là đúng artifact đã dùng trong E4; các hàng
-nhân bề rộng ô chỉ kiểm tra độ nhạy của diễn giải.}
-\label{tab:alpha_sensitivity}
-\end{table}
-
-Vì vậy phát biểu "bộ lọc corpus có trung vị khoảng 3 token" phải được hiểu theo
-đúng quy ước rời rạc đang dùng trong code, không phải kết luận duy nhất về nơi
-toàn bộ thông tin dự đoán của corpus nằm trong thang khoảng cách liên tục.
+khoảng cách dài, quy ước này kéo phân bố về phía các lag nhỏ. Đo lại trên cùng
+các file \texttt{E0b\_mi\_decay\_*\_bpe\_k500.csv} nhưng có nhân bề rộng ô,
+trung vị độ dài hiệu dụng của tiếng Việt chuyển từ 2,95 lên 90,54 token (số
+kênh có độ dài hiệu dụng $\le 4$ giảm từ 142 xuống 39, số kênh $\le 34$ giảm từ
+227 xuống 87), còn tiếng Anh chuyển từ 2,85 lên 160,45 token (141 xuống 27, và
+214 xuống 57). Phép tính có trọng số này chỉ là kiểm tra độ nhạy của cách diễn
+giải, không phải một kết quả huấn luyện mới. Vì vậy phát biểu "bộ lọc corpus có
+trung vị khoảng 3 token" phải được hiểu theo đúng quy ước rời rạc đang dùng
+trong code, không phải kết luận duy nhất về nơi toàn bộ thông tin dự đoán của
+corpus nằm trong thang khoảng cách liên tục.
 
 Cuối cùng, so sánh "cùng số ký tự" giữa hai ngôn ngữ không phải là "cùng lượng
 nội dung". Muốn khẳng định chuỗi tiếng Việt dài hơn ở cùng nội dung cần văn bản
