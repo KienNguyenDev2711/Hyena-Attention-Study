@@ -576,8 +576,12 @@ chứng.
 
 \begin{table}[t]
 \centering
-\small
-\setlength{\tabcolsep}{4pt}
+\footnotesize
+% Do tren ban build 2026-08-18: bang nay chay den x = 552,6 pt trong khi
+% cot chu ket thuc o x = 526 pt, tuc tran 26,6 pt ra le phai. Hien no dang
+% noi o cot phai nen chi tho vao le giay, nhung neu LaTeX day no sang cot
+% trai thi no se de len cot ben canh.
+\setlength{\tabcolsep}{3pt}
 \begin{tabular}{lrrcc}
 \toprule
 Cấu hình & PPL & $\Delta$ & KTC 95\% & Tách rời \\
@@ -856,7 +860,9 @@ trọng số bề rộng ô chỉ là kiểm tra độ nhạy, không phải k�
 
 \begin{table}[t]
 \centering
-\small
+\footnotesize
+% Cung ly do nhu Bang 6: ban build 2026-08-18 chay den x = 540,4 pt.
+\setlength{\tabcolsep}{3pt}
 \begin{tabular}{llrrr}
 \toprule
 Ngôn ngữ & Cách tính & trung vị & $\le 4$ & $\le 34$ \\
