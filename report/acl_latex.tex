@@ -195,7 +195,7 @@ của mạng nơ-ron. Tính nhân quả được bảo đảm bằng cách đán
 $t = 0 \dots L-1$ rồi đệm 0 cả tín hiệu lẫn bộ lọc tới độ dài ít nhất $2L-1$
 trước khi biến đổi Fourier.
 
-Phân bố $\{\alpha_i\}$ được mô tả là "thay đổi theo kênh" nhưng bài báo gốc không
+Phân bố $\{\alpha_i\}$ được mô tả là ``thay đổi theo kênh'' nhưng bài báo gốc không
 quy định khoảng giá trị cụ thể, cũng không gắn nó với thống kê của ngôn ngữ
 đích. Đây chính là khe hở mà đóng góp của chúng tôi nhắm vào.
 
@@ -478,7 +478,7 @@ Chúng tôi nhấn mạnh rằng kết quả này \emph{mạnh hơn} điều bà
 đọc thận trọng là ở quy mô nhỏ và ngân sách ngắn này, thiên lệch quy nạp của
 tích chập tỏ ra có lợi. Quan trọng hơn, cả hai kiến trúc dùng chung learning
 rate và lịch huấn luyện chứ không tinh chỉnh riêng, nên phát biểu đúng là
-"Hyena vượt Transformer ở cùng siêu tham số và cùng quy mô này".
+``Hyena vượt Transformer ở cùng siêu tham số và cùng quy mô này''.
 
 Đáng chú ý là khoảng cách trên tiếng Việt lớn hơn trên tiếng Anh, phù hợp với
 kết quả đo thông tin tương hỗ ở mục trước.
@@ -642,7 +642,7 @@ $L$ & \textsf{sdpa} & ngây thơ & \textsf{sdpa} & ngây thơ \\
 \end{tabular}
 \caption{Mức tăng tốc của Hyena so với hai đường cơ sở attention, tính bằng
 thương số thời gian chạy (số lớn hơn 1 nghĩa là Hyena nhanh hơn). Cột
-\textsf{sdpa} là kernel tiết kiệm bộ nhớ của PyTorch, cột "ngây thơ" là cài đặt
+\textsf{sdpa} là kernel tiết kiệm bộ nhớ của PyTorch, cột ``ngây thơ'' là cài đặt
 materialise ma trận $L \times L$. Cài đặt ngây thơ hết bộ nhớ ở $L = 8192$.}
 \label{tab:e5}
 \end{table}
@@ -700,9 +700,7 @@ tiếng Anh bác bỏ giả thuyết đó bằng số liệu: hai bộ lọc l�
 khi cùng lệch khoảng 76\% so với đường cơ sở.
 
 Nếu không có nhánh đối chứng, nhóm đã có thể công bố một khẳng định về đặc thù
-tiếng Việt mà chỉ cần áp dụng cùng quy trình lên tiếng Anh là bác bỏ được. Đây
-là lý do thực tế, không chỉ hình thức, để giữ nhóm đối chứng ngay cả khi ngân
-sách tính toán eo hẹp.
+tiếng Việt mà chỉ cần áp dụng cùng quy trình lên tiếng Anh là bác bỏ được.
 
 Kết quả huấn luyện xác nhận đúng dự đoán rút ra từ phân tích bộ lọc trước khi
 chạy thí nghiệm: chuyển từ \textsf{uniform} sang \textsf{logspace} thu được
@@ -761,11 +759,12 @@ trung vị độ dài hiệu dụng của tiếng Việt chuyển từ 2,95 lên
 $\le 4$ giảm từ 142 xuống 39, số kênh $\le 34$ từ 227 xuống 87), tiếng Anh từ
 2,85 lên 160,45 token (141 xuống 27, và 214 xuống 57). Đây chỉ là kiểm tra độ
 nhạy của cách diễn giải, không phải kết quả huấn luyện mới; vì vậy phát biểu
-"bộ lọc corpus có trung vị khoảng 3 token" phải hiểu theo đúng quy ước rời rạc
+``bộ lọc corpus có trung vị khoảng 3 token'' phải hiểu theo đúng quy ước rời rạc
 đang dùng trong code.
 
-Cuối cùng, so sánh "cùng số ký tự" giữa hai ngôn ngữ không phải là "cùng lượng
-nội dung". Muốn khẳng định chuỗi tiếng Việt dài hơn ở cùng nội dung cần văn bản
+Cuối cùng, so sánh ``cùng số ký tự'' giữa hai ngôn ngữ không phải là
+``cùng lượng nội dung''. Muốn khẳng định chuỗi tiếng Việt dài hơn ở cùng nội
+dung cần văn bản
 song ngữ song song, thứ chúng tôi không có.
 
 % =============================================================================
