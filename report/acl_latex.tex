@@ -332,12 +332,13 @@ hiểm nhất của loại nghiên cứu này.
 Chúng tôi khử nó bằng 67 phép kiểm tự động, trong đó phép kiểm cốt lõi dùng
 gradient: lấy đạo hàm của đầu ra tại vị trí $t$ theo đầu vào tại mọi vị trí
 $s > t$ và đòi hỏi kết quả bằng 0. Attention đạt 0 tuyệt đối nhờ cơ chế che;
-Hyena đạt $2{,}6 \times 10^{-16}$, tức nhân quả tới sai số máy, vì vòng biến đổi
+Hyena đạt dưới $10^{-15}$ trên mọi biến thể đã kiểm (lần chạy khi viết báo cáo
+này cho $3{,}8 \times 10^{-16}$), tức nhân quả tới sai số máy, vì vòng biến đổi
 Fourier thuận nghịch để lại nhiễu làm tròn.
 
 Quan trọng hơn, chúng tôi bổ sung một \emph{phép kiểm ngược}: cố tình cài lỗi
 nhân quả kinh điển (quên cắt phần đệm phải của tích chập ngắn) và xác nhận tỉ
-lệ rò rỉ vọt lên $9{,}1 \times 10^{-1}$. Chênh lệch 15 bậc độ lớn cho thấy bộ
+lệ rò rỉ vọt lên khoảng $2$. Chênh lệch hơn 15 bậc độ lớn cho thấy bộ
 kiểm thử thực sự có khả năng phát hiện lỗi, chứ không phải im lặng vì không đủ
 nhạy.
 
@@ -487,8 +488,8 @@ kết quả đo thông tin tương hỗ ở mục trước.
 
 \subsection{Ảnh hưởng của đơn vị token hoá}
 
-Ở cùng lượng ký tự, tiếng Việt sinh nhiều token hơn: 4,101 ký tự trên mỗi token
-so với 5,121 của tiếng Anh, tỉ lệ 1,249.
+Ở cùng lượng ký tự, tiếng Việt sinh nhiều token hơn: trên chính corpus huấn
+luyện, 4,118 ký tự trên mỗi token so với 5,100 của tiếng Anh, tỉ lệ 1,239.
 
 \begin{table}[t]
 \centering

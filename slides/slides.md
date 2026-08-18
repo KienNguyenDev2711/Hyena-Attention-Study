@@ -490,7 +490,7 @@ Trung thực về dòng N=1 (T8). 2 seed mỗi nhánh, KTC rộng, chỉ 2 dòng
 
 - **Tiếng Việt:** `logspace` và corpus đều **tách rời** khỏi `uniform` (−0,90 / −1,19 PPL) → *khoảng* $\alpha$ thực sự quan trọng, chọn tuỳ tiện gây thiệt hại đo được.
 - **Tiếng Anh:** cùng chiều (−0,85 / −0,91 PPL) nhưng KTC **chồng lấn** do phương sai seed của `uniform` lớn.
-- **corpus vs `logspace`:** chỉ hơn 0,285 (VI) / 0,055 (EN) PPL, chồng lấn cả hai → **không kết luận được H3**.
+- **corpus vs `logspace`:** chỉ hơn 0,285 (VI) / 0,052 (EN) PPL, chồng lấn cả hai → **không kết luận được H3**.
 
 <div class="warn">
 
@@ -509,7 +509,7 @@ Slide nhạy cảm nhất: tên đề tài nhấn H3 mà H3 không kết luận 
 
 - Ở $L = 8192$, Hyena nhanh hơn kernel attention tiết kiệm bộ nhớ **1,88 lần** (lượt tiến và lùi); attention dày đặc hết bộ nhớ từ trước đó.
 - Bộ nhớ Hyena tăng xấp xỉ **gấp đôi khi L gấp đôi** (gần tuyến tính); attention tăng gấp bốn (bậc hai).
-- Đổi lại, ở $L = 512$ mỗi token của Hyena **chậm hơn 1,50 lần** Transformer (91,7–92,5k so với 138,5–138,6k token/giây, Kaggle T4); chi phí cố định của FFT chỉ được bù khi $L \ge 8$K.
+- Đổi lại, ở $L = 512$ mỗi token của Hyena **chậm hơn 1,51 lần** Transformer (91,7–92,5k so với 138,5–138,6k token/giây, Kaggle T4); chi phí cố định của FFT chỉ được bù khi $L \ge 8$K.
 
 <div class="box">
 
@@ -565,7 +565,7 @@ Notes:
 1. **Quy ước lưới I(d):** chuẩn hoá trên lưới log không nhân bề rộng ô; trung vị độ dài hiệu dụng nhạy với quy ước (2,95 ↔ 90,5 token).
 2. **KTC chỉ bắt nhiễu khởi tạo:** 3 seed (2 với ablation) trên một tập test duy nhất, không bootstrap; nền nhiễu I(d) dựng từ **một** lần xáo trộn.
 3. **Lệch đơn vị:** $\alpha$ đo trên corpus BPE nhưng huấn luyện bằng âm tiết (lệch thang ~6,5% VI, ~18,5% EN).
-4. **Chưa so cùng thời gian thực:** Hyena chậm hơn 1,50×/token → cùng giờ GPU, Transformer thấy nhiều token hơn.
+4. **Chưa so cùng thời gian thực:** Hyena chậm hơn 1,51×/token → cùng giờ GPU, Transformer thấy nhiều token hơn.
 5. **Mẫu dữ liệu phụ thuộc phiên bản `datasets`:** nhánh EN phải lấy mẫu lại (110k tài liệu, cắt về đúng ngân sách VI); phiên bản thư viện nay được ghi vào mọi artifact.
 
 <!--
