@@ -191,15 +191,11 @@ với $\mathrm{Window}(t) = \exp\{-\alpha t\}$ và $\alpha$ thay đổi theo t�
 độc lập, nhằm buộc các bộ lọc có độ dài khác nhau. Mạng $\mathrm{FFN}$ dùng kích
 hoạt tuần hoàn tần số cao (sine), theo dòng biểu diễn ngầm
 \citep{sitzmann2020siren, romero2021ckconv}, để khắc phục thiên lệch tần số thấp
-của mạng nơ-ron.
+của mạng nơ-ron. Tính nhân quả được bảo đảm bằng cách đánh giá bộ lọc tại
+$t = 0 \dots L-1$ rồi đệm 0 cả tín hiệu lẫn bộ lọc tới độ dài ít nhất $2L-1$
+trước khi biến đổi Fourier.
 
-Tính nhân quả được bảo đảm bằng cách đánh giá bộ lọc tại $t = 0 \dots L-1$ rồi
-đệm 0 cả tín hiệu lẫn bộ lọc tới độ dài ít nhất $2L-1$ trước khi biến đổi
-Fourier.
-
-\subsection{Những gì bài báo gốc để ngỏ}
-
-Phân bố $\{\alpha_i\}$ được mô tả là "thay đổi theo kênh" nhưng bài báo không
+Phân bố $\{\alpha_i\}$ được mô tả là "thay đổi theo kênh" nhưng bài báo gốc không
 quy định khoảng giá trị cụ thể, cũng không gắn nó với thống kê của ngôn ngữ
 đích. Đây chính là khe hở mà đóng góp của chúng tôi nhắm vào.
 
@@ -218,10 +214,9 @@ hơn không?
 \subsection{Đo cái gì, và vì sao không dùng bộ tách từ}
 
 Phương án hiển nhiên là chạy bộ tách từ tiếng Việt rồi lấy phân bố số âm tiết
-mỗi từ. Chúng tôi bác bỏ phương án này vì nó phá hỏng nhánh đối chứng: tiếng
-Anh không có bộ tách từ tương đương, nên nếu hai ngôn ngữ được đo bằng hai công
-cụ khác nhau thì mọi khác biệt quan sát được đều có thể quy cho công cụ đo thay
-vì cho ngôn ngữ.
+mỗi từ. Chúng tôi bác bỏ phương án này vì nó phá hỏng nhánh đối chứng: tiếng Anh
+không có bộ tách từ tương đương, nên mọi khác biệt quan sát được đều có thể quy
+cho công cụ đo thay vì cho ngôn ngữ.
 
 Thay vào đó chúng tôi đo trực tiếp thông tin tương hỗ giữa hai token cách nhau
 $d$ vị trí:
@@ -296,13 +291,12 @@ không giữ nguyên tổng tham số: bậc $N = 1$ ít hơn cấu hình gốc 
 $N = 3$ nhiều hơn 4,4\%, bỏ positional embedding ít hơn 1,7\% (xem
 Bảng~\ref{tab:e3}).
 
-Chúng tôi cấp positional embedding học được cho cả hai loại mô hình. Attention
-bắt buộc cần thông tin vị trí còn Hyena thì không; cấp cho một bên mà không cấp
-cho bên kia sẽ tạo ra hai biến thay đổi thay vì một. Một nhánh ablation riêng
-kiểm tra Hyena có thật sự không cần.
-
-Huấn luyện tính theo ngân sách token cố định chứ không theo số epoch, vì so
-theo epoch sẽ thiên vị mô hình chạy nhanh hơn.
+Chúng tôi cấp positional embedding học được cho cả hai loại mô hình: attention
+bắt buộc cần thông tin vị trí còn Hyena thì không, nên cấp cho một bên mà không
+cấp cho bên kia sẽ tạo ra hai biến thay đổi thay vì một; một nhánh ablation
+riêng kiểm tra Hyena có thật sự không cần. Huấn luyện tính theo ngân sách token
+cố định chứ không theo số epoch, vì so theo epoch sẽ thiên vị mô hình chạy nhanh
+hơn.
 
 \subsection{Mô hình và dữ liệu}
 
@@ -491,33 +485,17 @@ kết quả đo thông tin tương hỗ ở mục trước.
 Ở cùng lượng ký tự, tiếng Việt sinh nhiều token hơn: trên chính corpus huấn
 luyện, 4,118 ký tự trên mỗi token so với 5,100 của tiếng Anh, tỉ lệ 1,239.
 
-\begin{table}[t]
-\centering
-\small
-\begin{tabular}{lrrr}
-\toprule
-Token hoá & Hyena & Transformer & Tỉ lệ \\
-\midrule
-Âm tiết & 51,38 & 63,86 & 1,243 \\
-BPE     & 80,02 & 96,22 & 1,202 \\
-\bottomrule
-\end{tabular}
-\caption{Perplexity theo đơn vị token hoá, chỉ tiếng Việt, 3 seed. Cột tỉ lệ là
-thương số giữa Transformer và Hyena.}
-\label{tab:e2}
-\end{table}
-
-Ở đây có một cạm bẫy diễn giải cần nêu rõ. Perplexity \emph{không so sánh được
-giữa hai bộ token hoá khác nhau}, vì từ điển khác nhau cho entropy trên mỗi
-token khác nhau. Con số 51,38 với âm tiết và 80,02 với BPE \emph{không} có
-nghĩa là âm tiết tốt hơn.
-
-Đại lượng so sánh được là tỉ lệ giữa hai mô hình trong cùng một bộ token hoá.
-Lợi thế tương đối của Hyena lớn hơn khi token hoá theo âm tiết (1,243) so với
-BPE (1,202), đúng chiều với giả thuyết rằng chuỗi dài hơn làm lợi thế dưới bậc
-hai có giá trị hơn. Tuy nhiên chênh lệch giữa hai tỉ lệ nhỏ và chúng tôi không
-ước lượng khoảng tin cậy cho tỉ lệ, nên đây chỉ là dấu hiệu, chưa phải bằng
-chứng.
+Chỉ xét tiếng Việt, với token hoá âm tiết Hyena đạt 51,38 so với 63,86 của
+Transformer, tỉ lệ 1,243; với BPE là 80,02 so với 96,22, tỉ lệ 1,202 (3 seed mỗi
+ô). Ở đây có một cạm bẫy diễn giải: perplexity \emph{không so sánh được giữa hai
+bộ token hoá khác nhau} vì từ điển khác nhau cho entropy trên mỗi token khác
+nhau, nên 51,38 với âm tiết và 80,02 với BPE \emph{không} có nghĩa là âm tiết tốt
+hơn. Đại lượng so sánh được là tỉ lệ giữa hai mô hình trong cùng một bộ token
+hoá. Lợi thế tương đối của Hyena lớn hơn khi token hoá theo âm tiết (1,243) so
+với BPE (1,202), đúng chiều với giả thuyết rằng chuỗi dài hơn làm lợi thế dưới
+bậc hai có giá trị hơn. Tuy nhiên chênh lệch giữa hai tỉ lệ nhỏ và chúng tôi
+không ước lượng khoảng tin cậy cho tỉ lệ, nên đây chỉ là dấu hiệu, chưa phải
+bằng chứng.
 
 \subsection{Ablation các thành phần của Hyena}
 
@@ -701,15 +679,13 @@ giữa các seed lớn hơn khoảng cách giữa bất kỳ cặp cấu hình n
 Với cấu hình suy từ corpus, chúng tôi gộp 5 seed từ hai ngân sách huấn luyện
 (2 seed ở 18.720 bước và 3 seed ở 37.440 bước, cùng độ dài 65 và cùng cấu hình
 tác vụ); việc gộp này là một lựa chọn phương pháp nên chúng tôi nêu rõ. Phân bố
-thu được \emph{lưỡng cực}: ba lần đạt 0,922; 0,981; 0,987 và hai lần sập về
-0,092 và 0,141, không có giá trị trung gian. Gấp đôi ngân sách làm các lần thành
-công tốt lên (0,922 lên 0,98) nhưng \emph{không} khử được kiểu hỏng: độ lệch chỉ
-giảm từ 0,415 xuống 0,397. Đây là dấu hiệu của thất bại tối ưu hoá chứ không
-phải hội tụ chậm; Hyena có đủ năng lực biểu diễn ở độ dài 65 vì hai lần chạy
-đạt tới 0,98, vấn đề nằm ở độ ổn định huấn luyện. Với phân bố như vậy, báo cáo
-trung bình kèm độ lệch chuẩn là sai lệch vì không lần chạy nào đạt gần giá trị
-trung bình; đại lượng đúng là tỉ lệ thành công, ở đây 3 trên 5, và độ chính xác
-khi thành công, ở đây 0,963.
+thu được \emph{lưỡng cực}: ba lần đạt 0,922; 0,981; 0,987 và hai lần sập về 0,092
+và 0,141, không có giá trị trung gian. Gấp đôi ngân sách làm các lần thành công
+tốt lên (0,922 lên 0,98) nhưng \emph{không} khử được kiểu hỏng (độ lệch 0,415
+xuống 0,397), tức thất bại tối ưu hoá chứ không phải hội tụ chậm: Hyena có đủ
+năng lực biểu diễn ở độ dài 65. Với phân bố lưỡng cực, báo cáo trung bình kèm độ
+lệch chuẩn là sai lệch; đại lượng đúng là tỉ lệ thành công 3 trên 5 và độ chính
+xác khi thành công 0,963.
 
 % =============================================================================
 \section{Thảo luận}
@@ -775,19 +751,16 @@ xuống đúng ngân sách token của nhánh tiếng Việt, còn nhánh tiến
 gốc; đổi lại hai ngôn ngữ không còn chung một lần lấy mẫu.
 
 Một hạn chế riêng của cách sinh $\alpha$ nằm ở phép ánh xạ từ $I(d)$ sang phân
-bố độ dài hiệu dụng. Hàm \texttt{alphas\_from\_mi} hiện coi mỗi điểm trên lưới
-log của $d$ là một khối lượng xác suất rồi chuẩn hoá trực tiếp, tức chưa nhân
-với bề rộng ô quanh từng điểm. Vì lưới log dày ở khoảng cách ngắn và thưa ở
-khoảng cách dài, quy ước này kéo phân bố về phía các lag nhỏ. Đo lại trên cùng
-các file \texttt{E0b\_mi\_decay\_*\_bpe\_k500.csv} nhưng có nhân bề rộng ô,
-trung vị độ dài hiệu dụng của tiếng Việt chuyển từ 2,95 lên 90,54 token (số
-kênh có độ dài hiệu dụng $\le 4$ giảm từ 142 xuống 39, số kênh $\le 34$ giảm từ
-227 xuống 87), còn tiếng Anh chuyển từ 2,85 lên 160,45 token (141 xuống 27, và
-214 xuống 57). Phép tính có trọng số này chỉ là kiểm tra độ nhạy của cách diễn
-giải, không phải một kết quả huấn luyện mới. Vì vậy phát biểu "bộ lọc corpus có
-trung vị khoảng 3 token" phải được hiểu theo đúng quy ước rời rạc đang dùng
-trong code, không phải kết luận duy nhất về nơi toàn bộ thông tin dự đoán của
-corpus nằm trong thang khoảng cách liên tục.
+bố độ dài hiệu dụng. Hàm \texttt{alphas\_from\_mi} coi mỗi điểm trên lưới log
+của $d$ là một khối lượng xác suất rồi chuẩn hoá trực tiếp, chưa nhân với bề
+rộng ô quanh từng điểm; vì lưới log dày ở khoảng cách ngắn, quy ước này kéo
+phân bố về phía các lag nhỏ. Đo lại trên cùng dữ liệu nhưng có nhân bề rộng ô,
+trung vị độ dài hiệu dụng của tiếng Việt chuyển từ 2,95 lên 90,54 token (số kênh
+$\le 4$ giảm từ 142 xuống 39, số kênh $\le 34$ từ 227 xuống 87), tiếng Anh từ
+2,85 lên 160,45 token (141 xuống 27, và 214 xuống 57). Đây chỉ là kiểm tra độ
+nhạy của cách diễn giải, không phải kết quả huấn luyện mới; vì vậy phát biểu
+"bộ lọc corpus có trung vị khoảng 3 token" phải hiểu theo đúng quy ước rời rạc
+đang dùng trong code.
 
 Cuối cùng, so sánh "cùng số ký tự" giữa hai ngôn ngữ không phải là "cùng lượng
 nội dung". Muốn khẳng định chuỗi tiếng Việt dài hơn ở cùng nội dung cần văn bản
