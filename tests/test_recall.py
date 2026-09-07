@@ -189,11 +189,16 @@ def test_task_is_actually_solvable_by_attention():
     TEST NANG - CHI CHAY TREN GPU (Kaggle). Xem `_heavy_allowed`.
     """
     if not _heavy_allowed():
-        raise SkipTest(
+        msg = (
             "test nang (huan luyen thuc su) - bo qua tren may khong co GPU.\n"
             "         Chay tren Kaggle GPU, hoac ep chay bang: "
             "python tests/test_recall.py --heavy"
         )
+        if "pytest" in sys.modules:
+            import pytest
+
+            pytest.skip(msg)
+        raise SkipTest(msg)
 
     torch.manual_seed(0)
     np.random.seed(0)

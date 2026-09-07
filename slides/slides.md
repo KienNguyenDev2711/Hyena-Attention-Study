@@ -389,7 +389,7 @@ Slide phòng thủ cho câu hỏi chắc chắn bị hỏi (T5). Chủ động k
 | Ngân sách | cùng 49.995.776 token huấn luyện = 6.103 bước ≈ 1,31 epoch mỗi nhánh |
 | Seed | 3 seed cho E1/E2/E4 · 2 seed cho E3 · KTC 95% phân phối $t$ |
 
-- **67 phép kiểm tự động**, gồm kiểm chứng nhân quả: rò rỉ tương lai $< 10^{-15}$ trên mọi biến thể; bản cố tình sai vọt lên 1,98, tức bộ test bắt được lỗi thật.
+- **67 phép kiểm tự động**, gồm kiểm chứng nhân quả: rò rỉ tương lai $< 10^{-15}$ trên mọi biến thể; bản cố tình sai vọt lên $9{,}1 \times 10^{-1}$, tức bộ test bắt được lỗi thật.
 - Kết luận khoa học so với đối chứng công bằng `logspace`, không so với hình nộm `uniform`.
 
 <!--
