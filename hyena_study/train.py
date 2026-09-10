@@ -284,6 +284,30 @@ def train(args: argparse.Namespace) -> dict:
             w = csv.DictWriter(fh, fieldnames=list(history[0].keys()))
             w.writeheader()
             w.writerows(history)
+    # Checkpoint là TUỲ CHỌN và mặc định tắt. Ghi SAU tệp JSON tóm tắt để nếu
+    # bước lưu trọng số có hỏng thì số liệu thí nghiệm vẫn còn nguyên trên đĩa.
+    if args.save_ckpt:
+        from .checkpoint import save_checkpoint
+        ckpt_path = Path(args.ckpt_path) if args.ckpt_path else (out_dir / f"{run_name}.pt")
+        save_checkpoint(
+            ckpt_path, model=model, cfg=cfg, tok=tok, tokenizer_kind=args.tokenizer,
+            run_name=run_name,
+            metrics={"test_ppl": test_ppl, "test_loss": test_loss,
+                     "final_val_ppl": summary["final_val_ppl"],
+                     "params_total": breakdown["total"],
+                     "tokens_seen": seen_tokens, "steps": step},
+            corpus=stats_to_dict(stats),
+            train_config=vars(args),
+        )
+        mb = ckpt_path.stat().st_size / 2**20
+        print(f"[{run_name}] đã lưu checkpoint {ckpt_path} ({mb:.1f} MB)")
+        # Ghi lại tệp tóm tắt để tên checkpoint có mặt trong đó. Nếu chỉ sửa dict
+        # trong bộ nhớ thì giá trị trả về và tệp trên đĩa sẽ lệch nhau, đúng loại
+        # sai lệch âm thầm mà repo này cố tránh.
+        summary["checkpoint"] = ckpt_path.name
+        (out_dir / f"{run_name}.json").write_text(
+            json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8")
+
     print(f"[{run_name}] đã ghi kết quả vào {out_dir}")
     return summary
 
@@ -356,6 +380,14 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     g.add_argument("--log_every", type=int, default=100)
     g.add_argument("--eval_every", type=int, default=500)
     g.add_argument("--eval_batches", type=int, default=50)
+
+    g = p.add_argument_group("checkpoint (chỉ dùng cho demo sinh văn bản)")
+    g.add_argument("--save_ckpt", action="store_true",
+                   help="lưu trọng số + cấu hình + bộ từ điển vào <out_dir>/<run_name>.pt. "
+                        "MẶC ĐỊNH TẮT: các thí nghiệm E1-E6 chỉ cần điểm số, và một "
+                        "checkpoint nặng khoảng 30 MB, bật cho mọi lần chạy là phí đĩa.")
+    g.add_argument("--ckpt_path", default=None,
+                   help="đường dẫn tệp .pt, để trống thì lấy <out_dir>/<run_name>.pt")
 
     return p.parse_args(argv)
 
