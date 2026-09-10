@@ -33,6 +33,7 @@ import argparse
 import json
 import re
 import time
+import unicodedata
 from pathlib import Path
 
 import torch
@@ -47,6 +48,37 @@ from .data.corpus import EOS, PAD, UNK, normalize_text
 # -----------------------------------------------------------------------------
 _SPACE_BEFORE_PUNCT = re.compile(r"\s+([,.;:!?%\)\]\}»…])")
 _SPACE_AFTER_OPEN = re.compile(r"([\(\[\{«])\s+")
+
+
+# Cac pham tru Unicode khong ve ra glyph nao: dinh dang an, dieu khien, dau phu
+# ket hop, va cac loai khoang trang.
+_INVISIBLE_CATEGORIES = frozenset({"Cf", "Cc", "Mn", "Me", "Zs", "Zl", "Zp"})
+
+
+def _is_invisible(s: str) -> bool:
+    return not s or all(unicodedata.category(c) in _INVISIBLE_CATEGORIES for c in s)
+
+
+def invisible_token_ids(tok) -> tuple[int, ...]:
+    r"""Id cua nhung token khong hien ra chu nao tren man hinh.
+
+    VI SAO CAN: `SyllableTokenizer._split` dung `\w+`, ma `\w` trong Unicode bao gom
+    ca dau phu ket hop va mot so ky tu dinh dang. Wikipedia tieng Viet co lan chu
+    Thai, Tang, Khmer va ky tu ZERO WIDTH SPACE, nen tu dien 16.000 chua 26 token
+    nhu vay. Da quan sat duoc mo hinh nha ra U+200B lap lai 16 lan (seed 7): tren
+    man hinh trong nhu mo hinh bi treo, trong khi that ra no dang sinh ky tu that.
+
+    Chan chung KHONG phai la lam dep ket qua: day cung mot loai voi <pad> va <unk>,
+    tuc nhung ky hieu khong phai chu doc duoc. Muon xem nguyen trang thi dung
+    `--keep_invisible`.
+
+    Chi ap dung cho bo token hoa co danh sach `vocab` (am tiet). Voi BPE tra ve
+    rong, va bao dung nhu vay thay vi doan mo.
+    """
+    vocab = getattr(tok, "vocab", None)
+    if vocab is None:
+        return ()
+    return tuple(i for i, s in enumerate(vocab) if _is_invisible(s))
 
 
 def detokenize(tok, ids: list[int]) -> str:
@@ -148,13 +180,18 @@ def generate_ids(model, prompt_ids: list[int], *, max_new_tokens: int = 60,
     }
 
 
-def generate_text(model, tok, prompt: str, **kw) -> dict:
+def generate_text(model, tok, prompt: str, *, ban_invisible: bool = True, **kw) -> dict:
     """Bọc `generate_ids` ở mức chữ: chuẩn hoá, token hoá, sinh, giải mã."""
     clean = normalize_text(prompt)
     prompt_ids = tok.encode(clean)
     if not prompt_ids:
         raise ValueError(f"prompt {prompt!r} token hoá ra rỗng")
     unk_in_prompt = sum(1 for i in prompt_ids if i == UNK)
+    n_invisible = 0
+    if ban_invisible:
+        inv = invisible_token_ids(tok)
+        n_invisible = len(inv)
+        kw["banned"] = tuple(kw.get("banned", (PAD, UNK))) + inv
     out = generate_ids(model, prompt_ids, **kw)
     out.update({
         "prompt": clean,
@@ -163,6 +200,7 @@ def generate_text(model, tok, prompt: str, **kw) -> dict:
         "continuation": detokenize(tok, out["new_ids"]),
         "full_text": detokenize(tok, out["all_ids"]),
         "raw_continuation": tok.decode(out["new_ids"]),
+        "n_banned_invisible": n_invisible,
     })
     return out
 
@@ -186,6 +224,7 @@ def _one(model, tok, meta, args, label: str) -> dict:
         top_k=args.top_k, top_p=args.top_p,
         repetition_penalty=args.repetition_penalty,
         seed=args.seed, device=args.device,
+        ban_invisible=not args.keep_invisible,
     )
     res["label"] = label
     res["run_name"] = meta.get("run_name")
@@ -230,6 +269,10 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     p.add_argument("--device", default="cpu", help="cpu hoặc cuda")
     p.add_argument("--samples_json", default=None,
                    help="ghi toàn bộ kết quả kèm siêu dữ liệu ra tệp JSON")
+    p.add_argument("--keep_invisible", action="store_true",
+                   help="cho phép mô hình nhả ra token không hiển thị được (ký tự "
+                        "zero-width, dấu phụ của chữ viết khác). Mặc định là CHẶN, "
+                        "xem `invisible_token_ids`.")
     p.add_argument("--smoke", action="store_true",
                    help="chạy nhanh để kiểm đường dây: 8 token, 1 mẫu")
     return p.parse_args(argv)

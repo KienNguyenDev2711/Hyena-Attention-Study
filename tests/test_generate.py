@@ -48,8 +48,16 @@ from hyena_study.checkpoint import (  # noqa: E402
     lm_config_to_dict,
     save_checkpoint,
 )
-from hyena_study.data.corpus import EOS, PAD, UNK, SyllableTokenizer  # noqa: E402
-from hyena_study.generate import detokenize, generate_ids, generate_text  # noqa: E402
+from hyena_study.data.corpus import (  # noqa: E402
+    EOS, PAD, SPECIAL_TOKENS, UNK, SyllableTokenizer,
+)
+from hyena_study.generate import (  # noqa: E402
+    _is_invisible as _inv, detokenize, generate_ids, generate_text,
+)
+
+
+def _vis(x):
+    return not _inv(x)
 from hyena_study.models import HyenaFilterConfig, LMConfig, SequenceLM  # noqa: E402
 
 TOY = [
@@ -317,6 +325,42 @@ def test_train_cli_writes_a_usable_checkpoint():
     return True
 
 
+def test_invisible_tokens_are_banned_by_default():
+    """G15. Token khong ve ra glyph nao phai bi chan, tru khi doi hoi nguoc lai.
+
+    Da quan sat that tren checkpoint 16.000 tu: mo hinh nha ra U+200B (ZERO WIDTH
+    SPACE) lap lai 16 lan o seed 7. Tren man hinh trong nhu treo may. Tu dien that
+    chua 26 token loai nay, lan vao tu Wikipedia (chu Thai, Tang, Khmer, dau phu).
+    """
+    from hyena_study.generate import invisible_token_ids
+
+    # dung mot tu dien co CHU Y cai ky tu vo hinh vao
+    tok = SyllableTokenizer(list(SPECIAL_TOKENS) + ["trường", "học", "​", "­", "viên"])
+    inv = invisible_token_ids(tok)
+    assert set(inv) == {5, 6}, f"nhan dien sai token vo hinh: {inv}"
+    assert all(not _vis(tok.vocab[i]) for i in inv)
+
+    model, _ = _toy_model(tok)
+    # ep mo hinh chi con duong sinh ra token vo hinh neu khong bi chan
+    allowed_only_invisible = tuple(i for i in range(tok.vocab_size) if i not in (5, 6))
+    out = generate_ids(model, tok.encode("trường học"), max_new_tokens=5,
+                       temperature=1.0, top_k=0, banned=allowed_only_invisible,
+                       eos=None, seed=0)
+    assert set(out["new_ids"]) <= {5, 6}, "test tu no khong ep duoc dung nhanh can kiem"
+
+    # mac dinh cua generate_text phai chan chung
+    out2 = generate_text(model, tok, "trường học", max_new_tokens=8,
+                         temperature=1.5, top_k=0, seed=0)
+    assert out2["n_banned_invisible"] == 2, f"dem sai: {out2['n_banned_invisible']}"
+    assert not any(i in (5, 6) for i in out2["new_ids"]), "token vo hinh van lot ra"
+
+    # va phai tat duoc khi nguoi dung muon xem nguyen trang
+    out3 = generate_text(model, tok, "trường học", max_new_tokens=8, temperature=1.5,
+                         top_k=0, seed=0, ban_invisible=False)
+    assert out3["n_banned_invisible"] == 0
+    return len(inv)
+
+
 # -----------------------------------------------------------------------------
 def main() -> int:
     print()
@@ -338,6 +382,7 @@ def main() -> int:
         ("G12 Dem token ngoai tu dien trong prompt", test_generate_text_reports_unk_in_prompt),
         ("G13 Nhanh attention cung chay", test_transformer_branch_also_works),
         ("G14 train.py --save_ckpt dau-cuoi", test_train_cli_writes_a_usable_checkpoint),
+        ("G15 Chan token khong hien thi duoc", test_invisible_tokens_are_banned_by_default),
     ]
     n_fail = 0
     for name, fn in tests:
