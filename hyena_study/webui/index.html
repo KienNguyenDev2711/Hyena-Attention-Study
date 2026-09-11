@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Demo sinh văn bản - Hyena cho tiếng Việt</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+:root{
+  --ground:#EEF2F8; --surface:#fff; --surface-2:#F7F9FD; --surface-3:#E7EDF7;
+  --ink:#101A2E; --ink-2:#3D4C66; --muted:#6C7E9B;
+  --line:#D5DEEC; --line-2:#B9C6DA;
+  --navy:#1F3A68; --accent:#2A6DF4;
+  --s1:#2a78d6; --s2:#eb6834;
+  --good:#0B7A3B; --warn:#A66A00; --bad:#B04A4A;
+  --shadow:0 1px 2px rgba(16,26,46,.06), 0 8px 24px rgba(16,26,46,.05);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --ground:#0B1220; --surface:#131C2C; --surface-2:#182336; --surface-3:#1E2B41;
+    --ink:#E9EFF8; --ink-2:#B7C4D8; --muted:#8698B4;
+    --line:#26334A; --line-2:#36476B;
+    --navy:#26395C; --accent:#5B94FF;
+    --s1:#3987e5; --s2:#d95926;
+    --good:#3FBF77; --warn:#E0A63C; --bad:#E07A7A;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.28);
+  }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);
+  font-family:"Be Vietnam Pro","Segoe UI",system-ui,sans-serif;font-size:15.5px;line-height:1.6}
+.mono{font-family:"IBM Plex Mono",ui-monospace,Consolas,monospace;font-variant-numeric:tabular-nums}
+.wrap{max-width:1080px;margin:0 auto;padding:0 20px}
+
+header{background:var(--navy);color:#fff;padding-block:24px 20px;border-bottom:3px solid var(--accent)}
+header .eyebrow{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.16em;
+  text-transform:uppercase;color:#A9C2E8;margin-bottom:8px}
+header h1{margin:0;font-size:clamp(21px,3.6vw,29px);font-weight:700;color:#fff}
+header p{margin:8px 0 0;color:#C7D7F0;font-size:14.5px;max-width:70ch}
+@media (prefers-color-scheme: dark){header{color:var(--ink)} header h1{color:var(--ink)} header p{color:var(--ink-2)}}
+#badges{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+#badges span{font-family:"IBM Plex Mono",monospace;font-size:12px;font-variant-numeric:tabular-nums;
+  background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.22);color:#DCE8FA;padding:5px 11px;border-radius:2px}
+@media (prefers-color-scheme: dark){#badges span{background:var(--surface-2);border-color:var(--line-2);color:var(--ink-2)}}
+
+main{padding-block:22px 40px;display:flex;flex-direction:column;gap:18px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:3px;box-shadow:var(--shadow);padding:18px 20px}
+h2{margin:0 0 12px;font-size:16px;font-weight:700}
+label.fl{display:block;font-family:"IBM Plex Mono",monospace;font-size:11.5px;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+
+textarea{width:100%;min-height:76px;resize:vertical;padding:11px 13px;border:1px solid var(--line-2);
+  border-radius:3px;background:var(--surface-2);color:var(--ink);font-family:inherit;font-size:15.5px;line-height:1.55}
+textarea:focus,input:focus,button:focus-visible{outline:2px solid var(--accent);outline-offset:-1px}
+
+.chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:9px}
+.chips button{font-size:13px;padding:5px 11px;border:1px solid var(--line-2);border-radius:999px;
+  background:var(--surface);color:var(--ink-2);cursor:pointer;font-family:inherit}
+.chips button:hover{border-color:var(--accent);color:var(--accent)}
+
+.knobs{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;margin-top:16px}
+.knob input[type=number]{width:100%;padding:7px 10px;border:1px solid var(--line-2);border-radius:3px;
+  background:var(--surface-2);color:var(--ink);font-family:"IBM Plex Mono",monospace;font-size:13.5px}
+.knob .hint{font-size:11.5px;color:var(--muted);margin-top:4px;line-height:1.4}
+.row{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-top:16px}
+#go{font-family:inherit;font-size:15px;font-weight:600;padding:10px 26px;border:none;border-radius:3px;
+  background:var(--accent);color:#fff;cursor:pointer}
+#go:disabled{opacity:.55;cursor:progress}
+.chk{display:flex;align-items:center;gap:7px;font-size:13.5px;color:var(--ink-2)}
+.kbd{font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--muted)}
+
+#err{display:none;border-left:3px solid var(--bad);background:var(--surface-2);color:var(--bad);
+  padding:10px 14px;margin-top:14px;font-size:14px}
+#warn{display:none;border-left:3px solid var(--warn);background:var(--surface-2);color:var(--ink-2);
+  padding:10px 14px;margin-top:14px;font-size:13.5px}
+
+#out{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (max-width:820px){#out{grid-template-columns:1fr}}
+.card{border:1px solid var(--line);border-radius:3px;background:var(--surface);display:flex;flex-direction:column;
+  box-shadow:var(--shadow);min-height:150px}
+.card.hy{box-shadow:inset 3px 0 0 var(--s1),var(--shadow)}
+.card.tr{box-shadow:inset 3px 0 0 var(--s2),var(--shadow)}
+.ch{display:flex;flex-wrap:wrap;align-items:baseline;gap:9px;padding:12px 16px 9px;border-bottom:1px solid var(--line)}
+.ch .nm{font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:14px}
+.ch .sp{font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--muted)}
+.ch .pp{font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--muted);margin-left:auto;font-variant-numeric:tabular-nums}
+.ct{padding:14px 16px;font-size:15.5px;line-height:1.65;flex:1}
+.ct .pr{color:var(--muted);background:var(--surface-3);padding:1px 5px;border-radius:2px}
+.ct .idle{color:var(--muted);font-style:italic}
+.cf{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--muted);
+  border-top:1px dashed var(--line);padding:8px 16px;display:flex;flex-wrap:wrap;gap:12px}
+.spin{display:inline-block;width:11px;height:11px;border:2px solid var(--line-2);border-top-color:var(--accent);
+  border-radius:50%;animation:sp .7s linear infinite;vertical-align:-1px;margin-right:7px}
+@keyframes sp{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.spin{animation:none}}
+.note{border-left:3px solid var(--accent);background:var(--surface-2);padding:11px 15px;font-size:13.5px;color:var(--ink-2)}
+.note b{color:var(--ink)}
+footer{color:var(--muted);font-size:12px;font-family:"IBM Plex Mono",monospace;
+  border-top:1px solid var(--line);padding-block:16px;word-break:break-word}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="eyebrow">Nhóm 08 · Đồ án cuối kỳ · Xử lý ngôn ngữ tự nhiên</div>
+    <h1>Hyena cho tiếng Việt: sinh văn bản</h1>
+    <p>Nhập một câu bất kỳ. Hai mô hình được huấn luyện trên <b>cùng ngân sách token</b>, cùng siêu tham số, khác nhau đúng một thứ là toán tử trộn token, sẽ viết tiếp câu đó.</p>
+    <div id="badges"></div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section class="panel">
+    <h2>Câu mở đầu</h2>
+    <label class="fl" for="prompt">prompt</label>
+    <textarea id="prompt" spellcheck="false">Trường Đại học Công nghệ Thông tin</textarea>
+    <div class="chips" id="chips"></div>
+
+    <div class="knobs">
+      <div class="knob">
+        <label class="fl" for="tokens">số token sinh</label>
+        <input type="number" id="tokens" value="40" min="1" max="200" step="5">
+        <div class="hint">nhiều hơn thì lâu hơn</div>
+      </div>
+      <div class="knob">
+        <label class="fl" for="temp">temperature</label>
+        <input type="number" id="temp" value="0.9" min="0" max="5" step="0.1">
+        <div class="hint">0 = luôn chọn token khả dĩ nhất, chạy lại y hệt</div>
+      </div>
+      <div class="knob">
+        <label class="fl" for="topk">top-k</label>
+        <input type="number" id="topk" value="40" min="0" max="16000" step="10">
+        <div class="hint">0 = không cắt đuôi phân phối</div>
+      </div>
+      <div class="knob">
+        <label class="fl" for="seed">seed</label>
+        <input type="number" id="seed" value="0" min="0" step="1">
+        <div class="hint">cùng seed cho cùng kết quả</div>
+      </div>
+    </div>
+
+    <div class="row">
+      <button id="go">Sinh tiếp</button>
+      <span class="kbd">hoặc Ctrl + Enter</span>
+      <label class="chk"><input type="checkbox" id="inv"> hiện cả token không vẽ ra ký tự</label>
+    </div>
+
+    <div id="err"></div>
+    <div id="warn"></div>
+  </section>
+
+  <section id="out"></section>
+
+  <section class="panel">
+    <div class="note" id="honest"></div>
+  </section>
+
+  <footer id="prov"></footer>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+const nf = (x, d = 2) => (x === null || x === undefined || Number.isNaN(x))
+  ? "n/a" : Number(x).toLocaleString("vi-VN", {minimumFractionDigits: d, maximumFractionDigits: d});
+const ni = x => (x === null || x === undefined) ? "n/a" : Number(x).toLocaleString("vi-VN");
+const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+const EXAMPLES = [
+  "Trường Đại học Công nghệ Thông tin",
+  "Việt Nam là một quốc gia nằm ở",
+  "Hà Nội là thủ đô của",
+  "Mô hình ngôn ngữ được huấn luyện trên",
+  "Trong lĩnh vực trí tuệ nhân tạo,"
+];
+$("chips").innerHTML = EXAMPLES.map(t =>
+  `<button type="button" data-t="${esc(t)}">${esc(t)}</button>`).join("");
+$("chips").addEventListener("click", e => {
+  const b = e.target.closest("button");
+  if (b) { $("prompt").value = b.dataset.t; $("prompt").focus(); }
+});
+
+let META = null;
+
+function cardClass(spec) {
+  if (!spec) return "";
+  const s = spec.toUpperCase();
+  if ([...s].every(c => c === "H")) return "hy";
+  if ([...s].every(c => c === "A")) return "tr";
+  return "";
+}
+
+function shell(m, inner, foot) {
+  return `<div class="card ${cardClass(m.layer_spec)}">
+    <div class="ch"><span class="nm">${esc(m.name)}</span>
+      <span class="sp">${esc(m.layer_spec || "")}</span>
+      <span class="pp">PPL ${m.test_ppl === null || m.test_ppl === undefined ? "n/a" : nf(m.test_ppl, 3)}</span></div>
+    <div class="ct">${inner}</div>
+    <div class="cf">${foot}</div></div>`;
+}
+
+function renderIdle() {
+  $("out").innerHTML = META.models.map(m =>
+    shell(m, `<span class="idle">Bấm "Sinh tiếp" để mô hình này viết tiếp câu của bạn.</span>`,
+      `<span>${ni(m.params_total)} tham số</span><span>${ni(m.tokens_seen)} token huấn luyện</span>`)
+  ).join("");
+}
+
+function renderBusy() {
+  $("out").innerHTML = META.models.map(m =>
+    shell(m, `<span class="idle"><span class="spin"></span>đang sinh trên ${esc(META.device.toUpperCase())}...</span>`, "")
+  ).join("");
+}
+
+function renderResults(res, params) {
+  $("out").innerHTML = res.map(r => {
+    const stop = r.stop_reason === "gap_eos"
+      ? "dừng sớm: mô hình chọn &lt;eos&gt;"
+      : `${ni(r.n_new)}/${ni(params.max_new_tokens)} token`;
+    const inner = `<span class="pr">${esc(r.prompt)}</span> ${esc(r.continuation) || '<span class="idle">(không sinh ra chữ nào)</span>'}`;
+    const foot = [
+      `<span>seed ${ni(params.seed)}</span>`,
+      `<span>temp ${nf(params.temperature, 1)}</span>`,
+      `<span>top-k ${ni(params.top_k)}</span>`,
+      `<span>${stop}</span>`,
+      `<span>${nf(r.seconds, 2)} s</span>`,
+      r.ms_per_token ? `<span>${nf(r.ms_per_token, 1)} ms/token</span>` : ""
+    ].join("");
+    return shell(r, inner, foot);
+  }).join("");
+}
+
+function showErr(msg) { const e = $("err"); e.textContent = msg; e.style.display = msg ? "block" : "none"; }
+function showWarn(html) { const w = $("warn"); w.innerHTML = html; w.style.display = html ? "block" : "none"; }
+
+async function generate() {
+  showErr(""); showWarn("");
+  const body = {
+    prompt: $("prompt").value,
+    max_new_tokens: +$("tokens").value,
+    temperature: +$("temp").value,
+    top_k: +$("topk").value,
+    seed: +$("seed").value,
+    ban_invisible: !$("inv").checked
+  };
+  $("go").disabled = true;
+  renderBusy();
+  try {
+    const r = await fetch("/api/generate", {
+      method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(body)
+    });
+    const d = await r.json();
+    if (!d.ok) { showErr(d.error || "Lỗi không rõ."); renderIdle(); return; }
+    renderResults(d.results, d.params);
+    const unk = d.results[0];
+    if (unk && unk.prompt_unk > 0) {
+      showWarn(`<b>Lưu ý:</b> ${unk.prompt_unk} trên ${unk.prompt_n_tokens} token trong câu của bạn `
+        + `nằm ngoài từ điển ${ni(META.models[0].vocab_size)} âm tiết, mô hình không nhìn thấy chúng. `
+        + `Kết quả sẽ kém hơn bình thường. Thử dùng từ phổ thông hơn.`);
+    }
+  } catch (e) {
+    showErr("Không gọi được máy chủ: " + e.message);
+    renderIdle();
+  } finally {
+    $("go").disabled = false;
+  }
+}
+
+$("go").addEventListener("click", generate);
+document.addEventListener("keydown", e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === "Enter") { e.preventDefault(); generate(); }
+});
+
+(async function init() {
+  try {
+    META = await (await fetch("/api/meta")).json();
+  } catch (e) {
+    showErr("Không đọc được thông tin mô hình từ máy chủ.");
+    return;
+  }
+  const m0 = META.models[0];
+  $("badges").innerHTML = [
+    `thiết bị: ${META.device}`,
+    `${ni(m0.tokens_seen)} token huấn luyện`,
+    `${ni(m0.steps)} bước`,
+    `từ điển ${ni(m0.vocab_size)} âm tiết`,
+    `ngữ cảnh ${ni(m0.max_seq_len)} token`
+  ].concat(META.models.map(m => `${m.name}: PPL ${nf(m.test_ppl, 3)}`))
+   .map(s => `<span>${esc(s)}</span>`).join("");
+
+  const best = [...META.models].sort((a, b) => a.test_ppl - b.test_ppl)[0];
+  const worst = [...META.models].sort((a, b) => b.test_ppl - a.test_ppl)[0];
+  const gap = META.models.length > 1 ? (1 - best.test_ppl / worst.test_ppl) * 100 : null;
+
+  $("honest").innerHTML =
+    `<b>Đọc kết quả với kỳ vọng đúng.</b> Mỗi mô hình chỉ có ${ni(m0.params_total)} tham số và `
+    + `nhìn thấy ${ni(m0.tokens_seen)} token, nhỏ hơn bài báo gốc khoảng ba bậc. Nó học được chính tả âm tiết, `
+    + `cụm từ ngắn và dấu câu, nhưng <b>không giữ được mạch ngữ nghĩa dài</b>. Đây là hệ quả của quy mô, `
+    + `không phải lỗi cài đặt.`
+    + (gap !== null ? ` Trên tập kiểm tra, ${esc(best.name)} có perplexity thấp hơn ${esc(worst.name)} `
+       + `${nf(gap, 1)}%, nhưng <b>một vài câu sinh ra không chứng minh được điều đó</b>; kết luận nằm ở bảng perplexity `
+       + `với khoảng tin cậy, không nằm ở đây.` : "")
+    + ` Bản tái hiện của nhóm <b>không cài cache trạng thái khi suy diễn</b>, nên mỗi token mới phải chạy lại `
+    + `cả lượt tiến trên toàn bộ ngữ cảnh.`;
+
+  $("prov").textContent =
+    "Trọng số: " + META.models.map(m => m.file).join(" · ")
+    + " | sinh bởi hyena_study/generate.py, phục vụ bởi hyena_study/serve.py"
+    + " | máy chủ chạy cục bộ trên " + META.device + ", không gọi dịch vụ bên ngoài.";
+
+  renderIdle();
+  // Sinh san mot ket qua ngay khi mo trang. Luc trinh chieu, man hinh dau tien
+  // phai co chu de doc chu khong phai mot o nhap trong. Nguoi dung van doi duoc
+  // prompt va bam lai bat cu luc nao.
+  generate();
+})();
+</script>
+</body>
+</html>

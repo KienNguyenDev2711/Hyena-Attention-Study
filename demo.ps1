@@ -18,6 +18,8 @@ CAN CO TRUOC: results/DEMO_vi_HHHH_s0.pt va results/DEMO_vi_AAAA_s0.pt
 .\demo.ps1 "Ha Noi la thu do cua" -Tokens 60 -Seed 3
 .EXAMPLE
 .\demo.ps1 "Mo hinh ngon ngu" -HyenaOnly
+.EXAMPLE
+.\demo.ps1 -Ui          # mo giao dien web tren trinh duyet (dung cai nay de demo)
 #>
 [CmdletBinding()]
 param(
@@ -35,6 +37,12 @@ param(
     [int]$TopK = 40,
 
     [int]$Seed = 0,
+
+    # Mo GIAO DIEN WEB thay vi in ra console. Dung cai nay khi trinh bay.
+    [switch]$Ui,
+
+    # Cong cho giao dien web, doi khi 8000 dang bi chiem
+    [int]$Port = 8000,
 
     # Chi chay Hyena, bo nhanh Transformer doi chung
     [switch]$HyenaOnly,
@@ -61,6 +69,19 @@ foreach ($f in @($hyena, $trans)) {
     }
 }
 
+$env:PYTHONIOENCODING = "utf-8"
+
+if ($Ui) {
+    $uiArgs = @("-m", "hyena_study.serve", "--ckpt", $hyena, "--port", $Port, "--device", "cpu")
+    if ($HyenaOnly) { $uiArgs += @("--compare", "") } else { $uiArgs += @("--compare", $trans) }
+    Write-Host ""
+    Write-Host "Dang nap mo hinh va mo giao dien tren http://127.0.0.1:$Port/ ..." -ForegroundColor Cyan
+    Write-Host "Nhan Ctrl+C trong cua so nay de dung." -ForegroundColor DarkGray
+    Write-Host ""
+    & python @uiArgs
+    exit $LASTEXITCODE
+}
+
 $cmdArgs = @(
     "-m", "hyena_study.generate",
     "--ckpt", $hyena,
@@ -75,8 +96,6 @@ if (-not $HyenaOnly)   { $cmdArgs += @("--compare", $trans) }
 if ($KeepInvisible)    { $cmdArgs += "--keep_invisible" }
 
 # Python tren Windows nhan argv dang Unicode nen prompt tieng Viet di qua nguyen ven.
-# Dong duoi chi bao dam phan IN RA man hinh khong hong khi console dung bang ma cu.
-$env:PYTHONIOENCODING = "utf-8"
-
+# PYTHONIOENCODING o tren chi bao dam phan IN RA man hinh khong hong voi console cu.
 & python @cmdArgs
 exit $LASTEXITCODE
