@@ -229,7 +229,7 @@ header: '<img src="assets/UIT_logo.svg" alt="UIT">'
 
 </div>
 
-<span class="small">Bài báo nền: Poli et al., *Hyena Hierarchy*, ICML 2023 (Oral) · Báo cáo cuối kỳ, môn Chuyên đề nghiên cứu và Xử lý ngôn ngữ tự nhiên</span>
+<span class="small">Bài báo nền: Poli et al., *Hyena Hierarchy*, ICML 2023 (Oral)<br>Báo cáo cuối kỳ, môn Chuyên đề nghiên cứu và Xử lý ngôn ngữ tự nhiên</span>
 
 <br>
 
@@ -259,15 +259,12 @@ Q&A 5 phút, Kiên điều phối: công thức/phương pháp -> Tiến · số
 3. **Kết quả**: E1 chất lượng · E2 token hoá · E3 ablation · E4 khởi tạo · E5 hiệu năng · E6 recall
 4. **Hạn chế & kết luận**
 
-<div class="box">
-
-Toàn bộ số liệu truy ngược được về `results/` trong repo; **67 phép kiểm tự động**; hai nhánh ngôn ngữ huấn luyện **cùng 38.250.964 token, cùng 6.103 bước**.
-
-</div>
 
 <!--
 Notes:
-30 giây. Nhấn câu trong box: đây là điểm phân biệt của nhóm: mọi con số tái lập được.
+30 giây. Chỉ đọc tên bốn phần, KHÔNG giải thích từng thí nghiệm.
+Khung số liệu đã được bỏ khỏi slide này cho thoáng. Nếu muốn nhấn tính tái lập thì nói miệng
+một câu ngắn (mọi con số truy ngược được về results/), đừng dừng lâu.
 -->
 
 ---
@@ -310,7 +307,7 @@ Notes:
 
 <div class="box">
 
-**H3.** Khoảng suy giảm $\alpha$ của bộ lọc, siêu tham số mà bài báo gốc **để ngỏ**: có nên **đo từ corpus** thay vì chọn tay?
+**H3.** Khoảng suy giảm $\alpha$ của bộ lọc, siêu tham số **không được bài báo gốc đặc tả**: có nên **đo từ corpus** thay vì chọn tay?
 
 </div>
 
@@ -507,7 +504,7 @@ Notes (QUANG · 0:55 · nhận mic đúng 10:00):
 
 <div class="warn">
 
-Kết quả **âm có kiểm soát**: đo $\alpha$ từ corpus không tốt hơn một lựa chọn cách đều theo log. Đây vẫn là câu trả lời có giá trị cho siêu tham số mà bài báo gốc để ngỏ.
+Kết quả **âm có kiểm soát**: đo $\alpha$ từ corpus không tốt hơn một lựa chọn cách đều theo log. Đây vẫn là câu trả lời có giá trị cho siêu tham số không được bài báo gốc đặc tả.
 
 </div>
 
@@ -517,7 +514,7 @@ Notes (QUANG · 1:20 · slide quan trọng nhất, nói chậm, nhận kết qu�
 - VI: logspace và corpus đều tách KTC khỏi uniform -> KHOẢNG alpha quan trọng, chọn tuỳ tiện mất ~1 PPL.
 - EN cùng số token: cùng chiều nhưng KTC chồng lấn (phương sai seed của uniform lớn).
 - corpus vs logspace: chỉ hơn 0,285 PPL (VI) / 0,055 PPL (EN), chồng lấn cả 2 -> không kết luận.
-- Chốt: kết quả âm có kiểm soát — khoảng suy giảm đáng chỉnh (bài gốc để ngỏ), nhưng đo từ corpus không hơn logspace.
+- Chốt: kết quả âm có kiểm soát — khoảng suy giảm đáng chỉnh (bài gốc không đặc tả), nhưng đo từ corpus không hơn logspace.
 -->
 
 ---
@@ -621,7 +618,7 @@ Notes (QUANG · 0:45 · điểm danh nhanh, KHÔNG giải thích sâu):
 
 </div>
 
-- Đóng góp: so sánh có kiểm soát Hyena–Transformer **đầu tiên trên tiếng Việt** ở quy mô này + trả lời có bằng chứng cho một siêu tham số bài báo gốc để ngỏ + hạ tầng tái lập đầy đủ (67 test, cache token, artifact truy ngược được).
+- Đóng góp: so sánh có kiểm soát Hyena–Transformer **đầu tiên trên tiếng Việt** ở quy mô này + trả lời có bằng chứng cho một siêu tham số bài báo gốc không đặc tả + hạ tầng tái lập đầy đủ (67 test, cache token, artifact truy ngược được).
 
 <!--
 Notes (QUANG · 0:30):
