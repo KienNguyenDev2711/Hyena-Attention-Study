@@ -115,7 +115,8 @@ style: |
     box-shadow:0 10px 30px rgba(15,29,56,.22); text-align:center;
   }
   .titlebox h1 { background:none; border:none; color:#fff !important;
-    font-size:42px; margin:0; padding:0; letter-spacing:.3px; }
+    font-size:42px; margin:0; padding:0; letter-spacing:1.2px;
+    text-transform:uppercase; }
   .titlebox h3 { color:#cfe0ff !important; font-weight:400; border:none;
     margin:10px 0 0 0; display:block; }
   section.lead h1 { color:var(--navy); font-size:42px; }
@@ -278,7 +279,7 @@ một câu ngắn (mọi con số truy ngược được về results/), đừng
 
 # Bài toán & ba giả thuyết
 
-<div class="dsub">Chữ Quốc ngữ viết rời theo âm tiết · chuỗi dài hơn · O(L²) cắn mạnh hơn</div>
+<div class="dsub">Chữ Quốc ngữ viết rời theo âm tiết · chuỗi dài hơn<br>chi phí bậc hai O(L²) chi phối khi L tăng</div>
 
 <div class="dmeta">Phần 1</div>
 
@@ -290,7 +291,7 @@ một câu ngắn (mọi con số truy ngược được về results/), đừng
 
 - Bài báo gốc chỉ thực nghiệm trên **tiếng Anh**.
 - Chữ Quốc ngữ viết **rời theo âm tiết**: cùng một nội dung, chuỗi tiếng Việt **dài hơn**.
-- Chuỗi dài hơn thì chi phí $O(L^2)$ của attention nặng hơn, nên lợi thế dưới bậc hai của Hyena đáng giá hơn với tiếng Việt.
+- Chuỗi càng dài, chi phí bậc hai $O(L^2)$ của attention càng **chi phối** tổng chi phí, nên lợi thế dưới bậc hai của Hyena đáng giá hơn với tiếng Việt.
 
 <div class="grid2">
 <div class="box">
