@@ -630,9 +630,28 @@ Notes (QUANG · 0:30):
 
 ---
 
+<!-- _class: divider -->
+
+<div class="dbar"></div>
+
+# DEMO
+
+<!--
+Notes (KIÊN nhận mic để chạy demo):
+- Slide này chỉ là tấm bảng hiệu. Chuyển sang cửa sổ trình duyệt đã mở sẵn.
+- Server PHẢI mở trước khi vào phòng: .\demo.ps1 -Ui  (nạp mô hình mất ~25 giây).
+- Để 40 token, đừng để 60. Mời thầy ra đề một câu bất kỳ.
+- Nói trước một câu về kỳ vọng: mô hình 7,55 triệu tham số nên viết đúng dáng tiếng Việt
+  nhưng không giữ được mạch nghĩa dài; giá trị của demo là đặt hai kiến trúc cạnh nhau
+  ở CÙNG ngân sách huấn luyện, không phải chất lượng văn bản.
+- Demo KHÔNG phải bằng chứng khoa học; kết luận nằm ở bảng perplexity có khoảng tin cậy.
+-->
+
+---
+
 <!-- _class: lead -->
 
-# Cảm ơn hội đồng!
+# Cảm ơn thầy và các bạn!
 
 **Nhóm 08** · Nguyễn Cao Trung Kiên · Tô Huỳnh Minh Tiến · Trần Tú Quang
 
