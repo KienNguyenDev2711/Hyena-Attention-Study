@@ -241,7 +241,7 @@ Nguyễn Cao Trung Kiên · Tô Huỳnh Minh Tiến · Trần Tú Quang
 
 <!--
 Notes:
-XÁC NHẬN tên GVHD trước khi trình chiếu (deck seminar ghi TS. Nguyễn Văn Kiệt).
+XÁC NHẬN tên giảng viên hướng dẫn trước khi trình chiếu (deck seminar ghi TS. Nguyễn Văn Kiệt).
 Mở đầu: hội đồng đã nghe seminar về bài báo gốc; buổi này là THÍ NGHIỆM CỦA NHÓM.
 
 PHÂN CÔNG (15 phút, mỗi người một khối liền mạch, không xen kẽ):
@@ -390,16 +390,16 @@ Slide phòng thủ cho câu hỏi chắc chắn bị hỏi (T5). Chủ động k
 |---|---|
 | Kiến trúc chung | 4 lớp · $d_{\text{model}}=256$ · $L=512$ · từ điển 16k · chỉ khác toán tử trộn token |
 | Tham số | Hyena 7.553.280 · Transformer 7.383.552 · lệch 2,30% |
-| Dữ liệu | Wikipedia VI/EN, nhánh EN **cắt xuống đúng 38.250.964 token của VI** |
+| Dữ liệu | Wikipedia tiếng Việt và tiếng Anh; nhánh tiếng Anh **cắt xuống đúng 38.250.964 token của nhánh tiếng Việt** |
 | Ngân sách | cùng 49.995.776 token huấn luyện = 6.103 bước ≈ 1,31 epoch mỗi nhánh |
-| Seed | 3 seed cho E1/E2/E4 · 2 seed cho E3 · KTC 95% phân phối $t$ |
+| Seed | 3 seed cho E1/E2/E4 · 2 seed cho E3 · khoảng tin cậy (KTC) 95% theo phân phối $t$ |
 
 - **67 phép kiểm tự động**, gồm kiểm chứng nhân quả: rò rỉ tương lai $< 10^{-15}$ trên mọi biến thể; bản cố tình sai vọt lên $9{,}1 \times 10^{-1}$, tức bộ test bắt được lỗi thật.
 - Kết luận khoa học so với đối chứng công bằng `logspace`, không so với hình nộm `uniform`.
 
 <!--
 Notes:
-"Cắt xuống đúng cùng số token" giờ đúng theo nghĩa đen: nhánh EN lấy dư 110k tài liệu rồi cắt (T13). Nếu bị hỏi vì sao 110k: mẫu streaming phụ thuộc phiên bản datasets, đã ghi version vào artifact.
+"Cắt xuống đúng cùng số token" giờ đúng theo nghĩa đen: nhánh tiếng Anh lấy dư 110k tài liệu rồi cắt (T13). Nếu bị hỏi vì sao 110k: mẫu streaming phụ thuộc phiên bản datasets, đã ghi version vào artifact.
 -->
 
 ---
@@ -438,7 +438,7 @@ Hai nhánh nhìn thấy đúng **cùng một lượng tín hiệu**: 38.250.964 
 <!--
 Notes:
 (Tiến trình bày · 1:15. Ở Q&A, câu hỏi đào sâu số liệu chuyển cho Quang.)
-Số EN là bản chạy lại token-matched (T13). Nếu hỏi "sao EN đổi số so với bản nộp trước": corpus lấy mẫu lại + cắt đúng ngân sách, ghi rõ trong Hạn chế.
+Số tiếng Anh là bản chạy lại cùng số token (T13). Nếu hỏi "sao số tiếng Anh đổi so với bản nộp trước": corpus lấy mẫu lại + cắt đúng ngân sách, ghi rõ trong Hạn chế.
 -->
 
 ---
@@ -451,7 +451,7 @@ Số EN là bản chạy lại token-matched (T13). Nếu hỏi "sao EN đổi s
 | BPE (chuỗi ngắn hơn) | 1,202 |
 
 - PPL **không so sánh được** giữa hai từ điển khác nhau, chỉ so được *tỉ lệ giữa hai mô hình trong cùng từ điển*.
-- Lợi thế Hyena lớn hơn ở âm tiết, đúng chiều H2, nhưng chênh lệch nhỏ và chưa có KTC cho tỉ lệ: **dấu hiệu, chưa phải bằng chứng**.
+- Lợi thế Hyena lớn hơn ở âm tiết, đúng chiều H2, nhưng chênh lệch nhỏ và chưa có khoảng tin cậy cho tỉ lệ: **dấu hiệu, chưa phải bằng chứng**.
 
 <!--
 Notes:
@@ -480,8 +480,8 @@ Chủ động nêu cạm bẫy diễn giải trước khi hội đồng nêu. Đ
 
 <!--
 Notes (QUANG · 0:55 · nhận mic đúng 10:00):
-- Cảm ơn Tiến, vào phần ablation: tắt từng thành phần, mỗi nhánh 2 seed.
-- Chỉ 2 dòng đầu tách KTC khỏi cấu hình gốc:
+- Ablation: tắt từng thành phần của bộ lọc, mỗi nhánh 2 seed.
+- Chỉ 2 dòng đầu tách khoảng tin cậy khỏi cấu hình gốc:
   - bỏ cửa sổ suy giảm: +1,92 PPL, thành phần sống còn, nơi H3 tác động
   - N=1: +1,73 PPL nhưng biên chỉ hở 0,016 PPL + mất 4,4% tham số -> kết luận mong manh
 - 3 dòng còn lại không kết luận; bỏ pos-emb không hại: bộ lọc đã mang sẵn thông tin vị trí.
@@ -493,15 +493,15 @@ Notes (QUANG · 0:55 · nhận mic đúng 10:00):
 
 ## E4 · Khởi tạo bộ lọc từ corpus
 
-| Khởi tạo | VI (PPL, KTC) | EN cùng số token (PPL, KTC) |
+| Khởi tạo | Tiếng Việt (PPL, KTC) | Tiếng Anh cùng số token (PPL, KTC) |
 |---|---|---|
 | `uniform` | 51,38 [51,05; 51,71] | 55,82 [54,96; 56,68] |
 | `logspace` | 50,48 [50,33; 50,62] | 54,97 [54,56; 55,37] |
 | corpus (H3) | **50,19** [49,93; 50,45] | **54,91** [54,53; 55,29] |
 
 - **Tiếng Việt:** `logspace` và corpus đều **tách rời** khỏi `uniform` (−0,90 / −1,19 PPL) → *khoảng* $\alpha$ thực sự quan trọng, chọn tuỳ tiện gây thiệt hại đo được.
-- **Tiếng Anh:** cùng chiều (−0,85 / −0,91 PPL) nhưng KTC **chồng lấn** do phương sai seed của `uniform` lớn.
-- **corpus vs `logspace`:** chỉ hơn 0,285 (VI) / 0,052 (EN) PPL, chồng lấn cả hai → **không kết luận được H3**.
+- **Tiếng Anh:** cùng chiều (−0,85 / −0,90 PPL) nhưng khoảng tin cậy **chồng lấn** do phương sai seed của `uniform` lớn.
+- **corpus vs `logspace`:** chỉ hơn 0,285 PPL (tiếng Việt) / 0,052 PPL (tiếng Anh), chồng lấn cả hai → **không kết luận được H3**.
 
 <div class="warn">
 
@@ -510,12 +510,12 @@ Kết quả **âm có kiểm soát**: đo $\alpha$ từ corpus không tốt hơn
 </div>
 
 <!--
-Notes (QUANG · 1:20 · slide quan trọng nhất, nói chậm, nhận kết quả âm trước):
-- Mở màn: slide này trả lời H3 trong tên đề tài; nói thẳng luôn: không kết luận được.
-- VI: logspace và corpus đều tách KTC khỏi uniform -> KHOẢNG alpha quan trọng, chọn tuỳ tiện mất ~1 PPL.
-- EN cùng số token: cùng chiều nhưng KTC chồng lấn (phương sai seed của uniform lớn).
-- corpus vs logspace: chỉ hơn 0,285 PPL (VI) / 0,055 PPL (EN), chồng lấn cả 2 -> không kết luận.
-- Chốt: kết quả âm có kiểm soát — khoảng suy giảm đáng chỉnh (bài gốc không đặc tả), nhưng đo từ corpus không hơn logspace.
+Notes (QUANG · 1:20):
+- Slide trả lời H3 trong tên đề tài: không kết luận được.
+- Tiếng Việt: logspace và corpus đều tách khoảng tin cậy khỏi uniform -> KHOẢNG alpha quan trọng, chọn tuỳ tiện mất ~1 PPL.
+- Tiếng Anh cùng số token: cùng chiều nhưng khoảng tin cậy chồng lấn (phương sai seed của uniform lớn).
+- corpus vs logspace: chỉ hơn 0,285 PPL (tiếng Việt) / 0,052 PPL (tiếng Anh), chồng lấn cả 2 -> không kết luận.
+- Kết quả âm có kiểm soát: khoảng suy giảm đáng chỉnh (bài gốc không đặc tả), nhưng đo từ corpus không hơn logspace.
 -->
 
 ---
@@ -537,7 +537,7 @@ Notes (QUANG · 0:40):
 - L=8192: Hyena nhanh hơn kernel attention tiết kiệm bộ nhớ 1,88x (tiến + lùi); attention dày đặc OOM trước đó.
 - Bộ nhớ Hyena tăng gần tuyến tính theo L.
 - Giá phải trả: L=512, mỗi token chậm hơn 1,5x Transformer.
-- Chốt: lợi thế tiệm cận, chỉ xuất hiện từ ~8K token.
+- Lợi thế tiệm cận, chỉ xuất hiện từ ~8K token.
 - Nếu hỏi "sao so chất lượng ở L=512": ngân sách GPU; cùng thời gian thực Transformer thấy ~1,5x token (đã ghi ở Hạn chế); 1 lần chạy compute-matched ~9 phút là việc tiếp theo.
 -->
 
@@ -561,7 +561,7 @@ Notes (QUANG · 0:40):
 - Hyena lưỡng cực: 5 seed -> 3 lần >= 0,92, 2 lần <= 0,14, không có giá trị trung gian.
 - Gấp đôi ngân sách bước: lần thành công tốt lên (0,92 -> 0,98), kiểu hỏng không đổi.
 - Vì lưỡng cực: không báo mean +- sd, báo tỉ lệ thành công + độ chính xác khi thành công.
-- Bài gốc cũng nhận điểm yếu recall này; nói thẳng là điểm cộng.
+- Bài gốc cũng nhận điểm yếu recall này.
 -->
 
 ---
@@ -586,21 +586,20 @@ Notes (QUANG · 0:40):
 ## Hạn chế
 
 1. **Quy ước lưới I(d):** chuẩn hoá trên lưới log không nhân bề rộng ô; trung vị độ dài hiệu dụng nhạy với quy ước (2,95 ↔ 90,5 token).
-2. **KTC chỉ bắt nhiễu khởi tạo:** 3 seed (2 với ablation) trên một tập test duy nhất, không bootstrap; nền nhiễu I(d) dựng từ **một** lần xáo trộn.
-3. **Lệch đơn vị:** $\alpha$ đo trên corpus BPE nhưng huấn luyện bằng âm tiết (lệch thang ~6,5% VI, ~18,5% EN).
+2. **Khoảng tin cậy chỉ bắt nhiễu khởi tạo:** 3 seed (2 với ablation) trên một tập test duy nhất, không bootstrap; nền nhiễu I(d) dựng từ **một** lần xáo trộn.
+3. **Lệch đơn vị:** $\alpha$ đo trên corpus BPE nhưng huấn luyện bằng âm tiết (lệch thang ~6,5% với tiếng Việt, ~18,5% với tiếng Anh).
 4. **Chưa so cùng thời gian thực:** Hyena chậm hơn 1,51×/token → cùng giờ GPU, Transformer thấy nhiều token hơn.
-5. **Mẫu dữ liệu phụ thuộc phiên bản `datasets`:** nhánh EN phải lấy mẫu lại (110k tài liệu, cắt về đúng ngân sách VI); phiên bản thư viện nay được ghi vào mọi artifact.
+5. **Mẫu dữ liệu phụ thuộc phiên bản `datasets`:** nhánh tiếng Anh phải lấy mẫu lại (110k tài liệu, cắt về đúng ngân sách của nhánh tiếng Việt); phiên bản thư viện nay được ghi vào mọi artifact.
 
 <!--
-Notes (QUANG · 0:45 · điểm danh nhanh, KHÔNG giải thích sâu):
+Notes (QUANG · 0:45):
 - 5 hạn chế nhóm tự khai:
   1. quy ước lưới log -> trung vị độ dài hiệu dụng nhạy với cách tính
-  2. KTC chỉ bắt nhiễu khởi tạo: 3 seed, không bootstrap tập test
+  2. khoảng tin cậy chỉ bắt nhiễu khởi tạo: 3 seed, không bootstrap tập test
   3. alpha đo trên BPE, huấn luyện bằng âm tiết
   4. chưa so cùng thời gian thực (Hyena chậm 1,5x/token)
-  5. mẫu streaming phụ thuộc version datasets; EN lấy mẫu lại, version đã ghi vào artifact
-- Chốt: chi tiết từng mục trả lời ở Q&A.
-- Mỗi mục ứng với 1 câu phản biện dự kiến; khai trước = giữ thế chủ động.
+  5. mẫu streaming phụ thuộc version datasets; tiếng Anh lấy mẫu lại, version đã ghi vào artifact
+- Chi tiết từng mục: trả lời ở Q&A.
 -->
 
 ---
@@ -609,7 +608,7 @@ Notes (QUANG · 0:45 · điểm danh nhanh, KHÔNG giải thích sâu):
 
 <div class="box">
 
-**Đứng vững:** Hyena đạt PPL thấp hơn Transformer **19,5%** (VI) và **14,7%** (EN) ở cùng ngân sách token; cửa sổ suy giảm là thành phần sống còn; *khoảng* $\alpha$ quan trọng (`logspace` vượt `uniform` tách rời trên tiếng Việt); tăng tốc 1,88× ở $L = 8192$.
+**Đứng vững:** Hyena đạt PPL thấp hơn Transformer **19,5%** trên tiếng Việt và **14,7%** trên tiếng Anh ở cùng ngân sách token; cửa sổ suy giảm là thành phần sống còn; *khoảng* $\alpha$ quan trọng (`logspace` vượt `uniform` tách rời trên tiếng Việt); tăng tốc 1,88× ở $L = 8192$.
 
 </div>
 
@@ -623,9 +622,9 @@ Notes (QUANG · 0:45 · điểm danh nhanh, KHÔNG giải thích sâu):
 
 <!--
 Notes (QUANG · 0:30):
-- Đứng vững: Hyena thấp hơn Transformer 19,5% (VI) / 14,7% (EN) cùng ngân sách token; cửa sổ suy giảm sống còn; khoảng alpha quan trọng.
+- Đứng vững: Hyena thấp hơn Transformer 19,5% (tiếng Việt) / 14,7% (tiếng Anh) cùng ngân sách token; cửa sổ suy giảm sống còn; khoảng alpha quan trọng.
 - Không kết luận: corpus-init không hơn logspace; ưu thế âm tiết mới là dấu hiệu; recall vẫn là điểm yếu.
-- Câu chốt: lợi thế Hyena với tiếng Việt có thật và đo được, nằm ở khoảng suy giảm của bộ lọc, không nằm ở việc đo nó từ corpus.
+- Lợi thế Hyena với tiếng Việt có thật và đo được, nằm ở khoảng suy giảm của bộ lọc, không nằm ở việc đo nó từ corpus.
 -->
 
 ---
@@ -659,6 +658,6 @@ Notes (KIÊN nhận mic để chạy demo):
 
 <!--
 Notes (QUANG · 0:10):
-- Kết: mã nguồn, 67 phép kiểm, artifact đều trong repo. Mời hội đồng đặt câu hỏi.
+- Mã nguồn, 67 phép kiểm, artifact đều trong repo; mời hội đồng đặt câu hỏi.
 - Kiên tiếp quản điều phối Q&A; đáp án chuẩn bị sẵn: docs/05 mục 5 + docs/03.
 -->
