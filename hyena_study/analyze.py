@@ -29,6 +29,7 @@ import argparse
 import csv
 import json
 import math
+import re
 from collections import defaultdict
 from pathlib import Path
 
@@ -450,8 +451,54 @@ def alpha_comparison_metrics(results_dir: Path, d_model: int = 256,
     }
 
 
+def alpha_robustness_metrics(results_dir: Path, d_model: int = 256,
+                             seq_len: int = 512) -> dict:
+    """Do ben cua so sanh bo loc VI-EN theo hai lua chon cua phep do.
+
+    Muc 5.3 cua bao cao trich cac so nay. Con so 14,3% (VI-EN) chi dung voi quy
+    uoc coi moi diem tren luoi log la mot khoi luong xac suat. Ham nay tinh lai
+    cung cac thuoc do voi (a) quy uoc nhan be rong o va (b) K = 1000 thay vi 500,
+    de nguoi doc thay ket luan "hai bo loc gan nhau" nhay voi lua chon nao.
+    """
+    from .morphology import alphas_from_mi, logspaced_alphas
+
+    def rel(a: np.ndarray, b: np.ndarray) -> float:
+        return float(np.mean(np.abs(a - b) / b) * 100.0)
+
+    logspace = np.asarray(
+        logspaced_alphas(d_model, seq_len=seq_len).effective_lengths, dtype=float)
+    width = {}
+    for lang in ("vi", "en"):
+        lags, mi = _load_mi_curve(results_dir / f"E0b_mi_decay_{lang}_bpe_k500.csv")
+        width[lang] = np.asarray(alphas_from_mi(
+            lags, mi * lag_bin_widths(lags), d_model=d_model, seq_len=seq_len
+        ).effective_lengths, dtype=float)
+    vi_k1000 = _load_effective_lengths(results_dir / "alpha_vi_bpe.json")
+    en_k1000 = _load_effective_lengths(results_dir / "alpha_en_bpe.json")
+    vi, en = width["vi"], width["en"]
+    return {
+        "width_vi_median": float(np.median(vi)),
+        "width_en_median": float(np.median(en)),
+        "width_vi_en_rel_den_en_pct": rel(vi, en),
+        "width_vi_en_rel_den_vi_pct": rel(en, vi),
+        "width_vi_en_symmetric_pct": float(np.mean(2.0 * np.abs(vi - en) / (vi + en)) * 100.0),
+        "width_vi_logspace_rel_den_logspace_pct": rel(vi, logspace),
+        "k1000_vi_en_rel_den_en_pct": rel(vi_k1000, en_k1000),
+    }
+
+
 def analyse_alpha_diagnostics(results_dir: Path) -> None:
     """Print diagnostics for the alpha-method claims in the report."""
+    try:
+        r = alpha_robustness_metrics(results_dir)
+        print("  Do ben VI-EN (mau so EN / VI / doi xung):")
+        print(f"    nhan be rong o: {r['width_vi_en_rel_den_en_pct']:.1f}% / "
+              f"{r['width_vi_en_rel_den_vi_pct']:.1f}% / {r['width_vi_en_symmetric_pct']:.1f}%"
+              f"; VI-logspace {r['width_vi_logspace_rel_den_logspace_pct']:.1f}%"
+              f"; trung vi VI {r['width_vi_median']:.2f}, EN {r['width_en_median']:.2f}")
+        print(f"    K = 1000: {r['k1000_vi_en_rel_den_en_pct']:.1f}% (mau so EN)\n")
+    except FileNotFoundError:
+        print("  (thieu artifact de do do ben VI-EN)\n")
     sens = alpha_mapping_sensitivity(results_dir)
     if not sens:
         print("  (thieu alpha/MI artifact de phan tich sensitivity)")
@@ -481,6 +528,166 @@ def analyse_alpha_diagnostics(results_dir: Path) -> None:
     print("  corpus vs logspace mean abs rel (denominator logspace): "
           f"VI {m['vi_logspace_mean_abs_rel_den_logspace_pct']:.2f}%, "
           f"EN {m['en_logspace_mean_abs_rel_den_logspace_pct']:.2f}%")
+
+
+# -----------------------------------------------------------------------------
+# Kiem dinh Welch + hieu chinh Holm (khong phu thuoc scipy)
+#
+# Bao cao dung MOT tieu chi cho moi phep so sanh PPL: Welch hai mau, hieu chinh
+# Holm trong tung ho so sanh. Truoc day E3 dung "KTC khong chong lan" con E4
+# dung Welch + Bonferroni, nen cung mot bang so cho hai kieu ket luan.
+# -----------------------------------------------------------------------------
+def _betacf(a: float, b: float, x: float, max_iter: int = 400, eps: float = 3e-16) -> float:
+    """Phan so lien tuc cua ham beta khong day du (Numerical Recipes, muc 6.4)."""
+    tiny = 1e-300
+    qab, qap, qam = a + b, a + 1.0, a - 1.0
+    c, d = 1.0, 1.0 - qab * x / qap
+    d = 1.0 / (d if abs(d) > tiny else tiny)
+    h = d
+    for m in range(1, max_iter + 1):
+        m2 = 2 * m
+        aa = m * (b - m) * x / ((qam + m2) * (a + m2))
+        d = 1.0 + aa * d
+        d = 1.0 / (d if abs(d) > tiny else tiny)
+        c = 1.0 + aa / c
+        c = c if abs(c) > tiny else tiny
+        h *= d * c
+        aa = -(a + m) * (qab + m) * x / ((a + m2) * (qap + m2))
+        d = 1.0 + aa * d
+        d = 1.0 / (d if abs(d) > tiny else tiny)
+        c = 1.0 + aa / c
+        c = c if abs(c) > tiny else tiny
+        delta = d * c
+        h *= delta
+        if abs(delta - 1.0) < eps:
+            break
+    return h
+
+
+def _betainc_reg(a: float, b: float, x: float) -> float:
+    if x <= 0.0:
+        return 0.0
+    if x >= 1.0:
+        return 1.0
+    log_bt = (math.lgamma(a + b) - math.lgamma(a) - math.lgamma(b)
+              + a * math.log(x) + b * math.log1p(-x))
+    bt = math.exp(log_bt)
+    if x < (a + 1.0) / (a + b + 2.0):
+        return bt * _betacf(a, b, x) / a
+    return 1.0 - bt * _betacf(b, a, 1.0 - x) / b
+
+
+def t_two_sided_p(t: float, df: float) -> float:
+    """P(|T| >= |t|) voi T ~ Student t, df thuc (Welch cho df khong nguyen)."""
+    return _betainc_reg(df / 2.0, 0.5, df / (df + t * t))
+
+
+def t_quantile_two_sided(conf: float, df: float) -> float:
+    """t sao cho P(|T| <= t) = conf. Chia doi vi p giam don dieu theo |t|."""
+    lo, hi = 0.0, 1e6
+    for _ in range(200):
+        mid = (lo + hi) / 2.0
+        if t_two_sided_p(mid, df) > 1.0 - conf:
+            lo = mid
+        else:
+            hi = mid
+    return (lo + hi) / 2.0
+
+
+def welch_test(a: list[float], b: list[float], conf: float = 0.95) -> dict:
+    """Welch hai mau cho trung binh a - b, kem KTC cua hieu."""
+    a, b = np.asarray(a, dtype=float), np.asarray(b, dtype=float)
+    if len(a) < 2 or len(b) < 2:
+        raise ValueError("moi nhom can it nhat 2 quan sat")
+    va, vb = a.var(ddof=1) / len(a), b.var(ddof=1) / len(b)
+    se = math.sqrt(va + vb)
+    if se == 0.0:
+        raise ValueError("phuong sai bang 0 o ca hai nhom, khong kiem dinh duoc")
+    diff = float(a.mean() - b.mean())
+    t = diff / se
+    df = (va + vb) ** 2 / (va ** 2 / (len(a) - 1) + vb ** 2 / (len(b) - 1))
+    q = t_quantile_two_sided(conf, df)
+    return {"diff": diff, "t": t, "df": df, "p": t_two_sided_p(t, df),
+            "ci_low": diff - q * se, "ci_high": diff + q * se,
+            "n_a": int(len(a)), "n_b": int(len(b))}
+
+
+def holm_adjust(pvals: list[float]) -> list[float]:
+    """p da hieu chinh Holm (step-down), giu thu tu dau vao."""
+    m = len(pvals)
+    order = sorted(range(m), key=lambda i: pvals[i])
+    adj = [0.0] * m
+    running = 0.0
+    for k, i in enumerate(order):
+        running = max(running, min(1.0, (m - k) * pvals[i]))
+        adj[i] = running
+    return adj
+
+
+_SEED_RE = re.compile(r"^(?P<prefix>.+)_s(?P<seed>\d+)$")
+ABLATION_TAGS = ("no_window", "order1", "no_sine", "order3", "no_posemb")
+
+
+def _ppl_by_prefix(dirs: list[Path]) -> dict[str, dict[int, float]]:
+    """prefix -> {seed: test_ppl}. Thu muc sau ghi de thu muc truoc neu trung ten."""
+    out: dict[str, dict[int, float]] = defaultdict(dict)
+    for d in dirs:
+        for f in sorted(Path(d).glob("*.json")):
+            try:
+                payload = json.loads(f.read_text(encoding="utf-8"))
+            except (json.JSONDecodeError, UnicodeDecodeError):
+                continue
+            if "test_ppl" not in payload:
+                continue
+            m = _SEED_RE.match(payload.get("run_name", f.stem))
+            if m:
+                out[m["prefix"]][int(m["seed"])] = float(payload["test_ppl"])
+    return out
+
+
+def followup_tests(dirs: list[Path]) -> dict:
+    """Kiem dinh cho ablation (E3 vs goc) va hoan doi alpha (E4x vs alpha cua minh)."""
+    runs = _ppl_by_prefix([Path(d) for d in dirs])
+
+    def vals(prefix: str) -> list[float]:
+        return [runs[prefix][s] for s in sorted(runs.get(prefix, {}))]
+
+    result = {"ablation": [], "swap": []}
+    base = vals("E1_vi_HHHH")
+    for tag in ABLATION_TAGS:
+        v = vals(f"E3_{tag}")
+        if len(v) >= 2 and len(base) >= 2:
+            result["ablation"].append({"name": tag, "n": len(v), "mean": float(np.mean(v)),
+                                       **welch_test(v, base)})
+    for lang, other in (("vi", "en"), ("en", "vi")):
+        sw = vals(f"E4x_{lang}_alpha{other}")
+        control = f"E4c_{lang}_alpha{lang}"
+        own_prefix = control if len(vals(control)) >= 2 else f"E4_corpus_{lang}"
+        own = vals(own_prefix)
+        if len(sw) >= 2 and len(own) >= 2:
+            result["swap"].append({"name": f"{lang}: alpha_{other} - alpha_{lang}",
+                                   "against": own_prefix, "n": len(sw),
+                                   "mean": float(np.mean(sw)), **welch_test(sw, own)})
+    for family in result.values():
+        for row, adj in zip(family, holm_adjust([r["p"] for r in family])):
+            row["p_holm"] = adj
+    return result
+
+
+def print_followup(dirs: list[Path]) -> None:
+    res = followup_tests(dirs)
+    print("\n  Welch hai mau, Holm trong tung ho; Delta = nhanh - doi chung (PPL)")
+    for fam, title in (("ablation", "E3 so voi cau hinh goc (E1_vi_HHHH)"),
+                       ("swap", "E4x hoan doi alpha so voi alpha cua chinh ngon ngu")):
+        print(f"\n  {title}")
+        if not res[fam]:
+            print("    (chua du ket qua)")
+            continue
+        for r in res[fam]:
+            flag = "co y nghia" if r["p_holm"] < 0.05 else "khong ket luan"
+            print(f"    {r['name']:<22} n={r['n']} Delta={r['diff']:+.3f} "
+                  f"KTC=[{r['ci_low']:+.3f}; {r['ci_high']:+.3f}] df={r['df']:.2f} "
+                  f"p={r['p']:.4f} p_Holm={r['p_holm']:.4f}  {flag}")
 
 
 # -----------------------------------------------------------------------------

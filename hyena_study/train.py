@@ -110,7 +110,12 @@ def evaluate(model: SequenceLM, loader: DataLoader, device: torch.device,
 # -----------------------------------------------------------------------------
 # Huấn luyện
 # -----------------------------------------------------------------------------
-def train(args: argparse.Namespace) -> dict:
+def train(args: argparse.Namespace, texts_provider=None) -> dict:
+    """Huấn luyện một cấu hình.
+
+    `texts_provider` chỉ dùng cho test đường dây chạy offline (xem
+    `hyena_study/followup.py --smoke`). Để trống thì lấy Wikipedia như cũ.
+    """
     set_seed(args.seed)
     device = get_device()
     if device.type != "cuda":
@@ -135,6 +140,7 @@ def train(args: argparse.Namespace) -> dict:
         n_docs=args.n_docs, data_seed=args.data_seed,
         max_tokens=resolve_max_train_tokens(args), cache_root=args.token_cache,
         use_cache=not args.no_cache, hf_cache_dir=args.cache_dir,
+        texts_provider=texts_provider,
     )
     print(f"[{run_name}] token: train={len(train_ids):,} val={len(val_ids):,} "
           f"test={len(test_ids):,} | vocab={tok.vocab_size:,} "
