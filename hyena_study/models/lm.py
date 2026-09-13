@@ -166,8 +166,15 @@ class SequenceLM(nn.Module):
         elif isinstance(module, nn.Embedding):
             nn.init.normal_(module.weight, mean=0.0, std=0.02)
 
-    def forward(self, idx: torch.Tensor) -> torch.Tensor:
-        """idx: (B, L) chỉ số token -> logits (B, L, vocab)."""
+    def hidden_states(self, idx: torch.Tensor) -> torch.Tensor:
+        """idx: (B, L) -> biểu diễn ẩn (B, L, d_model) SAU norm_f, TRƯỚC lm_head.
+
+        Tách riêng khỏi `forward` để tác vụ hạ nguồn (phân loại) dùng lại ĐÚNG
+        thân mô hình đã tiền huấn luyện, thay vì chép lại logic — chép lại thì
+        hai đường đi sẽ lệch nhau lúc nào không biết.
+
+        Vị trí t chỉ thấy các token <= t (cả Hyena lẫn Attention đều nhân quả).
+        """
         B, L = idx.shape
         if L > self.cfg.max_seq_len:
             raise ValueError(f"độ dài {L} vượt max_seq_len={self.cfg.max_seq_len}")
@@ -180,7 +187,11 @@ class SequenceLM(nn.Module):
 
         for block in self.blocks:
             x = block(x)
-        return self.lm_head(self.norm_f(x))
+        return self.norm_f(x)
+
+    def forward(self, idx: torch.Tensor) -> torch.Tensor:
+        """idx: (B, L) chỉ số token -> logits (B, L, vocab)."""
+        return self.lm_head(self.hidden_states(idx))
 
     # -- tiện ích báo cáo ----------------------------------------------------
     def num_parameters(self, trainable_only: bool = True, exclude_embedding: bool = False) -> int:
