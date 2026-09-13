@@ -38,6 +38,7 @@ Chay (Kaggle, GPU T4, BAT Internet):
     python -m hyena_study.followup --lang vi --prepare_only   # ~10 phut, chi do dau van tay
     python -m hyena_study.followup --lang vi                  # ke hoach VI
     python -m hyena_study.followup --lang en                  # ke hoach EN
+    python -m hyena_study.followup --lang en --with_control   # them doi chung cung phien
     python -m hyena_study.followup --lang vi --smoke          # CPU, kiem tra duong day
 """
 
@@ -130,8 +131,14 @@ def fingerprint_mismatches(got: dict, ref: dict, rel_tol: float = 1e-9) -> list[
 # Ke hoach
 # -----------------------------------------------------------------------------
 def build_plan(lang: str, corpus_matches: bool, seeds: tuple[int, ...] = (0, 1, 2),
-               ablation_seed: int = 2) -> list[RunSpec]:
-    """Danh sach lan chay. Xem docstring dau file ve hai truong hop khop/lech."""
+               ablation_seed: int = 2, with_control: bool = False) -> list[RunSpec]:
+    """Danh sach lan chay. Xem docstring dau file ve hai truong hop khop/lech.
+
+    `with_control`: chay doi chung E4c CUNG PHIEN ke ca khi corpus khop. Bai hoc
+    tu lan chay 2026-09-13: E4x_en chay tren Kaggle (torch 2.10) con doi chung
+    E4_corpus_en chay tren Colab (torch 2.11), nen chenh lech 0,15 PPL co the
+    lan khac biet moi truong. Doi chung cung phien khu duoc bien do.
+    """
     if lang not in LANGS:
         raise ValueError(f"lang phai thuoc {sorted(LANGS)}, nhan {lang!r}")
     cfg = LANGS[lang]
@@ -142,7 +149,7 @@ def build_plan(lang: str, corpus_matches: bool, seeds: tuple[int, ...] = (0, 1, 
     plan: list[RunSpec] = []
     # Xen ke theo seed: phien Kaggle chet giua chung thi cac cap da xong van dung duoc.
     for s in seeds:
-        if not corpus_matches:
+        if with_control or not corpus_matches:
             plan.append(RunSpec(
                 name=f"E4c_{lang}_alpha{lang}_s{s}",
                 argv=base + ["--decay_mode", "corpus", "--alpha_file", cfg["own_alpha"],
@@ -244,6 +251,8 @@ def main(argv: list[str] | None = None, texts_provider=None) -> int:
                    help="chi dung cache va so dau van tay; ma thoat 2 neu lech")
     p.add_argument("--dry_run", action="store_true",
                    help="in ke hoach cho ca hai truong hop, khong nap du lieu")
+    p.add_argument("--with_control", action="store_true",
+                   help="luon chay doi chung E4c cung phien, ke ca khi corpus khop")
     p.add_argument("--smoke", action="store_true",
                    help="CPU, corpus do choi, ngan sach si hon; khong so dau van tay tru khi co --reference")
     args = p.parse_args(argv)
@@ -256,7 +265,7 @@ def main(argv: list[str] | None = None, texts_provider=None) -> int:
     if args.dry_run:
         for matched in (True, False):
             _banner(f"KE HOACH {lang.upper()} neu corpus {'KHOP' if matched else 'LECH'}")
-            for spec in build_plan(lang, matched, seeds):
+            for spec in build_plan(lang, matched, seeds, with_control=args.with_control):
                 print(f"  {spec.kind:<9}{spec.name}")
         return 0
 
@@ -317,7 +326,7 @@ def main(argv: list[str] | None = None, texts_provider=None) -> int:
 
     from .train import parse_args, train
 
-    plan = build_plan(lang, matched, seeds)
+    plan = build_plan(lang, matched, seeds, with_control=args.with_control)
     manifest["plan"] = [s.name for s in plan]
     if lang == "vi" and not matched:
         manifest["skipped"] = "ablation seed 2: corpus khac voi seed 0-1 nen khong so sanh duoc"

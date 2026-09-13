@@ -628,8 +628,12 @@ _SEED_RE = re.compile(r"^(?P<prefix>.+)_s(?P<seed>\d+)$")
 ABLATION_TAGS = ("no_window", "order1", "no_sine", "order3", "no_posemb")
 
 
-def _ppl_by_prefix(dirs: list[Path]) -> dict[str, dict[int, float]]:
-    """prefix -> {seed: test_ppl}. Thu muc sau ghi de thu muc truoc neu trung ten."""
+def _ppl_by_prefix(dirs: list[Path], tokens: dict | None = None) -> dict[str, dict[int, float]]:
+    """prefix -> {seed: test_ppl}. Thu muc sau ghi de thu muc truoc neu trung ten.
+
+    Neu truyen `tokens`, ghi them prefix -> so token train cua corpus, de nguoi
+    doc thay ngay khi hai nhom duoc so sanh nam tren corpus khac nhau.
+    """
     out: dict[str, dict[int, float]] = defaultdict(dict)
     for d in dirs:
         for f in sorted(Path(d).glob("*.json")):
@@ -642,12 +646,15 @@ def _ppl_by_prefix(dirs: list[Path]) -> dict[str, dict[int, float]]:
             m = _SEED_RE.match(payload.get("run_name", f.stem))
             if m:
                 out[m["prefix"]][int(m["seed"])] = float(payload["test_ppl"])
+                if tokens is not None:
+                    tokens[m["prefix"]] = payload.get("corpus", {}).get("n_tokens_train")
     return out
 
 
 def followup_tests(dirs: list[Path]) -> dict:
     """Kiem dinh cho ablation (E3 vs goc) va hoan doi alpha (E4x vs alpha cua minh)."""
-    runs = _ppl_by_prefix([Path(d) for d in dirs])
+    tokens: dict = {}
+    runs = _ppl_by_prefix([Path(d) for d in dirs], tokens)
 
     def vals(prefix: str) -> list[float]:
         return [runs[prefix][s] for s in sorted(runs.get(prefix, {}))]
@@ -667,6 +674,7 @@ def followup_tests(dirs: list[Path]) -> dict:
         if len(sw) >= 2 and len(own) >= 2:
             result["swap"].append({"name": f"{lang}: alpha_{other} - alpha_{lang}",
                                    "against": own_prefix, "n": len(sw),
+                                   "n_tokens_train": tokens.get(f"E4x_{lang}_alpha{other}"),
                                    "mean": float(np.mean(sw)), **welch_test(sw, own)})
     for family in result.values():
         for row, adj in zip(family, holm_adjust([r["p"] for r in family])):
@@ -688,6 +696,9 @@ def print_followup(dirs: list[Path]) -> None:
             print(f"    {r['name']:<22} n={r['n']} Delta={r['diff']:+.3f} "
                   f"KTC=[{r['ci_low']:+.3f}; {r['ci_high']:+.3f}] df={r['df']:.2f} "
                   f"p={r['p']:.4f} p_Holm={r['p_holm']:.4f}  {flag}")
+            if fam == "swap":
+                print(f"    {'':<22} doi chung: {r['against']}; token train cua corpus: "
+                      f"{r['n_tokens_train']}")
 
 
 # -----------------------------------------------------------------------------
@@ -723,6 +734,10 @@ def main(argv: list[str] | None = None) -> int:
         print("ALPHA DIAGNOSTICS")
         print("=" * 86)
         analyse_alpha_diagnostics(d)
+        print("\n" + "=" * 86)
+        print("THI NGHIEM BO SUNG (followup_*_results)")
+        print("=" * 86)
+        print_followup([d, *sorted(p for p in d.glob("followup_*_results") if p.is_dir())])
 
     tex = []
     for tag, cap, lab in [

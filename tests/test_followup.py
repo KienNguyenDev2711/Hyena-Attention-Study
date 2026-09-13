@@ -85,6 +85,11 @@ def test_plan_shape():
                              "E4c_vi_alphavi_s1", "E4x_vi_alphaen_s1",
                              "E4c_vi_alphavi_s2", "E4x_vi_alphaen_s2"]
     assert names(build_plan("en", True)) == [f"E4x_en_alphavi_s{s}" for s in (0, 1, 2)]
+    assert names(build_plan("en", True, with_control=True)) == [
+        "E4c_en_alphaen_s0", "E4x_en_alphavi_s0", "E4c_en_alphaen_s1",
+        "E4x_en_alphavi_s1", "E4c_en_alphaen_s2", "E4x_en_alphavi_s2"]
+    assert not [n for n in names(build_plan("vi", True, with_control=True))
+                if n.startswith("E3_")] == [], "with_control khong duoc bo ablation khi corpus khop"
     assert len(build_plan("en", False)) == 6
     return len(vi_ok)
 

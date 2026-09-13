@@ -1,0 +1,50 @@
+{
+  "lang": "en",
+  "smoke": false,
+  "created": "2026-09-13 13:52:28",
+  "git_commit": "c7e731839b51b0627f73353569d5425ff7ffe754",
+  "datasets_version": "4.0.0",
+  "torch_version": "2.10.0+cu128",
+  "device": "Tesla T4",
+  "token_cache": "data_cache/datasets-4.0.0",
+  "reference": "/kaggle/working/Hyena-Attention-Study/results/E4_corpus_en_s0.json",
+  "corpus": {
+    "lang": "en",
+    "tokenizer": "syllable",
+    "vocab_size": 16000,
+    "n_docs": 110000,
+    "n_chars": 245466748,
+    "n_tokens_train": 38250964,
+    "n_tokens_val": 2406613,
+    "n_tokens_test": 2406613,
+    "chars_per_token": 5.0998366023697566,
+    "unk_rate": 0.10455784171606924
+  },
+  "corpus_matches": true,
+  "mismatches": [],
+  "runs": [
+    {
+      "name": "E4x_en_alphavi_s0",
+      "kind": "swap",
+      "status": "done",
+      "test_ppl": 54.90445073347158
+    },
+    {
+      "name": "E4x_en_alphavi_s1",
+      "kind": "swap",
+      "status": "done",
+      "test_ppl": 54.6337325820573
+    },
+    {
+      "name": "E4x_en_alphavi_s2",
+      "kind": "swap",
+      "status": "done",
+      "test_ppl": 54.761192397844084
+    }
+  ],
+  "plan": [
+    "E4x_en_alphavi_s0",
+    "E4x_en_alphavi_s1",
+    "E4x_en_alphavi_s2"
+  ]
+}
