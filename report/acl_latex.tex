@@ -460,7 +460,9 @@ suy từ tiếng Việt (cùng corpus, cùng cấu hình, 3 seed) đạt 54,77 P
 khi dùng $\alpha$ của chính nó ($\Delta = -0{,}15$; KTC 95\% [$-0{,}48$; $0{,}18$];
 Welch $p = 0{,}28$). Vì perplexity ít nhạy với $\alpha$ (mục~\ref{sec:e4text}),
 kết luận đứng được là bộ lọc thay thế được cho nhau ở quy mô này, không phải hai
-bộ lọc giống nhau (lưu ý ở mục Hạn chế). Các số được tái sinh bởi
+bộ lọc giống nhau. Đối chứng chạy lại cùng phiên cho perplexity trùng khớp tới
+từng chữ số với lần chạy gốc ở môi trường khác, nên chênh lệch không đến từ môi
+trường. Các số được tái sinh bởi
 \texttt{python -m hyena\_study.analyze}.
 
 \subsection{Perplexity trên mô hình ngôn ngữ}
@@ -810,9 +812,7 @@ một tỉ lệ văn bản khác nhau ở hai ngôn ngữ, điều chúng tôi c
 
 Chiều hoán đổi $\alpha$ trên tiếng Việt và seed thứ ba cho ablation không chạy
 được trên đúng corpus: lấy mẫu lại (\texttt{datasets} 4.0.0) cho cùng 90.000 tài
-liệu nhưng chỉ 3,67 triệu token huấn luyện, khoảng một phần mười bản gốc. Lần
-hoán đổi tiếng Anh chạy trên Kaggle (torch 2.10), đối chứng của nó trên Colab
-(torch 2.11), nên chênh lệch 0,15 PPL có thể lẫn khác biệt môi trường.
+liệu nhưng chỉ 3,67 triệu token huấn luyện, khoảng một phần mười bản gốc.
 
 Đánh giá ngoại tại dùng câu ngắn nên không kiểm tra được ngữ cảnh dài, và chỉ
 có một seed tiền huấn luyện.
