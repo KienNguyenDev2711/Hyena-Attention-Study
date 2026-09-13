@@ -112,15 +112,14 @@ khởi tạo phân bố suy giảm của bộ lọc từ đường cong thông t
 corpus. Ở khoảng 7,5 triệu tham số, cùng 50 triệu token và cùng siêu tham số,
 Hyena có perplexity thấp hơn Transformer 19,5\% trên tiếng Việt và 14,7\% trên
 tiếng Anh, nhưng ưu thế này không chuyển thành ưu thế phân loại trên UIT-VSFC.
-Ở độ dài 8192, Hyena nhanh hơn attention tối ưu của PyTorch 1,88 lần cho lượt
-tiến và lùi. Tiếng Việt mang thông tin tương hỗ cục bộ gấp 1,7 đến 2,3 lần
+Tiếng Việt mang thông tin tương hỗ cục bộ gấp 1,7 đến 2,3 lần
 tiếng Anh ở khoảng cách ngắn. Trên tiếng Việt, đặt phân bố suy giảm theo một
 nguyên tắc, cách đều theo thang log hoặc suy từ corpus, giảm khoảng 0,9 PPL so
 với một khoảng đặt tuỳ tiện; trên tiếng Anh hiệu ứng cùng chiều nhưng không qua
 hiệu chỉnh so sánh bội. Khởi tạo từ corpus không vượt được đường cơ sở thang
-log một cách có ý nghĩa. Bộ lọc suy từ hai ngôn ngữ gần nhau theo quy ước ánh
-xạ đang dùng (lệch 14,3\%) nhưng xa nhau hơn khi tính bề rộng ô (36,2\%), nên
-câu hỏi bộ lọc có mang tính đặc thù ngôn ngữ hay không vẫn còn mở.
+log một cách có ý nghĩa. Mô hình tiếng Anh dùng $\alpha$ suy từ tiếng Việt
+không kém đi ($p = 0{,}28$), nên ở quy mô này bộ lọc của hai ngôn ngữ thay thế
+được cho nhau.
 \end{abstract}
 
 % =============================================================================
@@ -454,8 +453,14 @@ thước đo còn lại), còn độ lệch so với \textsf{logspace} là 163,3
 vẫn gần nhau hơn so với đường cơ sở, nhưng không còn gần như trùng nhau, và bộ
 lọc tiếng Việt ngắn hơn, cùng chiều với việc tiếng Việt có nhiều thông tin tương
 hỗ cục bộ hơn. Vì vậy phân tích hình dạng bộ lọc \emph{không} đủ để bác bỏ tính
-đặc thù ngôn ngữ. Phép thử trực tiếp là hoán đổi $\alpha$ giữa hai ngôn ngữ khi
-huấn luyện, chúng tôi chưa thực hiện. Mọi số trong mục này được tái sinh bởi
+đặc thù ngôn ngữ.
+
+Phép thử ở mức huấn luyện là hoán đổi $\alpha$: mô hình tiếng Anh dùng $\alpha$
+suy từ tiếng Việt (cùng corpus, cùng cấu hình, 3 seed) đạt 54,77 PPL so với 54,91
+khi dùng $\alpha$ của chính nó ($\Delta = -0{,}15$; KTC 95\% [$-0{,}48$; $0{,}18$];
+Welch $p = 0{,}28$). Vì perplexity ít nhạy với $\alpha$ (mục~\ref{sec:e4text}),
+kết luận đứng được là bộ lọc thay thế được cho nhau ở quy mô này, không phải hai
+bộ lọc giống nhau (lưu ý ở mục Hạn chế). Các số được tái sinh bởi
 \texttt{python -m hyena\_study.analyze}.
 
 \subsection{Perplexity trên mô hình ngôn ngữ}
@@ -488,10 +493,9 @@ lệch chuẩn mẫu. Khoảng tin cậy 95\% theo phân phối $t$ ($t = 4{,}30
 Hyena có perplexity thấp hơn Transformer 19,5\% trên tiếng Việt và 14,7\% trên
 tiếng Anh (Welch, $p < 10^{-4}$ ở cả hai).
 
-Bài báo gốc khẳng định Hyena đạt chất lượng \emph{tương đương} Transformer ở
-quy mô 125 đến 355 triệu tham số; kết quả của chúng tôi thuộc một chế độ khác,
-mô hình nhỏ và ngân sách ngắn, nên không mâu thuẫn với khẳng định đó. Cần đọc
-thận trọng vì hai lý do. Cả hai kiến trúc dùng chung learning rate và lịch huấn
+Bài báo gốc chỉ khẳng định Hyena \emph{tương đương} Transformer ở quy mô 125 đến
+355 triệu tham số; kết quả này thuộc chế độ khác nên không mâu thuẫn, nhưng cần
+đọc thận trọng vì hai lý do. Cả hai kiến trúc dùng chung learning rate và lịch huấn
 luyện; bài báo gốc cũng làm vậy nhưng ghi nhận Hyena hưởng lợi từ learning rate
 thấp hơn đôi chút. Và Transformer chạy nhanh hơn 1,51 lần mỗi token
 (mục~\ref{sec:hieunang}), nên ở cùng thời gian thực nó xử lý được nhiều token
@@ -546,9 +550,8 @@ seed, bậc tự do Welch chỉ 1,4 đến 3,0 nên mọi kết luận ở bản
 \label{tab:e3}
 \end{table}
 
-Từ mục này, mọi so sánh perplexity dùng một tiêu chí: kiểm định Welch hai mẫu,
-hiệu chỉnh Holm trong từng họ so sánh ở mức 0,05. Khoảng tin cậy trong bảng chỉ
-để mô tả; hai khoảng chồng lấn không đồng nghĩa với không có khác biệt.
+Từ mục này, mọi so sánh perplexity dùng kiểm định Welch hai mẫu, hiệu chỉnh Holm
+trong từng họ so sánh ở mức 0,05; khoảng tin cậy trong bảng chỉ để mô tả.
 
 Bỏ cửa sổ suy giảm gây thiệt hại lớn nhất (+1,92 PPL), xác nhận vai trò của số
 hạng $\mathrm{Window}(t)$ trong công thức~\eqref{eq:filter}. Hạ bậc xuống $N=1$
@@ -558,10 +561,10 @@ tham số (4,4\%), nên thiệt hại trộn lẫn hai nguyên nhân mà thiết
 không tách được. Bỏ kích hoạt sine gây thiệt hại nhỏ (+0,42) và chỉ vừa qua
 ngưỡng. Bỏ positional embedding lại cho perplexity \emph{thấp hơn} 0,59, phù hợp
 với lập luận rằng bộ lọc tích chập đã mang thông tin vị trí. Bậc $N=3$ không
-khác biệt. Vì bậc tự do Welch rất nhỏ, chúng tôi coi các kết luận này là sơ bộ
-cho tới khi có seed thứ ba.
+khác biệt. Vì bậc tự do Welch rất nhỏ, chúng tôi coi các kết luận này là sơ bộ.
 
 \subsection{Khởi tạo bộ lọc từ corpus}
+\label{sec:e4text}
 
 \begin{table}[t]
 \centering
@@ -610,14 +613,11 @@ trên cả hai ngôn ngữ không phải là bằng chứng cho điều đó.
 \subsection{Hiệu năng theo độ dài chuỗi}
 \label{sec:hieunang}
 
-Ở $L = 512$, trên chính các lần chạy tiếng Việt của Bảng~\ref{tab:e1}
-(Tesla T4), chúng tôi đo được Transformer đạt 138,5 nghìn token mỗi giây còn
-Hyena đạt 92,0 nghìn, tức Transformer \emph{nhanh hơn} 1,51 lần. Nhánh tiếng
-Anh chạy trên một máy chủ khác cho cùng chiều với biên độ nhỏ hơn: 122,4 nghìn
-so với 85,7 nghìn, tức 1,43 lần. Kết quả này
-không mâu thuẫn với bài báo gốc: các con số tăng tốc được công bố ở đó áp dụng
-cho $L \ge 8$K, nơi chi phí bậc hai của attention mới lấn át chi phí cố định
-của biến đổi Fourier. Chúng tôi nêu rõ điều kiện này để tránh trích dẫn sai.
+Ở $L = 512$, trên các lần chạy tiếng Việt của Bảng~\ref{tab:e1} (Tesla T4),
+Transformer đạt 138,5 nghìn token mỗi giây còn Hyena 92,0 nghìn, tức Transformer
+\emph{nhanh hơn} 1,51 lần (nhánh tiếng Anh: 1,43 lần). Điều này không mâu thuẫn
+với bài báo gốc, vốn chỉ công bố tăng tốc ở độ dài lớn, nơi chi phí bậc hai của
+attention lấn át chi phí cố định của biến đổi Fourier.
 
 Khi đo hiệu năng, việc chọn đường cơ sở attention nào cũng quyết định kết luận.
 Bài báo gốc so với FlashAttention \citep{dao2022flashattention} và tự ghi rõ
@@ -759,11 +759,9 @@ quyết định tới kết luận: nếu chỉ so với \textsf{uniform}, nhóm
 cho đóng góp đề xuất, trong khi so với \textsf{logspace} phần còn lại chỉ 0,29 PPL
 và không qua hiệu chỉnh so sánh bội.
 
-Câu hỏi bộ lọc có đặc thù ngôn ngữ hay không thì chưa được trả lời. Theo quy ước
-ánh xạ đang dùng, hai bộ lọc gần nhau; đổi quy ước thì khoảng cách tăng 2,5 lần;
-còn perplexity quá ít nhạy với $\alpha$ để phân biệt. Bài học phương pháp là một
-kết luận rút từ hình dạng bộ lọc phải được kiểm lại ở mức huấn luyện, ở đây là
-bằng cách hoán đổi $\alpha$ giữa hai ngôn ngữ.
+Câu hỏi bộ lọc có đặc thù ngôn ngữ hay không mới được trả lời một phần: hình
+dạng bộ lọc phụ thuộc quy ước ánh xạ, còn ở mức huấn luyện bộ lọc thay thế được
+cho nhau trên tiếng Anh; chiều tiếng Việt chưa kiểm được.
 
 Phần đặc thù tiếng Việt đứng vững nằm ở phép đo: ở khoảng cách ngắn, tiếng Việt
 mang thông tin tương hỗ cục bộ gấp 1,7 tới 2,3 lần tiếng Anh, và nếu chỉ đo bằng
@@ -808,8 +806,13 @@ Phép đo thông tin tương hỗ có ba điểm yếu chưa xử lý: phép án
 phụ thuộc quy ước rời rạc hoá (mục~\ref{sec:doichung}); đường nền nhiễu chỉ ước
 lượng từ một lần xáo; và bước thô hoá về $K$ ký hiệu thường gặp nhất có thể phủ
 một tỉ lệ văn bản khác nhau ở hai ngôn ngữ, điều chúng tôi chưa đo nên tỉ lệ 1,7
-đến 2,3 lần có thể chịu ảnh hưởng của nó. Chúng tôi cũng chưa chạy thí nghiệm
-hoán đổi $\alpha$ giữa hai ngôn ngữ và seed thứ ba cho ablation.
+đến 2,3 lần có thể chịu ảnh hưởng của nó.
+
+Chiều hoán đổi $\alpha$ trên tiếng Việt và seed thứ ba cho ablation không chạy
+được trên đúng corpus: lấy mẫu lại (\texttt{datasets} 4.0.0) cho cùng 90.000 tài
+liệu nhưng chỉ 3,67 triệu token huấn luyện, khoảng một phần mười bản gốc. Lần
+hoán đổi tiếng Anh chạy trên Kaggle (torch 2.10), đối chứng của nó trên Colab
+(torch 2.11), nên chênh lệch 0,15 PPL có thể lẫn khác biệt môi trường.
 
 Đánh giá ngoại tại dùng câu ngắn nên không kiểm tra được ngữ cảnh dài, và chỉ
 có một seed tiền huấn luyện.
@@ -834,8 +837,9 @@ hưởng lớn nhất; các nhánh khác cần thêm seed.
 Đóng góp đề xuất cho kết quả hai mặt. Khoảng giá trị của tham số suy giảm quan
 trọng: khoảng 0,9 PPL trên tiếng Việt, cùng chiều trên tiếng Anh. Nhưng suy
 khoảng đó từ thống kê corpus không mang lại lợi ích đo được so với cách đều theo
-thang log, và câu hỏi bộ lọc có đặc thù ngôn ngữ hay không phụ thuộc quy ước ánh
-xạ, cần thí nghiệm hoán đổi $\alpha$ để trả lời. Chúng tôi báo cáo các kết quả
+thang log; hoán đổi $\alpha$ giữa hai ngôn ngữ trên tiếng Anh cũng không làm
+perplexity kém đi, nên ở quy mô này bộ lọc thay thế được cho nhau. Chúng tôi báo
+cáo các kết quả
 phủ định này cùng giới hạn của bản tái hiện thay vì lược bỏ chúng.
 
 % =============================================================================
