@@ -48,6 +48,14 @@
   % pdfLaTeX: phai dung ma hoa T5 cua vntex. T1 KHONG chua ky tu tieng Viet.
   % Dat sau \usepackage{acl} nen T5 la ma hoa mac dinh (lenh nap sau thang).
   \usepackage[T5]{fontenc}
+  % Times cho nhanh pdfLaTeX (bien ban 2026-09-13). Overleaf cua nhom bien dich
+  % bang pdfLaTeX; khong co dong nay thi chu ra Computer Modern, rong hon Times
+  % nen phan than dai 9 trang (vuot gioi han 8) va cot trai trang 1 bi day het
+  % dung o cuoi tom tat, tieu de muc 1 nhay sang cot phai, TeX gian khoang doc
+  % duoi "Tom tat noi dung" thanh 39 pt cho day cot. Voi Times: than 8 trang,
+  % khoang do 13,6 pt. vntex co san t5ptm.fd va phong urwvn cho tieng Viet;
+  % Times cung la phong chuan cua mau ACL. Da bien dich kiem bang pdfTeX 1.40.29.
+  \usepackage{times}
 \else
   % LuaLaTeX hoac XeLaTeX. Ba font TeX Gyre di cung mot goi trong TeX Live
   % nen neu thieu thi thieu ca ba; khi do chi can chu thich ca ba dong,
