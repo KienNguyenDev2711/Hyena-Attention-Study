@@ -106,11 +106,9 @@ luyện, thay cho cách đặt thủ công. Ở cùng ngân sách tham số, cù
 token và cùng siêu tham số, Hyena đạt perplexity thấp hơn Transformer 19,5\%
 trên tiếng Việt và 14,7\% trên tiếng Anh. Về hiệu năng, Hyena vượt kernel
 attention tiết kiệm bộ nhớ 1,88 lần ở độ dài 8192 cho lượt tiến và lùi, tiệm
-cận mức 2 lần mà bài báo gốc công bố. Đánh giá ngoại tại trên bộ dữ liệu phân
-loại UIT-VSFC lại cho thấy ưu thế perplexity đó không chuyển thành ưu thế
-phân loại: khi đóng băng mô hình, Transformer bằng hoặc cao hơn Hyena, còn khi
-tinh chỉnh toàn phần thì hai kiến trúc không phân biệt được. Về đóng góp đề
-xuất, chúng tôi đo được
+cận mức 2 lần mà bài báo gốc công bố. Tuy vậy, trên tác vụ phân loại UIT-VSFC,
+ưu thế perplexity không chuyển thành ưu thế phân loại. Về đóng góp đề xuất,
+chúng tôi đo được
 tiếng Việt mang lượng thông tin tương hỗ cục bộ gấp 1,7 đến 2,3 lần tiếng Anh
 ở khoảng cách ngắn và giảm dần về khoảng 1,0 ở rìa vùng đo được, nhưng
 nhánh đối chứng cho thấy bộ lọc suy ra từ hai ngôn ngữ gần nhau:
@@ -159,10 +157,6 @@ cho việc đặt tham số này bằng trực giác. Thứ ba, và đây là ph
 là có giá trị nhất, nhánh đối chứng tiếng Anh \emph{bác bỏ} giả thuyết ban đầu
 của chính chúng tôi rằng bộ lọc thu được mang tính đặc thù tiếng Việt; chúng
 tôi báo cáo đầy đủ kết quả phủ định này thay vì lược bỏ nó.
-
-Ngoài ba điểm trên, chúng tôi bổ sung đánh giá ngoại tại trên tác vụ phân loại
-tiếng Việt, nhằm kiểm tra liệu perplexity, một thước đo nội tại, có phản ánh
-chất lượng biểu diễn dùng cho tác vụ hạ nguồn hay không.
 
 % =============================================================================
 \section{Nền tảng: toán tử Hyena}
@@ -343,56 +337,6 @@ nhân quả kinh điển (quên cắt phần đệm phải của tích chập ng
 lệ rò rỉ vọt lên khoảng $2$. Chênh lệch hơn 15 bậc độ lớn cho thấy bộ
 kiểm thử thực sự có khả năng phát hiện lỗi, chứ không phải im lặng vì không đủ
 nhạy.
-
-\subsection{Đánh giá ngoại tại}
-\label{sec:ngoaitai-setup}
-
-Perplexity là thước đo nội tại: nó cho biết mô hình dự đoán token kế tiếp tốt
-đến đâu trên chính phân phối dữ liệu tiền huấn luyện, nhưng không cho biết biểu
-diễn học được có dùng được cho tác vụ khác hay không. Để trả lời câu hỏi đó,
-chúng tôi đánh giá ngoại tại trên UIT-VSFC \citep{nguyen2018vsfc}, bộ phản hồi
-của sinh viên gồm 16.175 câu (train 11.426, validation 1.583, test 3.166), gán
-nhãn cho hai tác vụ phân loại trên cùng một tập câu: cảm xúc (3 lớp: tiêu cực,
-trung tính, tích cực) và chủ đề (4 lớp: giảng viên, chương trình đào tạo, cơ sở
-vật chất, khác). Chúng tôi dùng bản do chính nhóm tác giả đăng tải
-(\texttt{uitnlp/vietnamese\_students\_feedback}) và đối chiếu với một bản sao
-độc lập có sẵn cột nhãn dạng chữ: số câu và phân bố nhãn khớp tuyệt đối ở cả ba
-tập, nên ánh xạ từ chỉ số sang tên nhãn là đã được kiểm chứng.
-
-Hai checkpoint được đánh giá là mô hình âm tiết tiếng Việt, khởi tạo
-\textsf{uniform}, seed 0 trong Bảng~\ref{tab:e1}, huấn luyện lại với đúng cấu
-hình đó. Perplexity của Hyena trùng lần chạy gốc tới chữ số cuối; của
-Transformer lệch 0,0008, nhiều khả năng do kernel attention trên GPU không tất
-định (chúng tôi không kiểm chứng riêng nguyên nhân này). Từ điển 16k
-phủ tốt miền văn bản mới này: tỉ lệ token ngoài từ điển là 1,11\% trên tập
-train và 1,25\% trên tập test, câu dài nhất có 159 token nên không câu nào bị
-cắt.
-
-Chúng tôi dùng hai giao thức. \emph{Thăm dò tuyến tính} (linear probe) đóng băng
-toàn bộ thân mô hình và chỉ học một lớp tuyến tính, nên đo trực tiếp chất lượng
-biểu diễn. \emph{Tinh chỉnh toàn phần} cập nhật mọi tham số. Biểu diễn của câu
-là trạng thái ẩn tại token thật cuối cùng: cả hai toán tử đều nhân quả nên chỉ
-vị trí này nhìn thấy trọn câu, và lựa chọn này được cố định trước khi xem kết
-quả. Hai kiến trúc dùng chung siêu tham số: AdamW, batch 32, weight decay 0,01;
-thăm dò dùng learning rate $10^{-3}$ trong 20 epoch, tinh chỉnh dùng $10^{-4}$
-trong 5 epoch. Epoch tốt nhất được chọn theo macro-F1 trên tập validation, rồi
-mới báo cáo trên tập test. Mỗi ô chạy 3 seed tinh chỉnh.
-
-Hai đường cơ sở là bắt buộc. Đường thứ nhất luôn đoán lớp đông nhất; vì dữ liệu
-lệch lớp nặng (lớp trung tính chỉ chiếm 4,0\% tập train, lớp giảng viên chiếm
-71,5\%), chỉ số chính là macro-F1 chứ không phải accuracy. Đường thứ hai giữ
-nguyên kiến trúc nhưng dùng trọng số \emph{ngẫu nhiên}; thiếu nó thì không tách
-được phần đóng góp của tiền huấn luyện khỏi phần đóng góp của kiến trúc và đầu
-phân loại.
-
-Một chi tiết cài đặt quyết định tính công bằng của so sánh. Trong cài đặt của
-chúng tôi, bộ lọc Hyena được đánh giá trên trục thời gian chuẩn hoá
-$t \in [0,1]$ theo chính độ dài chuỗi $L$, nên đổi độ dài đệm là co giãn toàn
-bộ bộ lọc và làm đổi đầu ra tại cả những vị trí thật, dù không có rò rỉ thông
-tin từ tương lai. Attention không có tính chất này. Nếu đệm theo câu dài nhất
-trong batch như thông lệ, điểm số của Hyena sẽ phụ thuộc cách chia batch và bộ
-lọc lúc đánh giá sẽ khác bộ lọc lúc tiền huấn luyện. Vì vậy mọi câu được đệm về
-đúng $L = 512$, bằng độ dài tiền huấn luyện.
 
 % =============================================================================
 \section{Kết quả}
@@ -749,81 +693,48 @@ xác khi thành công 0,963.
 
 \subsection{Đánh giá ngoại tại}
 
+Perplexity chỉ đo khả năng dự đoán token kế tiếp. Để kiểm tra biểu diễn có dùng
+được cho tác vụ khác, chúng tôi đánh giá hai checkpoint âm tiết, \textsf{uniform},
+seed 0 của Bảng~\ref{tab:e1} trên UIT-VSFC \citep{nguyen2018vsfc}, gồm 16.175
+câu phản hồi của sinh viên với hai tác vụ phân loại cảm xúc (3 lớp) và chủ đề
+(4 lớp). Hai giao thức dùng chung siêu tham số: \emph{thăm dò tuyến tính} (đóng
+băng thân, học một lớp tuyến tính trên trạng thái ẩn của token cuối) và
+\emph{tinh chỉnh toàn phần}; epoch được chọn theo macro-F1 trên validation, mỗi
+ô 3 seed, đối chứng bằng cùng kiến trúc với trọng số ngẫu nhiên. Vì bộ lọc
+Hyena trong cài đặt của chúng tôi phụ thuộc độ dài chuỗi, mọi câu được đệm về
+đúng $L = 512$ như lúc tiền huấn luyện.
+
 \begin{table*}[t]
 \centering
 \footnotesize
-% Bang rong hai cot: bon cot so lieu kem nua do rong khoang tin cay khong vua
-% mot cot cua bo cuc ACL.
 \setlength{\tabcolsep}{3pt}
 \begin{tabular}{llcccc}
 \toprule
-& & \multicolumn{2}{c}{Thăm dò tuyến tính (đóng băng)} &
-    \multicolumn{2}{c}{Tinh chỉnh toàn phần} \\
+& & \multicolumn{2}{c}{Thăm dò tuyến tính} & \multicolumn{2}{c}{Tinh chỉnh toàn phần} \\
 \cmidrule(lr){3-4}\cmidrule(lr){5-6}
 Kiến trúc & Khởi tạo & Cảm xúc & Chủ đề & Cảm xúc & Chủ đề \\
 \midrule
-\multicolumn{2}{l}{Đoán lớp đông nhất} & 0,2229 & 0,2099 & 0,2229 & 0,2099 \\
-\midrule
-Hyena       & ngẫu nhiên & 0,4551 $\pm$ 0,0513 & 0,2981 $\pm$ 0,0424
-            & 0,7363 $\pm$ 0,0422 & 0,7562 $\pm$ 0,0218 \\
-Transformer & ngẫu nhiên & 0,5984 $\pm$ 0,0205 & 0,6431 $\pm$ 0,0175
-            & 0,7591 $\pm$ 0,0256 & 0,7672 $\pm$ 0,0108 \\
-\midrule
-Hyena       & tiền huấn luyện & 0,6329 $\pm$ 0,0464 & 0,6428 $\pm$ 0,0143
-            & 0,7596 $\pm$ 0,0411 & 0,7715 $\pm$ 0,0243 \\
-Transformer & tiền huấn luyện & 0,6505 $\pm$ 0,0019 & \textbf{0,7079} $\pm$ 0,0050
-            & 0,7751 $\pm$ 0,0229 & 0,7718 $\pm$ 0,0349 \\
+Hyena       & ngẫu nhiên      & 0,4551 $\pm$ 0,0513 & 0,2981 $\pm$ 0,0424 & 0,7363 $\pm$ 0,0422 & 0,7562 $\pm$ 0,0218 \\
+Transformer & ngẫu nhiên      & 0,5984 $\pm$ 0,0205 & 0,6431 $\pm$ 0,0175 & 0,7591 $\pm$ 0,0256 & 0,7672 $\pm$ 0,0108 \\
+Hyena       & tiền huấn luyện & 0,6329 $\pm$ 0,0464 & 0,6428 $\pm$ 0,0143 & 0,7596 $\pm$ 0,0411 & 0,7715 $\pm$ 0,0243 \\
+Transformer & tiền huấn luyện & 0,6505 $\pm$ 0,0019 & \textbf{0,7079} $\pm$ 0,0050 & 0,7751 $\pm$ 0,0229 & 0,7718 $\pm$ 0,0349 \\
 \bottomrule
 \end{tabular}
-\caption{Đánh giá ngoại tại trên UIT-VSFC: macro-F1 trên tập test, trung bình
-3 seed tinh chỉnh; $\pm$ là nửa độ rộng khoảng tin cậy 95\% theo phân phối $t$
-($t = 4{,}303$), khác với Bảng~\ref{tab:e1} vốn ghi độ lệch chuẩn. Mọi chuỗi đệm
-về $L = 512$. Chữ đậm: khoảng tin cậy tách rời khỏi kiến trúc còn lại ở cùng
-giao thức và cùng tác vụ. Tham chiếu nội tại của hai checkpoint: perplexity
-Hyena 51,50, Transformer 63,91. Đường cơ sở lớp đông nhất đạt accuracy 0,5022
-(cảm xúc) và 0,7233 (chủ đề).}
+\caption{Macro-F1 trên tập test UIT-VSFC, trung bình 3 seed; $\pm$ là nửa độ
+rộng khoảng tin cậy 95\%. Đoán lớp đông nhất đạt 0,2229 (cảm xúc) và 0,2099
+(chủ đề). Chữ đậm: tách rời khỏi kiến trúc còn lại.}
 \label{tab:e7}
 \end{table*}
 
-Bảng~\ref{tab:e7} trình bày kết quả, với cùng tiêu chí như các mục trước: chỉ
-kết luận khi hai khoảng tin cậy 95\% tách rời.
-
-Thứ nhất, mọi nhánh đều vượt xa đường cơ sở lớp đông nhất, và ở giao thức thăm
-dò tuyến tính, tiền huấn luyện mang lại cải thiện có khoảng tin cậy tách rời
-cho cả hai kiến trúc trên cả hai tác vụ: Hyena tăng 0,178 (cảm xúc) và 0,345
-(chủ đề), Transformer tăng 0,052 và 0,065. Mức tăng của Hyena lớn hơn chủ yếu
-vì Hyena khởi tạo ngẫu nhiên xuất phát rất thấp: trên tác vụ chủ đề, nhánh này
-đạt accuracy 0,719, xấp xỉ mức đoán lớp đông nhất 0,723.
-
-Thứ hai, và đây là điểm chính của mục này, ưu thế perplexity của Hyena không
-chuyển thành ưu thế về biểu diễn. Với mô hình đóng băng, Transformer đạt
-macro-F1 0,7079 so với 0,6428 của Hyena trên tác vụ chủ đề, khoảng tin cậy tách
-rời; trên tác vụ cảm xúc Transformer cũng cao hơn (0,6505 so với 0,6329) nhưng
-khoảng tin cậy chồng lấn. Tức là với cùng hai checkpoint mà Hyena có perplexity
-thấp hơn (51,50 so với 63,91), thứ tự theo đánh giá ngoại tại bằng nhau hoặc đảo
-ngược. Một phần khoảng cách này đã có trước khi tiền huấn luyện: với trọng số
-ngẫu nhiên, Transformer đạt 0,5984 và 0,6431 trong khi Hyena chỉ đạt 0,4551 và
-0,2981. Nói cách khác, với cách gộp tại token cuối và đầu phân loại tuyến tính,
-kiến trúc Transformer cho đặc trưng dễ tách lớp hơn ngay từ khởi tạo; trên tác
-vụ chủ đề, Transformer ngẫu nhiên (0,6431) ngang Hyena đã tiền huấn luyện
-(0,6428).
-
-Thứ ba, khi tinh chỉnh toàn phần, mọi so sánh giữa hai kiến trúc đều chồng lấn,
-với chênh lệch trung bình tối đa 0,016, và lợi ích của tiền huấn luyện co lại
-còn 0,005 tới 0,023, cũng chồng lấn. Ở giao thức này mô hình khởi tạo ngẫu nhiên
-gần bắt kịp mô hình đã tiền huấn luyện, nên thiết lập hiện tại không phân biệt
-được hai kiến trúc, cũng không chứng minh được tác dụng của tiền huấn luyện;
-chúng tôi chưa làm thí nghiệm để tách nguyên nhân (chẳng hạn cỡ tập huấn luyện
-hay số epoch).
-
-Cuối cùng, thí nghiệm đối chứng về độ dài đệm xác nhận chi tiết cài đặt nêu ở
-Mục~\ref{sec:ngoaitai-setup}. Chạy lại thăm dò tuyến tính với mọi câu đệm về
-$L = 176$ thay vì 512, macro-F1 của Hyena đã tiền huấn luyện giảm từ 0,6329
-xuống 0,5576 (cảm xúc) và từ 0,6428 xuống 0,5384 (chủ đề); xét từng seed, mức
-giảm nằm trong khoảng 0,064 tới 0,112 ở cả sáu lần chạy. Kết quả của Transformer
-trùng khớp tuyệt đối ở cả mười hai lần chạy. Nếu đệm theo thông lệ, khoảng cách
-giữa hai kiến trúc ở giao thức thăm dò đã bị phóng đại thêm 0,075 (cảm xúc) và
-0,104 (chủ đề), và Hyena bị đánh giá thấp một cách oan uổng.
+Theo Bảng~\ref{tab:e7}, ở giao thức thăm dò, tiền huấn luyện cải thiện cả hai
+kiến trúc với khoảng tin cậy tách rời, nhưng Transformer vẫn bằng hoặc cao hơn
+Hyena: 0,7079 so với 0,6428 trên chủ đề (tách rời), 0,6505 so với 0,6329 trên
+cảm xúc (chồng lấn), dù Hyena có perplexity thấp hơn (51,50 so với 63,91). Ưu
+thế perplexity vì vậy không chuyển thành ưu thế biểu diễn; một phần khoảng cách
+có sẵn từ khởi tạo, vì Transformer ngẫu nhiên đã đạt 0,6431 trên chủ đề. Khi
+tinh chỉnh toàn phần, mọi so sánh đều chồng lấn. Đệm về $L = 176$ thay vì 512
+làm macro-F1 thăm dò của Hyena đã tiền huấn luyện giảm 0,064 tới 0,112 ở cả sáu
+lần chạy, còn Transformer không đổi.
 
 % =============================================================================
 \section{Thảo luận}
@@ -856,14 +767,6 @@ với BPE là phân biệt chỉ tồn tại ở dạng này với chữ Quốc 
 Hiện tượng lưỡng cực ở tác vụ associative recall gợi ra một hướng đáng theo
 đuổi: vấn đề của Hyena ở quy mô nhỏ có thể nằm ở độ ổn định tối ưu hoá chứ
 không phải ở năng lực biểu diễn, vì hai trong ba lần chạy đạt tới 0,98.
-
-Đánh giá ngoại tại đặt ra một giới hạn cho cách đọc Bảng~\ref{tab:e1}.
-Perplexity thấp hơn đáng kể không bảo đảm biểu diễn tốt hơn cho phân loại: ở
-cùng quy mô và cùng siêu tham số này, Transformer cho đặc trưng đóng băng bằng
-hoặc tốt hơn Hyena, còn khi tinh chỉnh toàn phần thì hai kiến trúc không phân
-biệt được. Vì vậy phát biểu ``Hyena vượt Transformer'' trong báo cáo này chỉ
-đúng theo nghĩa mô hình hoá ngôn ngữ, không mở rộng sang chất lượng biểu diễn
-nói chung.
 
 % =============================================================================
 \section*{Hạn chế}
@@ -906,15 +809,8 @@ nhạy của cách diễn giải, không phải kết quả huấn luyện mới
 ``bộ lọc corpus có trung vị khoảng 3 token'' phải hiểu theo đúng quy ước rời rạc
 đang dùng trong code.
 
-Đánh giá ngoại tại có các giới hạn riêng. Câu trong UIT-VSFC rất ngắn (trung
-vị 11 token), nên tác vụ này đo chất lượng biểu diễn chứ không kiểm tra khả
-năng xử lý ngữ cảnh dài, vốn là động cơ chính của Hyena. Chúng tôi chỉ có
-checkpoint của một seed tiền huấn luyện, nên khoảng tin cậy chỉ phản ánh độ
-biến thiên của bước tinh chỉnh. Hai kiến trúc dùng chung một learning rate và
-một cách gộp biểu diễn, không tinh chỉnh riêng; một cách gộp khác, chẳng hạn
-lấy trung bình trên các vị trí, có thể thay đổi thứ tự ở giao thức thăm dò.
-Thêm nữa, giấy phép của bộ dữ liệu trên HuggingFace ghi là không xác định, nên
-chúng tôi chỉ dùng nó cho mục đích học tập.
+Đánh giá ngoại tại dùng câu ngắn nên không kiểm tra được ngữ cảnh dài, và chỉ
+có một seed tiền huấn luyện.
 
 Cuối cùng, so sánh ``cùng số ký tự'' giữa hai ngôn ngữ không phải là
 ``cùng lượng nội dung''. Muốn khẳng định chuỗi tiếng Việt dài hơn ở cùng nội
@@ -931,10 +827,8 @@ tham số, Hyena đạt perplexity thấp hơn Transformer 19,5\% trên tiếng 
 14,7\% trên tiếng Anh, và vượt kernel attention tiết kiệm bộ nhớ 1,88 lần ở độ
 dài 8192 cho lượt tiến và lùi. Ablation cho thấy cửa sổ suy giảm và bậc đệ quy
 là hai thành phần có ảnh hưởng đo được, còn kích hoạt sine và positional
-embedding thì không phân biệt được ở số seed hiện có. Đánh giá ngoại tại trên
-UIT-VSFC cho thấy ưu thế perplexity đó không chuyển thành ưu thế phân loại:
-với mô hình đóng băng, Transformer bằng hoặc cao hơn Hyena, còn khi tinh chỉnh
-toàn phần thì hai kiến trúc không phân biệt được.
+embedding thì không phân biệt được ở số seed hiện có. Tuy vậy, trên UIT-VSFC
+ưu thế perplexity đó không chuyển thành ưu thế phân loại.
 
 Đóng góp đề xuất cho kết quả hai mặt. Khoảng giá trị của tham số suy giảm thực
 sự quan trọng: chuyển từ một khoảng đặt tuỳ tiện sang một lựa chọn có nguyên
