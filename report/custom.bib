@@ -1,9 +1,12 @@
 % Thu muc trich dan cho bao cao do an cuoi ky, Nhom 8.
 %
-% LUU Y KIEM CHUNG: cac muc duoi day duoc soan theo hieu biet chung ve tung
-% cong trinh. Truoc khi nop, hay doi chieu lai nam xuat ban, ten hoi nghi va
-% so trang voi trang chinh thuc cua tung bai. Khong nen tin tuyet doi vao mot
-% file bib duoc soan tu dong.
+% DA DOI CHIEU ngay 2026-09-15: tung muc so voi trang chinh thuc (PMLR, NeurIPS
+% proceedings, ACL Anthology, trang ICLR va COLM, arXiv) hoac Crossref theo DOI
+% khi trang nha xuat ban chan truy cap. Da sua: so trang/so tap cua Hyena,
+% FlashAttention, SIREN, PhoBERT, Sennrich; GSS la ICLR 2023 va Mamba la COLM
+% 2024 (khong con ghi la preprint). Chu lot ten tac gia cua Lin, SIREN va CKConv
+% da kiem tren trang arXiv. Khoa trich dan giu nguyen du nam trong khoa co the
+% lech voi nam xuat ban.
 
 @inproceedings{poli2023hyena,
   title     = {Hyena Hierarchy: Towards Larger Convolutional Language Models},
@@ -14,6 +17,7 @@
                Learning (ICML)},
   series    = {Proceedings of Machine Learning Research},
   volume    = {202},
+  pages     = {28043--28078},
   year      = {2023},
   url       = {https://proceedings.mlr.press/v202/poli23a/poli23a.pdf}
 }
@@ -43,12 +47,12 @@
   year      = {2023}
 }
 
-@article{mehta2022gss,
-  title   = {Long Range Language Modeling via Gated State Spaces},
-  author  = {Mehta, Harsh and Gupta, Ankit and Cutkosky, Ashok and
-             Neyshabur, Behnam},
-  journal = {arXiv preprint arXiv:2206.13947},
-  year    = {2022}
+@inproceedings{mehta2022gss,
+  title     = {Long Range Language Modeling via Gated State Spaces},
+  author    = {Mehta, Harsh and Gupta, Ankit and Cutkosky, Ashok and
+               Neyshabur, Behnam},
+  booktitle = {International Conference on Learning Representations (ICLR)},
+  year      = {2023}
 }
 
 @inproceedings{dao2022flashattention,
@@ -57,6 +61,8 @@
   author    = {Dao, Tri and Fu, Daniel Y. and Ermon, Stefano and
                Rudra, Atri and R{\'e}, Christopher},
   booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
+  volume    = {35},
+  pages     = {16344--16359},
   year      = {2022}
 }
 
@@ -67,6 +73,8 @@
                Bergman, Alexander W. and Lindell, David B. and
                Wetzstein, Gordon},
   booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
+  volume    = {33},
+  pages     = {7462--7473},
   year      = {2020}
 }
 
@@ -78,11 +86,11 @@
   year      = {2022}
 }
 
-@article{gu2023mamba,
-  title   = {Mamba: Linear-Time Sequence Modeling with Selective State Spaces},
-  author  = {Gu, Albert and Dao, Tri},
-  journal = {arXiv preprint arXiv:2312.00752},
-  year    = {2023}
+@inproceedings{gu2023mamba,
+  title     = {Mamba: Linear-Time Sequence Modeling with Selective State Spaces},
+  author    = {Gu, Albert and Dao, Tri},
+  booktitle = {Conference on Language Modeling (COLM)},
+  year      = {2024}
 }
 
 @article{gao2020pile,
@@ -108,6 +116,7 @@
   author    = {Nguyen, Dat Quoc and Nguyen, Anh Tuan},
   booktitle = {Findings of the Association for Computational Linguistics: EMNLP
                2020},
+  pages     = {1037--1042},
   year      = {2020}
 }
 
@@ -115,12 +124,12 @@
   title     = {Neural Machine Translation of Rare Words with Subword Units},
   author    = {Sennrich, Rico and Haddow, Barry and Birch, Alexandra},
   booktitle = {Proceedings of the 54th Annual Meeting of the Association for
-               Computational Linguistics (ACL)},
+               Computational Linguistics (Volume 1: Long Papers)},
+  pages     = {1715--1725},
   year      = {2016}
 }
 
-% Ba muc duoi day them ngay 2026-09-13 sau review. Soan theo hieu biet chung,
-% CHUA doi chieu voi trang chinh thuc: kiem lai so tap, so trang truoc khi nop.
+% Ba muc duoi day them ngay 2026-09-13; da doi chieu nguon ngay 2026-09-15.
 @misc{radford2019gpt2,
   title        = {Language Models are Unsupervised Multitask Learners},
   author       = {Radford, Alec and Wu, Jeffrey and Child, Rewon and Luan, David

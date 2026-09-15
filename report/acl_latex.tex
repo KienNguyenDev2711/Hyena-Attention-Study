@@ -117,7 +117,7 @@ phân tích ablation và khởi tạo bộ lọc từ cấu trúc thông tin c�
 \maketitle
 
 \begin{abstract}
-Toán tử Hyena \citep{poli2023hyena} thay self-attention bằng đệ quy đan xen
+Toán tử Hyena \citep{poli2023hyena} thay thế self-attention bằng đệ quy đan xen
 tích chập dài tham số hoá ngầm và cổng nhân điều khiển bởi dữ liệu, cho chi phí
 dưới bậc hai theo độ dài chuỗi; mọi thực nghiệm ngôn ngữ của bài báo gốc đều
 trên tiếng Anh. Chúng tôi cài đặt lại Hyena kèm bộ kiểm thử tính nhân quả, áp
@@ -129,11 +129,11 @@ tiếng Anh, nhưng ưu thế này không chuyển thành ưu thế phân loại
 Tiếng Việt mang thông tin tương hỗ cục bộ gấp 1,7 đến 2,3 lần
 tiếng Anh ở khoảng cách ngắn. Trên tiếng Việt, đặt phân bố suy giảm theo một
 nguyên tắc, cách đều theo thang log hoặc suy từ corpus, giảm khoảng 0,9 PPL so
-với một khoảng đặt tuỳ tiện; trên tiếng Anh hiệu ứng cùng chiều nhưng không qua
+với một khoảng chọn tuỳ ý; trên tiếng Anh hiệu ứng cùng chiều nhưng không qua
 hiệu chỉnh so sánh bội. Khởi tạo từ corpus không vượt được đường cơ sở thang
 log một cách có ý nghĩa. Trên nhánh tiếng Anh, dùng $\alpha$ suy từ tiếng Việt
-không làm perplexity xấu đi có ý nghĩa ($p = 0{,}28$); chiều hoán đổi ngược lại
-chưa được kiểm tra.
+không làm perplexity tăng có ý nghĩa thống kê ($p = 0{,}28$); chiều hoán đổi
+ngược lại chưa được kiểm tra.
 \end{abstract}
 
 % =============================================================================
@@ -142,9 +142,9 @@ chưa được kiểm tra.
 
 Cơ chế self-attention \citep{vaswani2017attention} có chi phí tính toán và bộ
 nhớ tăng theo bình phương độ dài chuỗi, đặt ra giới hạn cứng cho lượng ngữ cảnh
-mà mô hình có thể xử lý. Nhiều hướng nghiên cứu tìm cách phá vỡ rào cản này,
-trong đó dòng mô hình không gian trạng thái \citep{gu2021s4, mehta2022gss,
-dao2023h3} và tích chập dài nổi lên như những lựa chọn thay thế nghiêm túc.
+mà mô hình có thể xử lý. Nhiều hướng nghiên cứu tìm cách vượt qua giới hạn này,
+trong đó các mô hình không gian trạng thái \citep{gu2021s4, mehta2022gss,
+dao2023h3} và tích chập dài trở thành những phương án thay thế đáng chú ý.
 
 Hyena \citep{poli2023hyena} là một trong những kiến trúc đầu tiên không dùng
 attention dày đặc mà vẫn đạt chất lượng tương đương Transformer trên mô hình
@@ -157,11 +157,11 @@ Toàn bộ thực nghiệm ngôn ngữ trong bài báo gốc thực hiện trên
 là WikiText103 \citep{merity2017pointer} và The Pile \citep{gao2020pile}. Chưa
 có bằng chứng nào về hành vi của Hyena trên tiếng Việt, một ngôn ngữ có đặc
 điểm chữ viết khác hẳn: chữ Quốc ngữ tách rời theo âm tiết, nên một từ ghép
-nhiều âm tiết bị chẻ thành nhiều token khi token hoá theo khoảng trắng. Các mô
+nhiều âm tiết bị tách thành nhiều token khi token hoá theo khoảng trắng. Các mô
 hình ngôn ngữ tiếng Việt hiện có phần lớn dựa trên kiến trúc Transformer
 \citep{nguyen2020phobert}.
 
-Bài báo cáo này đóng góp ba điểm.
+Báo cáo này có ba đóng góp.
 
 Thứ nhất, chúng tôi cài đặt lại toán tử Hyena bám sát đặc tả gốc và
 \emph{kiểm chứng} tính nhân quả của cài đặt bằng bộ kiểm thử tự động, trong đó
@@ -194,19 +194,19 @@ $O(N L \log_2 L)$.
 
 Bài báo gốc chỉ ra rằng Hyena bậc 1 tương ứng với GSS \citep{mehta2022gss} và
 bậc 2 tương ứng với H3 \citep{dao2023h3}, nên bậc $N$ là một trục thiết kế có
-ý nghĩa chứ không phải tham số tuỳ tiện.
+ý nghĩa chứ không phải một tham số tuỳ ý.
 
 \subsection{Bộ lọc tham số hoá ngầm}
 
-Điểm mấu chốt khiến bộ lọc dài mà không tốn tham số theo $L$ là cách tham số
-hoá ngầm:
+Yếu tố cho phép bộ lọc có độ dài lớn mà số tham số không tăng theo $L$ là cách
+tham số hoá ngầm:
 \begin{equation}
 h_t = \mathrm{Window}(t) \cdot (\mathrm{FFN} \circ \mathrm{PositionalEncoding})(t)
 \label{eq:filter}
 \end{equation}
 với $\mathrm{Window}(t) = \exp\{-\alpha t\} + b$, trong đó $\alpha$ thay đổi theo
 từng kênh nhằm buộc các bộ lọc có độ dài khác nhau, còn $b$ là độ lệch học được
-để bộ lọc không bị ép về 0 sau độ dài do $\alpha$ quy định (bài báo gốc cũng
+để bộ lọc không bị triệt tiêu về 0 sau độ dài do $\alpha$ quy định (bài báo gốc cũng
 thêm số hạng này). Mạng $\mathrm{FFN}$ dùng kích
 hoạt tuần hoàn tần số cao (sine), theo dòng biểu diễn ngầm
 \citep{sitzmann2020siren, romero2021ckconv}, để khắc phục thiên lệch tần số thấp
@@ -216,7 +216,7 @@ trước khi biến đổi Fourier.
 
 Phân bố $\{\alpha_i\}$ được mô tả là ``thay đổi theo kênh'' nhưng bài báo gốc không
 quy định khoảng giá trị cụ thể, cũng không gắn nó với thống kê của ngôn ngữ
-đích. Đây chính là khe hở mà đóng góp của chúng tôi nhắm vào.
+đích. Đây là khoảng trống mà đóng góp của chúng tôi hướng tới.
 
 % =============================================================================
 \section{Khởi tạo bộ lọc từ cấu trúc thông tin của corpus}
@@ -225,17 +225,17 @@ quy định khoảng giá trị cụ thể, cũng không gắn nó với thống
 \subsection{Động cơ}
 
 Với $t$ chuẩn hoá về $[0,1]$ trên $L$ vị trí, kênh thứ $i$ suy giảm còn $1/e$
-tại token thứ khoảng $L/\alpha_i$. Ta gọi đại lượng này là \emph{độ dài hiệu
-dụng} của kênh. Câu hỏi đặt ra: nếu đặt tập độ dài hiệu dụng phủ đúng nơi thông
-tin dự đoán thực sự nằm trong corpus, mô hình có dùng ngân sách kênh hiệu quả
-hơn không?
+tại token thứ khoảng $L/\alpha_i$. Chúng tôi gọi đại lượng này là \emph{độ dài
+hiệu dụng} của kênh. Câu hỏi nghiên cứu là: nếu tập độ dài hiệu dụng được đặt
+tương ứng với vùng khoảng cách chứa thông tin dự đoán trong corpus, mô hình có
+sử dụng ngân sách kênh hiệu quả hơn không?
 
-\subsection{Đo cái gì, và vì sao không dùng bộ tách từ}
+\subsection{Đại lượng đo và lý do không dùng bộ tách từ}
 
-Phương án hiển nhiên là chạy bộ tách từ tiếng Việt rồi lấy phân bố số âm tiết
-mỗi từ. Chúng tôi bác bỏ phương án này vì nó phá hỏng nhánh đối chứng: tiếng Anh
-không có bộ tách từ tương đương, nên mọi khác biệt quan sát được đều có thể quy
-cho công cụ đo thay vì cho ngôn ngữ.
+Một phương án trực tiếp là dùng bộ tách từ tiếng Việt để lấy phân bố số âm tiết
+mỗi từ. Chúng tôi không chọn phương án này vì nó làm mất tính so sánh của nhánh
+đối chứng: tiếng Anh không có bộ tách từ tương đương, nên mọi khác biệt quan sát
+được đều có thể quy cho công cụ đo thay vì cho ngôn ngữ.
 
 Thay vào đó chúng tôi đo trực tiếp thông tin tương hỗ giữa hai token cách nhau
 $d$ vị trí:
@@ -243,7 +243,7 @@ $d$ vị trí:
 I(d) = \sum_{x,y} p_d(x,y) \log \frac{p_d(x,y)}{p(x)\,p(y)}
 \label{eq:mi}
 \end{equation}
-Cùng một công thức, cùng một quy trình ước lượng, áp cho cả hai ngôn ngữ.
+Hai ngôn ngữ được đo bằng cùng công thức và cùng quy trình ước lượng.
 \citet{lin2017critical} đã khảo sát sự suy giảm của đại lượng này trong văn bản
 tự nhiên; chúng tôi dùng nó cho một mục đích khác là khởi tạo bộ lọc.
 
@@ -252,31 +252,32 @@ tự nhiên; chúng tôi dùng nó cho một mục đích khác là khởi tạo
 Ước lượng hợp lý cực đại của thông tin tương hỗ luôn chệch dương trên mẫu hữu
 hạn \citep{paninski2003estimation}, và độ chệch tăng theo bình phương cỡ bảng chữ cái; bỏ qua điều này sẽ dẫn
 tới kết luận rằng ngôn ngữ có corpus nhỏ hơn mang nhiều thông tin tầm xa hơn.
-Chúng tôi khử độ chệch bằng cách trừ đường nền xáo trộn: xáo ngẫu nhiên corpus
-phá huỷ mọi cấu trúc thật, nên thông tin tương hỗ đo trên bản xáo chính là độ
-chệch. Ngoài ra chúng tôi thô hoá bảng chữ cái xuống $K$ ký hiệu thường gặp
-nhất, làm giảm độ chệch theo $K^2$; thô hoá cho ước lượng thận trọng.
+Chúng tôi khử độ chệch bằng cách trừ đường nền xáo trộn: hoán vị ngẫu nhiên corpus
+phá vỡ mọi phụ thuộc giữa các vị trí, nên thông tin tương hỗ đo trên bản hoán vị
+chính là độ chệch. Ngoài ra chúng tôi thô hoá bảng chữ cái xuống $K$ ký hiệu thường gặp
+nhất, làm giảm độ chệch theo $K^2$; việc thô hoá khiến ước lượng thiên về thận trọng.
 
 \subsection{Hiệu chuẩn công cụ đo}
 
-Một phép đo chưa được hiệu chuẩn trên dữ liệu có đáp án biết trước thì không
-dùng để kết luận được. Chúng tôi kiểm công cụ đo trên bốn chuỗi nhân tạo. Trên
-chuỗi độc lập hoàn toàn, đáp án đúng là $I = 0$ và bộ đo còn dư 2,82\% độ chệch.
-Trên chuỗi sao chép chu kỳ $k = 8$, nó đặt đỉnh đúng tại $d = 8$ và đỉnh đó nổi
-84 lần trên nền. Trên chuỗi Markov, nó cho $I(1) = 2{,}79$, giảm đơn điệu và tắt
-ở $d = 64$. Trên chuỗi suy biến toàn 0, nó báo lỗi và từ chối sinh $\alpha$ thay
-vì trả về một phân bố vô nghĩa.
+Một công cụ đo chưa được hiệu chuẩn trên dữ liệu có đáp án biết trước thì chưa
+đủ căn cứ để rút ra kết luận. Chúng tôi kiểm tra công cụ đo trên bốn chuỗi nhân
+tạo. Trên chuỗi độc lập hoàn toàn, đáp án đúng là $I = 0$ và kết quả đo còn dư
+2,82\% độ chệch. Trên chuỗi sao chép chu kỳ $k = 8$, đỉnh xuất hiện đúng tại
+$d = 8$ và cao gấp 84 lần mức nền. Trên chuỗi Markov, công cụ cho $I(1) = 2{,}79$,
+giảm đơn điệu và gần như triệt tiêu tại $d = 64$. Trên chuỗi suy biến toàn 0,
+công cụ báo lỗi và không sinh $\alpha$ thay vì trả về một phân bố vô nghĩa.
 
 \subsection{Ánh xạ sang phân bố suy giảm}
 
 Chúng tôi coi $I(d)$ là khối lượng thông tin nằm tại khoảng cách $d$, chuẩn hoá
 thành một phân bố xác suất trên khoảng cách, rồi lấy $D$ phân vị cách đều làm
-tập độ dài hiệu dụng $\{\ell_i\}$, cuối cùng đặt $\alpha_i = L / \ell_i$. Nơi
-tập trung nhiều thông tin sẽ được cấp nhiều kênh hơn.
+tập độ dài hiệu dụng $\{\ell_i\}$, cuối cùng đặt $\alpha_i = L / \ell_i$. Vùng
+khoảng cách tập trung nhiều thông tin sẽ được phân bổ nhiều kênh hơn.
 
-Trong các lần chạy E4, file $\alpha$ của nhánh corpus được sinh từ phép đo BPE
-với $K=500$, nhưng mô hình ngôn ngữ chính lại huấn luyện với đơn vị âm tiết, nên
-độ dài hiệu dụng đang được chuyển nguyên từ token BPE sang vị trí token âm tiết.
+Trong các lần chạy khởi tạo từ corpus (mục~\ref{sec:e4text}), tệp $\alpha$ được
+sinh từ phép đo BPE với $K=500$, nhưng mô hình ngôn ngữ chính lại huấn luyện với
+đơn vị âm tiết, nên độ dài hiệu dụng được áp dụng nguyên vẹn từ đơn vị token BPE
+sang vị trí token âm tiết.
 Tỉ lệ ký tự trên mỗi token trong file đo là 3,851 so với 4,118 ở nhánh tiếng
 Việt và 4,155 so với 5,100 ở nhánh tiếng Anh, tức lệch thang khoảng 6,5\% và
 18,5\%. Chúng tôi xem đây là hạn chế về diễn giải, không quy trực tiếp thành sai
@@ -289,13 +290,13 @@ Chúng tôi so sánh với hai đường cơ sở. Đường thứ nhất, ký h
 hai, ký hiệu \textsf{logspace}, đặt độ dài hiệu dụng cách đều theo thang log từ
 1 tới $L$.
 
-Đường \textsf{logspace} tồn tại vì một lý do quan trọng. Phép đo cho thấy 80\%
+Đường cơ sở \textsf{logspace} cần thiết vì lý do sau. Phép đo cho thấy 80\%
 tới 90\% thông tin nằm trong khoảng cách 34 token, tuỳ ngôn ngữ và bộ token
 hoá, trong khi cấu hình \textsf{uniform}
 đặt \emph{toàn bộ} 256 kênh ra xa hơn 64 token (Bảng~\ref{tab:dodaihieudung}).
-So sánh đề xuất với một cấu hình lệch xa như vậy là so với hình nộm: thắng cũng
-không chứng minh được gì. Mọi kết luận khoa học trong báo cáo này đều rút ra từ
-so sánh với \textsf{logspace}.
+So sánh đề xuất với một cấu hình lệch xa như vậy là so sánh với một đường cơ sở
+yếu: vượt được nó không chứng minh giá trị của đề xuất. Mọi kết luận về đề xuất
+trong báo cáo này đều rút ra từ so sánh với \textsf{logspace}.
 
 % =============================================================================
 \section{Thiết lập thí nghiệm}
@@ -305,16 +306,15 @@ so sánh với \textsf{logspace}.
 
 Trong so sánh chính giữa Hyena và Transformer, mọi cấu hình chỉ khác nhau ở
 toán tử trộn token. Embedding, pre-LayerNorm, khối MLP, kết nối residual,
-weight tying, cách khởi tạo và lịch learning rate giữ nguyên vẹn như nhau. Nếu
-để nhiều thứ khác nhau cùng lúc thì không thể quy chênh lệch perplexity cho
-toán tử. Riêng các nhánh ablation thay đổi cấu trúc bên trong toán tử nên
+weight tying, cách khởi tạo và lịch learning rate giữ nguyên vẹn như nhau.
+Riêng các nhánh ablation thay đổi cấu trúc bên trong toán tử nên
 không giữ nguyên tổng tham số: bậc $N = 1$ ít hơn cấu hình chuẩn 4,4\%, bậc
 $N = 3$ nhiều hơn 4,4\%, bỏ positional embedding ít hơn 1,7\% (xem
 Bảng~\ref{tab:e3}).
 
-Chúng tôi cấp positional embedding học được cho cả hai loại mô hình: attention
-bắt buộc cần thông tin vị trí còn Hyena thì không, nên cấp cho một bên mà không
-cấp cho bên kia sẽ tạo ra hai biến thay đổi thay vì một; một nhánh ablation
+Chúng tôi dùng positional embedding học được cho cả hai loại mô hình: attention
+bắt buộc cần thông tin vị trí còn Hyena thì không, nên dùng cho một bên mà không
+dùng cho bên kia sẽ tạo ra hai biến thay đổi thay vì một; một nhánh ablation
 riêng kiểm tra Hyena có thật sự không cần. Huấn luyện tính theo ngân sách token
 cố định chứ không theo số epoch, vì so theo epoch sẽ thiên vị mô hình chạy nhanh
 hơn.
@@ -326,35 +326,31 @@ $L = 512$, từ điển 16k. Số tham số đo được: Hyena 7.553.280 và Tr
 7.383.552, lệch 2,30\%.
 
 Dữ liệu lấy từ Wikipedia tiếng Việt và tiếng Anh (bản \texttt{20231101}).
-Nhánh tiếng Anh được lấy dư 110.000 tài liệu rồi cắt xuống đúng 38.250.964
+Nhánh tiếng Anh được lấy mẫu 110.000 tài liệu rồi cắt xuống đúng 38.250.964
 token của nhánh tiếng Việt, nên hai nhánh có cùng số token huấn luyện duy nhất.
 Cả hai sau đó huấn luyện trên cùng 49.995.776 token, tức cùng 6.103 bước và
 cùng khoảng 1,31 epoch.
 
-Chúng tôi khảo sát hai đơn vị token hoá. Thứ nhất là âm tiết, tức tách theo
-khoảng trắng, vốn là đơn vị tự nhiên của chữ Quốc ngữ. Thứ hai là BPE \citep{sennrich2016bpe}
-mức byte \citep{radford2019gpt2}, huấn luyện trên chính corpus, không sinh token ngoài
-từ điển. Phân biệt này chỉ tồn tại ở dạng như vậy với tiếng Việt: với tiếng
-Anh, tách theo khoảng trắng cho ra đơn vị từ chứ không phải âm tiết, nên nhánh
-đối chứng phải được diễn giải tương ứng.
+Chúng tôi khảo sát hai đơn vị token hoá: âm tiết, tức tách theo khoảng trắng, vốn
+là đơn vị tự nhiên của chữ Quốc ngữ; và BPE \citep{sennrich2016bpe} mức byte
+\citep{radford2019gpt2}, huấn luyện trên chính corpus, không sinh token ngoài từ
+điển. Với tiếng Anh, tách theo khoảng trắng cho ra đơn vị từ chứ không phải âm
+tiết, nên nhánh đối chứng phải được diễn giải tương ứng.
 
-\subsection{Bằng chứng cài đặt đúng}
+\subsection{Kiểm chứng tính đúng đắn của cài đặt}
 
-Một mô hình ngôn ngữ nhân quả cài sai, để rò rỉ thông tin từ tương lai, vẫn
-huấn luyện trơn tru và cho perplexity đẹp bất thường. Đây là lỗi im lặng nguy
-hiểm nhất của loại nghiên cứu này.
-
-Chúng tôi khử nó bằng bộ kiểm thử tự động, trong đó phép kiểm cốt lõi dùng
+Một mô hình ngôn ngữ nhân quả bị cài đặt sai, để rò rỉ thông tin từ các vị trí
+tương lai, vẫn huấn luyện bình thường và cho perplexity thấp bất thường. Đây là
+loại lỗi khó phát hiện và nguy hiểm nhất trong dạng nghiên cứu này. Chúng tôi
+loại trừ lỗi này bằng bộ kiểm thử tự động, trong đó phép kiểm cốt lõi dùng
 gradient: lấy đạo hàm của đầu ra tại vị trí $t$ theo đầu vào tại mọi vị trí
-$s > t$ và đòi hỏi kết quả bằng 0. Attention đạt 0 tuyệt đối nhờ cơ chế che;
+$s > t$ và yêu cầu kết quả bằng 0. Attention cho giá trị đúng bằng 0 nhờ mặt nạ nhân quả;
 Hyena đạt dưới $10^{-15}$ trên mọi biến thể đã kiểm (lần chạy khi viết báo cáo
-này cho $3{,}8 \times 10^{-16}$), tức nhân quả tới sai số máy, vì vòng biến đổi
-Fourier thuận nghịch để lại nhiễu làm tròn.
-
-Quan trọng hơn, chúng tôi bổ sung một \emph{phép kiểm ngược}: cố tình cài lỗi
-nhân quả kinh điển (quên cắt phần đệm phải của tích chập ngắn) và xác nhận tỉ
-lệ rò rỉ vọt lên khoảng $2$. Chênh lệch hơn 15 bậc độ lớn cho thấy bộ
-kiểm thử thực sự có khả năng phát hiện lỗi, chứ không phải im lặng vì không đủ
+này cho $3{,}8 \times 10^{-16}$), tức nhân quả tới sai số làm tròn của phép biến
+đổi Fourier thuận và nghịch. Quan trọng hơn, chúng tôi bổ sung một \emph{phép kiểm ngược}: chủ động đưa vào
+một lỗi nhân quả điển hình (cắt lệch phần đệm của tích chập ngắn) và xác nhận tỉ
+lệ rò rỉ tăng lên khoảng $2$. Chênh lệch hơn 15 bậc độ lớn cho thấy bộ kiểm thử
+thực sự có khả năng phát hiện lỗi, chứ không cho kết quả đạt chỉ vì thiếu độ
 nhạy.
 
 % =============================================================================
@@ -403,19 +399,18 @@ Anh trong toàn vùng tín hiệu nằm trên nền nhiễu.}
 Ba nhận xét.
 
 Thứ nhất, với phép đo BPE, tiếng Việt mang nhiều thông tin tương hỗ cục bộ hơn
-tiếng Anh ở mọi khoảng cách trong vùng đo được, nhưng ưu thế đó tập trung ở
-khoảng cách ngắn: tỉ lệ đạt 1,66 tới 2,27 ở $d \le 13$, rồi giảm còn 1,55 ở
-$d = 34$, 1,27 ở $d = 88$ và 1,03 ở $d = 167$. Với phép đo âm tiết, ưu thế đảo
-chiều từ $d \approx 88$ (xem nhận xét thứ hai), nên phát biểu này chỉ vững với
-phép đo BPE. Hình~\ref{fig:mi} cho thấy trực tiếp điều đó.
+tiếng Anh ở mọi khoảng cách trong vùng đo được, nhưng ưu thế tập trung ở khoảng
+cách ngắn: tỉ lệ đạt 1,66 tới 2,27 ở $d \le 13$ rồi giảm dần về 1,03 ở $d = 167$
+(Bảng~\ref{tab:mi}, Hình~\ref{fig:mi}). Với phép đo âm tiết, ưu thế đảo chiều từ
+$d \approx 88$, nên phát biểu này chỉ vững với phép đo BPE.
 
 Thứ hai, phép đo bằng âm tiết cho thấy hai đường cắt nhau tại $d \approx 88$,
-nhưng điểm cắt này \emph{biến mất} khi khử token ngoài từ điển. Nó là hiện vật
-của việc gộp mọi từ hiếm của tiếng Anh vào một ký hiệu duy nhất, làm mất thông
-tin của tiếng Anh một cách hệ thống. Chúng tôi nêu ra để cảnh báo: nếu chỉ đo
-bằng âm tiết, chúng tôi đã kết luận sai.
+nhưng điểm cắt này \emph{biến mất} khi khử token ngoài từ điển. Đây là sai lệch
+do phương pháp đo: mọi từ hiếm của tiếng Anh bị gộp vào một ký hiệu duy nhất,
+làm mất thông tin của tiếng Anh một cách hệ thống. Chúng tôi nêu điểm này như
+một cảnh báo: nếu chỉ đo bằng âm tiết, chúng tôi đã rút ra kết luận sai.
 
-Thứ ba, tín hiệu chìm xuống dưới mức nhiễu ở $d > 121$ với phép đo âm tiết và
+Thứ ba, tín hiệu giảm xuống dưới mức nhiễu ở $d > 121$ với phép đo âm tiết và
 $d > 167$ với BPE. Mọi phát biểu về khoảng cách xa hơn các mốc này đều không có
 căn cứ.
 
@@ -443,7 +438,7 @@ corpus, tiếng Anh & 141 & 214 & 2,85 \\
 \end{table}
 
 
-\subsection{Nhánh đối chứng tiếng Anh và độ bền của nó}
+\subsection{Nhánh đối chứng tiếng Anh và độ vững của kết luận}
 \label{sec:doichung}
 
 Giả thuyết ban đầu của chúng tôi là bộ lọc suy từ corpus mang tính đặc thù tiếng
@@ -473,16 +468,13 @@ Phép thử ở mức huấn luyện là hoán đổi $\alpha$: mô hình tiến
 suy từ tiếng Việt (cùng corpus, cùng cấu hình, 3 seed) đạt 54,77 PPL so với 54,91
 khi dùng $\alpha$ của chính nó ($\Delta = -0{,}15$; KTC 95\% [$-0{,}48$; $0{,}18$];
 Welch $p = 0{,}28$). Vì perplexity ít nhạy với $\alpha$ (mục~\ref{sec:e4text}),
-kết luận đứng được chỉ là trên tiếng Anh, $\alpha$ suy từ tiếng Việt dùng thay được
-$\alpha$ của chính nó, không phải hai bộ lọc giống nhau; chiều ngược lại chưa kiểm
-được trên đúng corpus. Đối chứng chạy lại cùng phiên cho perplexity trùng khớp
-tới từng chữ số với lần chạy gốc ở môi trường khác, nên chênh lệch không đến từ
-môi trường. Các số được tái sinh bởi \texttt{python -m hyena\_study.analyze}.
+kết luận có thể rút ra chỉ là: trên tiếng Anh, $\alpha$ suy từ tiếng Việt thay thế
+được $\alpha$ của chính mô hình, chứ không phải hai bộ lọc giống nhau; chiều ngược
+lại chưa được kiểm tra trên đúng corpus. Đối chứng chạy lại trong cùng phiên cho
+perplexity trùng khớp đến từng chữ số với lần chạy gốc ở môi trường khác, nên
+chênh lệch không do môi trường gây ra. Các số được tái sinh bởi \texttt{python -m hyena\_study.analyze}.
 
 \subsection{Perplexity trên mô hình ngôn ngữ}
-
-Bảng~\ref{tab:e1} trình bày kết quả chính. Mỗi cấu hình chạy 3 seed với cùng
-50 triệu token huấn luyện.
 
 \begin{table}[t]
 \centering
@@ -507,15 +499,15 @@ lệch chuẩn mẫu. Khoảng tin cậy 95\% theo phân phối $t$ ($t = 4{,}30
 \end{table}
 
 Hyena có perplexity thấp hơn Transformer 19,5\% trên tiếng Việt và 14,7\% trên
-tiếng Anh (Welch, $p < 10^{-4}$ ở cả hai).
+tiếng Anh (Bảng~\ref{tab:e1}; Welch, $p < 10^{-4}$ ở cả hai).
 
 Bài báo gốc chỉ khẳng định Hyena \emph{tương đương} Transformer ở quy mô 125 đến
 355 triệu tham số; kết quả này thuộc chế độ khác nên không mâu thuẫn, nhưng cần
-đọc thận trọng vì hai lý do. Cả hai kiến trúc dùng chung learning rate và lịch huấn
-luyện; bài báo gốc cũng làm vậy nhưng ghi nhận Hyena hưởng lợi từ learning rate
-thấp hơn đôi chút. Và Transformer chạy nhanh hơn 1,51 lần mỗi token
+được diễn giải thận trọng vì hai lý do. Thứ nhất, cả hai kiến trúc dùng chung
+learning rate và lịch huấn luyện; bài báo gốc cũng làm vậy nhưng ghi nhận Hyena hưởng lợi từ learning rate
+thấp hơn đôi chút. Thứ hai, Transformer chạy nhanh hơn 1,51 lần mỗi token
 (mục~\ref{sec:hieunang}), nên ở cùng thời gian thực nó xử lý được nhiều token
-hơn. Phát biểu đúng là ``Hyena vượt Transformer ở cùng số token, cùng siêu tham
+hơn. Phát biểu chính xác là ``Hyena vượt Transformer ở cùng số token, cùng siêu tham
 số và cùng quy mô này''. Khoảng cách trên tiếng Việt lớn hơn trên tiếng Anh,
 nhưng hai corpus khác nhau và tỉ lệ token ngoài từ điển chênh lệch (3,1\% so với
 10,5\%), nên chúng tôi không diễn giải chênh lệch này.
@@ -527,14 +519,14 @@ luyện, 4,118 ký tự trên mỗi token so với 5,100 của tiếng Anh, tỉ
 
 Chỉ xét tiếng Việt, với token hoá âm tiết Hyena đạt 51,38 so với 63,86 của
 Transformer, tỉ lệ 1,243; với BPE là 80,02 so với 96,22, tỉ lệ 1,202 (3 seed mỗi
-ô). Ở đây có một cạm bẫy diễn giải: perplexity \emph{không so sánh được giữa hai
+ô). Cần tránh một sai lầm diễn giải ở đây: perplexity \emph{không so sánh được giữa hai
 bộ token hoá khác nhau} vì từ điển khác nhau cho entropy trên mỗi token khác
 nhau, nên 51,38 với âm tiết và 80,02 với BPE \emph{không} có nghĩa là âm tiết tốt
 hơn. Đại lượng so sánh được là chênh lệch log-loss giữa hai mô hình quy về mỗi ký
 tự: Hyena hơn Transformer 0,053 nat/ký tự với âm tiết và 0,048 nat/ký tự với
 BPE, cùng chiều và gần nhau. Chúng tôi không ước lượng khoảng tin cậy cho hiệu
 của hai con số nên không kết luận đơn vị token hoá làm thay đổi lợi thế của
-Hyena. Cũng lưu ý rằng ở $L = 512$ cố định, hai mô hình nhìn cùng số token, nên
+Hyena. Cũng lưu ý rằng ở $L = 512$ cố định, hai mô hình xử lý cùng số token, nên
 tính dưới bậc hai của Hyena không phải là cơ chế giải thích ở đây.
 
 \subsection{Ablation các thành phần của Hyena}
@@ -569,13 +561,13 @@ seed, bậc tự do Welch chỉ 1,4 đến 3,0 nên mọi kết luận ở bản
 Từ mục này, mọi so sánh perplexity dùng kiểm định Welch hai mẫu, hiệu chỉnh Holm
 trong từng họ so sánh ở mức 0,05; khoảng tin cậy trong bảng chỉ để mô tả.
 
-Bỏ cửa sổ suy giảm gây thiệt hại lớn nhất (+1,92 PPL), xác nhận vai trò của số
+Bỏ cửa sổ suy giảm làm perplexity tăng nhiều nhất (+1,92 PPL), xác nhận vai trò của số
 hạng $\mathrm{Window}(t)$ trong công thức~\eqref{eq:filter}. Hạ bậc xuống $N=1$
-cũng gây thiệt hại (+1,73), phù hợp với việc H3, tức Hyena bậc 2, được đề xuất
+cũng làm perplexity tăng (+1,73), phù hợp với việc H3, tức Hyena bậc 2, được đề xuất
 chính vì GSS, tức bậc 1, yếu ở associative recall; nhưng bậc 1 cũng mất 331.776
-tham số (4,4\%), nên thiệt hại trộn lẫn hai nguyên nhân mà thiết kế hiện tại
-không tách được. Bỏ kích hoạt sine gây thiệt hại nhỏ (+0,42) và chỉ vừa qua
-ngưỡng. Bỏ positional embedding lại cho perplexity \emph{thấp hơn} 0,59, phù hợp
+tham số (4,4\%), nên mức tăng này gộp lẫn hai nguyên nhân mà thiết kế hiện tại
+không tách được. Bỏ kích hoạt sine làm perplexity tăng ít (+0,42) và chỉ vừa
+đạt ngưỡng ý nghĩa. Bỏ positional embedding lại cho perplexity \emph{thấp hơn} 0,59, phù hợp
 với lập luận rằng bộ lọc tích chập đã mang thông tin vị trí. Bậc $N=3$ không
 khác biệt. Vì bậc tự do Welch rất nhỏ, chúng tôi coi các kết luận này là sơ bộ.
 
@@ -610,7 +602,7 @@ lượt 0,90 và 1,19 PPL ($p_{\text{Holm}} = 0{,}012$ và $0{,}002$). Trên ti�
 hiệu ứng cùng chiều và cùng độ lớn, 0,85 và 0,90 PPL, nhưng không qua hiệu chỉnh
 ($p = 0{,}034$ và $0{,}030$ trước hiệu chỉnh; $p_{\text{Holm}} = 0{,}097$). Như
 vậy khoảng giá trị của $\alpha$ có ảnh hưởng đo được trên tiếng Việt, còn trên
-tiếng Anh mới là dấu hiệu.
+tiếng Anh mới dừng ở mức gợi ý.
 
 Corpus hơn \textsf{logspace} 0,285 PPL trên tiếng Việt ($p = 0{,}024$ trước hiệu
 chỉnh, $p_{\text{Holm}} = 0{,}097$) và 0,05 PPL trên tiếng Anh ($p = 0{,}70$).
@@ -622,7 +614,7 @@ Kết quả này còn cho thấy một giới hạn của thiết kế. Bộ l�
 \textsf{logspace} 75,8\% mà perplexity chỉ khác 0,05 đến 0,29, tức perplexity ở
 quy mô này ít nhạy với phân bố $\alpha$ trong một vùng hợp lý. Một cơ chế khả dĩ,
 chưa kiểm chứng, là độ lệch $b$ của cửa sổ và mạng FFN sinh bộ lọc bù lại một
-phần khởi tạo trong khi huấn luyện. Vì vậy E4 không đủ độ nhạy để trả lời câu
+phần khởi tạo trong khi huấn luyện. Vì vậy thí nghiệm này không đủ độ nhạy để trả lời câu
 hỏi bộ lọc có đặc thù ngôn ngữ hay không, và việc phần chênh lệch nhỏ xuất hiện
 trên cả hai ngôn ngữ không phải là bằng chứng cho điều đó.
 
@@ -638,10 +630,9 @@ attention lấn át chi phí cố định của biến đổi Fourier.
 Khi đo hiệu năng, việc chọn đường cơ sở attention nào cũng quyết định kết luận.
 Bài báo gốc so với FlashAttention \citep{dao2022flashattention} và tự ghi rõ
 rằng cài đặt này đã nhanh hơn attention thông thường trong PyTorch từ 2 tới 4
-lần. Vì vậy chúng tôi báo cáo cả hai đường cơ sở: một cài đặt materialise ma
+lần. Vì vậy chúng tôi báo cáo cả hai đường cơ sở: một cài đặt tính tường minh ma
 trận $L \times L$ và hàm \texttt{scaled\_dot\_product\_attention} (\textsf{sdpa})
-của PyTorch. Chỉ so với đường cơ sở thứ nhất sẽ thổi phồng mức tăng tốc nhiều
-lần.
+của PyTorch.
 
 \begin{table}[t]
 \centering
@@ -652,7 +643,7 @@ lần.
 \toprule
 & \multicolumn{2}{c}{tiến} & \multicolumn{2}{c}{tiến và lùi} \\
 \cmidrule(lr){2-3}\cmidrule(lr){4-5}
-$L$ & \textsf{sdpa} & ngây thơ & \textsf{sdpa} & ngây thơ \\
+$L$ & \textsf{sdpa} & trực tiếp & \textsf{sdpa} & trực tiếp \\
 \midrule
 256  & 0,16 & 0,55 & 0,23 & 0,47 \\
 512  & 0,22 & 0,92 & 0,27 & 0,82 \\
@@ -664,15 +655,15 @@ $L$ & \textsf{sdpa} & ngây thơ & \textsf{sdpa} & ngây thơ \\
 \end{tabular}
 \caption{Mức tăng tốc của Hyena so với hai đường cơ sở attention, tính bằng
 thương số thời gian chạy (số lớn hơn 1 nghĩa là Hyena nhanh hơn). Cột
-\textsf{sdpa} là attention tối ưu của PyTorch, cột ``ngây thơ'' là cài đặt
-materialise ma trận $L \times L$. Batch 8, $d_{\text{model}} = 256$, fp16, T4;
-mỗi điểm đo 20 lượt sau 5 lượt khởi động. Cài đặt ngây thơ hết bộ nhớ ở
+\textsf{sdpa} là attention tối ưu của PyTorch, cột ``trực tiếp'' là cài đặt
+tính tường minh ma trận $L \times L$. Batch 8, $d_{\text{model}} = 256$, fp16, T4;
+mỗi điểm đo 20 lượt sau 5 lượt khởi động. Cài đặt trực tiếp hết bộ nhớ ở
 $L = 8192$.}
 \label{tab:e5}
 \end{table}
 
 Bảng~\ref{tab:e5} cho thấy điểm hoà vốn phụ thuộc mạnh vào đường cơ sở. So với
-cài đặt ngây thơ, Hyena nhanh hơn từ $L = 1024$. So với \textsf{sdpa}, Hyena
+cài đặt trực tiếp, Hyena nhanh hơn từ $L = 1024$. So với \textsf{sdpa}, Hyena
 ngang bằng ở $L = 4096$ với lượt tiến và lùi (1,02 lần, trong phạm vi nhiễu của
 một lần đo) và nhanh hơn ở $L = 8192$: 1,19 lần với lượt tiến, 1,88 lần với lượt
 tiến và lùi. Bài báo gốc báo cáo điểm giao giữa Hyena và FlashAttention nằm giữa
@@ -681,7 +672,7 @@ khác nhau (đường cơ sở, batch 8 so với 64, phần cứng, và \texttt{
 cho kernel CUDA hợp nhất), nên chúng tôi không so trực tiếp 1,88 với mức 2 lần
 của bài báo gốc.
 
-Về bộ nhớ ở lượt tiến, cài đặt ngây thơ tiêu thụ 30,6, 83,1, 283,6, 1074,5 và
+Về bộ nhớ ở lượt tiến, cài đặt trực tiếp tiêu thụ 30,6, 83,1, 283,6, 1074,5 và
 4201,6 MB khi $L$ tăng gấp đôi từ 256 tới 4096; tỉ số giữa hai mức liên tiếp
 tăng từ 2,7 lên 3,9, tiến về 4 của dạng bậc hai, và hết bộ nhớ ở 8192. Hyena
 tiêu thụ 36,5, 66,1, 117,7, 224,7, 438,7 và 865,8 MB, tỉ số từ 1,8 tới 2,0, đúng
@@ -690,14 +681,14 @@ dạng tuyến tính.
 \subsection{Chẩn đoán trí nhớ tầm xa}
 
 Perplexity không phát hiện được việc mô hình mất khả năng tầm xa: một mô hình
-chỉ nhìn vài token vẫn đạt perplexity khá tốt trên văn bản tự nhiên. Vì bộ lọc
+chỉ dùng vài token ngữ cảnh vẫn đạt perplexity tương đối thấp trên văn bản tự nhiên. Vì bộ lọc
 suy từ corpus có trung vị độ dài hiệu dụng chỉ 2,95 token, chúng tôi bổ sung tác
 vụ associative recall, vốn là công cụ chẩn đoán của chính bài báo gốc.
 
 Trước hết chúng tôi xác nhận tác vụ giải được: attention hai lớp đạt độ chính
-xác 1,000 ở độ dài 65 với mức đoán mò 0,100. Hai lần đo thăm dò không lưu file
+xác 1,000 ở độ dài 65 với mức đoán mò 0,100. Hai lần đo thăm dò không lưu tệp
 kết quả cho thấy attention còn 0,196 ở độ dài 129, và ở độ dài 33 cùng 18.720
-bước, bỏ lịch warmup làm độ chính xác rơi từ 1,000 xuống 0,187; mọi lần chạy về
+bước, bỏ lịch warmup làm độ chính xác giảm từ 1,000 xuống 0,187; mọi lần chạy về
 sau đều dùng warmup. Ở độ dài 65, mọi cấu
 hình Hyena đều kém hơn attention và dao động rất mạnh giữa các seed: 0,564 với
 \textsf{uniform} và 0,170 với \textsf{logspace} (2 seed mỗi cấu hình). Độ lệch
@@ -707,19 +698,19 @@ giữa các seed lớn hơn khoảng cách giữa bất kỳ cặp cấu hình n
 Với cấu hình suy từ corpus, chúng tôi gộp 5 seed từ hai ngân sách huấn luyện
 (2 seed ở 18.720 bước và 3 seed ở 37.440 bước, cùng độ dài 65 và cùng cấu hình
 tác vụ); việc gộp này là một lựa chọn phương pháp nên chúng tôi nêu rõ. Phân bố
-thu được \emph{lưỡng cực}: ba lần đạt 0,922; 0,981; 0,987 và hai lần sập về 0,092
-và 0,141, không có giá trị trung gian. Gấp đôi ngân sách làm các lần thành công
-tốt lên (0,922 lên 0,98) nhưng không khử được kiểu hỏng, và cùng một seed khởi
-tạo có thể đổi kết cục khi đổi ngân sách (seed 0: 0,092 thành 0,981; seed 1:
+thu được \emph{lưỡng cực}: ba lần đạt 0,922; 0,981; 0,987 và hai lần chỉ đạt 0,092
+và 0,141, gần mức đoán mò, không có giá trị trung gian. Gấp đôi ngân sách làm các lần thành công
+tốt lên (0,922 lên 0,98) nhưng không loại bỏ được kiểu thất bại này, và cùng một
+seed khởi tạo có thể cho kết quả trái ngược khi đổi ngân sách (seed 0: 0,092 thành 0,981; seed 1:
 0,922 thành 0,141). Đây là mất ổn định tối ưu hoá chứ không phải hội tụ chậm,
-và Hyena có đủ năng lực biểu diễn ở độ dài 65. Với phân bố lưỡng cực, trung bình
-kèm độ lệch chuẩn là sai lệch; chúng tôi báo cáo tỉ lệ thành công 3 trên 5 và
+và Hyena có đủ năng lực biểu diễn ở độ dài 65. Với phân bố lưỡng cực, báo cáo trung
+bình kèm độ lệch chuẩn sẽ gây hiểu sai; chúng tôi báo cáo tỉ lệ thành công 3 trên 5 và
 độ chính xác khi thành công 0,963.
 
 \subsection{Đánh giá ngoại tại}
 
-Perplexity chỉ đo khả năng dự đoán token kế tiếp. Để kiểm tra biểu diễn có dùng
-được cho tác vụ khác, chúng tôi đánh giá hai checkpoint âm tiết, \textsf{uniform},
+Để kiểm tra biểu diễn có dùng được cho tác vụ khác ngoài dự đoán token kế tiếp,
+chúng tôi đánh giá hai checkpoint âm tiết, \textsf{uniform},
 seed 0 của Bảng~\ref{tab:e1} trên UIT-VSFC \citep{nguyen2018vsfc}, gồm 16.175
 câu phản hồi của sinh viên với hai tác vụ phân loại cảm xúc (3 lớp) và chủ đề
 (4 lớp). Hai kiến trúc dùng chung siêu tham số trong mỗi giao thức: \emph{thăm dò tuyến tính} (đóng
@@ -766,21 +757,22 @@ lần chạy, còn Transformer không đổi.
 \section{Thảo luận}
 % =============================================================================
 
-Phát hiện đứng vững nhất của phần đề xuất không nằm ở nơi chúng tôi dự kiến.
+Kết quả vững chắc nhất của phần đề xuất không nằm ở điều chúng tôi dự kiến ban
+đầu.
 Khoảng giá trị của tham số suy giảm, một chi tiết bài báo gốc để ngỏ, có ảnh
-hưởng đo được trên tiếng Việt: chuyển từ một khoảng đặt tuỳ tiện sang một lựa
+hưởng đo được trên tiếng Việt: chuyển từ một khoảng chọn tuỳ ý sang một lựa
 chọn có nguyên tắc giảm khoảng 0,9 PPL. Việc bổ sung đường cơ sở \textsf{logspace}
-sau khi phát hiện \textsf{uniform} đặt toàn bộ kênh ra ngoài vùng có thông tin là
-quyết định tới kết luận: nếu chỉ so với \textsf{uniform}, chúng tôi đã quy cả 1,19 PPL
+sau khi phát hiện \textsf{uniform} đặt toàn bộ kênh ra ngoài vùng có thông tin có
+tính quyết định đối với kết luận: nếu chỉ so với \textsf{uniform}, chúng tôi đã quy cả 1,19 PPL
 cho đóng góp đề xuất, trong khi so với \textsf{logspace} phần còn lại chỉ 0,29 PPL
 và không qua hiệu chỉnh so sánh bội.
 
 Câu hỏi bộ lọc có đặc thù ngôn ngữ hay không mới được trả lời một phần: hình
 dạng bộ lọc phụ thuộc quy ước ánh xạ, còn ở mức huấn luyện, trên nhánh tiếng Anh,
-dùng $\alpha$ suy từ tiếng Việt không làm perplexity xấu đi có ý nghĩa
-($p = 0{,}28$); chiều hoán đổi ngược lại chưa được kiểm tra.
+dùng $\alpha$ suy từ tiếng Việt không làm perplexity tăng có ý nghĩa
+thống kê ($p = 0{,}28$); chiều hoán đổi ngược lại chưa được kiểm tra.
 
-Phần đặc thù tiếng Việt đứng vững nằm ở phép đo: ở khoảng cách ngắn, tiếng Việt
+Kết quả đặc thù tiếng Việt có cơ sở vững chắc nằm ở phép đo: ở khoảng cách ngắn, tiếng Việt
 mang thông tin tương hỗ cục bộ gấp 1,7 tới 2,3 lần tiếng Anh, và nếu chỉ đo bằng
 âm tiết, nhiễu loạn token ngoài từ điển đã khiến chúng tôi kết luận sai về tầm xa.
 
@@ -792,9 +784,9 @@ thành công 3 trên 5 lần, với độ chính xác tới 0,98.
 \section*{Hạn chế}
 % =============================================================================
 
-Quy mô mô hình của chúng tôi (khoảng 7,5 triệu tham số) nhỏ hơn khoảng 47 lần
-so với quy mô 355 triệu tham số trong bài báo gốc. Mọi kết luận đều gắn với quy mô này
-và không được ngoại suy.
+Mô hình của chúng tôi (khoảng 7,5 triệu tham số) nhỏ hơn khoảng 47 lần so với
+mô hình 355 triệu tham số của bài báo gốc; mọi kết luận gắn với quy mô này và
+không nên ngoại suy.
 
 Chúng tôi dùng \texttt{torch.fft} thuần thay cho CUDA kernel tuỳ chỉnh của bài
 báo gốc, nên các con số tốc độ không so trực tiếp được với con số trong đó.
@@ -803,7 +795,7 @@ Bản tái hiện của chúng tôi \emph{chưa đạt được} kết quả ass
 bài báo gốc, vốn báo cáo 97,2\% ở độ dài 131.072. Đây là hạn chế của bản tái
 hiện ở ngân sách hiện có, không phải bằng chứng phản bác bài báo gốc. Số liệu
 associative recall ở 37.440 bước được chép từ nhật ký chạy chứ không phải từ
-file kết quả gốc.
+tệp kết quả gốc.
 
 Do phân bố lưỡng cực và số seed hạn chế, chúng tôi \emph{không} xếp hạng được
 các biến thể bộ lọc trên tác vụ associative recall. Phân biệt được tỉ lệ thành
@@ -812,7 +804,7 @@ tính toán của đồ án.
 
 Corpus được lấy mẫu ở chế độ streaming, trong đó việc xáo trộn chỉ diễn ra
 trong một bộ đệm hữu hạn chứ không xáo toàn cục, nên mẫu lệch về phía đầu tập
-dữ liệu. Nặng hơn, phép lấy mẫu này không tái lập được giữa các phiên bản thư
+dữ liệu. Nghiêm trọng hơn, phép lấy mẫu này không tái lập được giữa các phiên bản thư
 viện \texttt{datasets}. Vì vậy nhánh tiếng Anh phải được lấy mẫu lại (110.000
 tài liệu, \texttt{datasets} phiên bản 4.0.0, ghi trong mỗi tệp kết quả) rồi cắt
 xuống đúng ngân sách token của nhánh tiếng Việt, còn nhánh tiếng Việt giữ mẫu
@@ -831,10 +823,9 @@ liệu nhưng chỉ 3,67 triệu token huấn luyện, khoảng một phần mư
 Đánh giá ngoại tại dùng câu ngắn nên không kiểm tra được ngữ cảnh dài, và chỉ
 có một seed tiền huấn luyện.
 
-Cuối cùng, so sánh ``cùng số ký tự'' giữa hai ngôn ngữ không phải là
-``cùng lượng nội dung''. Muốn khẳng định chuỗi tiếng Việt dài hơn ở cùng nội
-dung cần văn bản
-song ngữ song song, thứ chúng tôi không có.
+Cuối cùng, ``cùng số ký tự'' giữa hai ngôn ngữ không đồng nghĩa với ``cùng lượng
+nội dung''; khẳng định chuỗi tiếng Việt dài hơn ở cùng nội dung cần văn bản song
+ngữ song song, thứ chúng tôi không có.
 
 % =============================================================================
 \section{Kết luận}
@@ -852,7 +843,7 @@ hưởng lớn nhất; các nhánh khác cần thêm seed.
 trọng: khoảng 0,9 PPL trên tiếng Việt, cùng chiều trên tiếng Anh. Nhưng suy
 khoảng đó từ thống kê corpus không mang lại lợi ích đo được so với cách đều theo
 thang log; trên nhánh tiếng Anh, dùng $\alpha$ suy từ tiếng Việt cũng không làm
-perplexity xấu đi có ý nghĩa, còn chiều hoán đổi ngược lại chưa được kiểm tra.
+perplexity tăng có ý nghĩa thống kê, còn chiều hoán đổi ngược lại chưa được kiểm tra.
 Chúng tôi báo cáo các kết quả phủ định này cùng giới hạn của bản tái hiện thay
 vì lược bỏ chúng.
 
