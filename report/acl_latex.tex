@@ -67,6 +67,20 @@
 \fi
 \usepackage[vietnamese]{babel}
 
+% Tieu de danh muc tai lieu tham khao bang tieng Viet. acl.sty viet cung chu
+% "References" ben trong \thebibliography, nen \refname cua babel khong co tac
+% dung; phai va lenh do. \patchcmd thay lan xuat hien DAU TIEN, chinh la tieu
+% de in ra (hai lan sau nam trong \@mkboth, chi dung cho tieu de chay dau trang
+% ma mau ACL khong in). Lenh chua @ nen phai boc \makeatletter. Neu acl.sty tren
+% Overleaf khac ban chinh thuc thi va that bai: tieu de giu "References", log co
+% canh bao, ban build khong vo.
+\usepackage{etoolbox}
+\newcommand{\tailieuthamkhao}{Tài liệu tham khảo}
+\makeatletter
+\patchcmd{\thebibliography}{References}{\tailieuthamkhao}{}{%
+  \PackageWarningNoLine{acl_latex}{Khong doi duoc tieu de References}}
+\makeatother
+
 \usepackage{graphicx}
 \usepackage{booktabs}
 \usepackage{amsmath}
@@ -117,9 +131,9 @@ tiếng Anh ở khoảng cách ngắn. Trên tiếng Việt, đặt phân bố s
 nguyên tắc, cách đều theo thang log hoặc suy từ corpus, giảm khoảng 0,9 PPL so
 với một khoảng đặt tuỳ tiện; trên tiếng Anh hiệu ứng cùng chiều nhưng không qua
 hiệu chỉnh so sánh bội. Khởi tạo từ corpus không vượt được đường cơ sở thang
-log một cách có ý nghĩa. Mô hình tiếng Anh dùng $\alpha$ suy từ tiếng Việt
-không kém đi ($p = 0{,}28$), nên ở quy mô này bộ lọc của hai ngôn ngữ thay thế
-được cho nhau.
+log một cách có ý nghĩa. Trên nhánh tiếng Anh, dùng $\alpha$ suy từ tiếng Việt
+không làm perplexity xấu đi có ý nghĩa ($p = 0{,}28$); chiều hoán đổi ngược lại
+chưa được kiểm tra.
 \end{abstract}
 
 % =============================================================================
@@ -399,7 +413,7 @@ Thứ hai, phép đo bằng âm tiết cho thấy hai đường cắt nhau tại
 nhưng điểm cắt này \emph{biến mất} khi khử token ngoài từ điển. Nó là hiện vật
 của việc gộp mọi từ hiếm của tiếng Anh vào một ký hiệu duy nhất, làm mất thông
 tin của tiếng Anh một cách hệ thống. Chúng tôi nêu ra để cảnh báo: nếu chỉ đo
-bằng âm tiết, nhóm đã kết luận sai.
+bằng âm tiết, chúng tôi đã kết luận sai.
 
 Thứ ba, tín hiệu chìm xuống dưới mức nhiễu ở $d > 121$ với phép đo âm tiết và
 $d > 167$ với BPE. Mọi phát biểu về khoảng cách xa hơn các mốc này đều không có
@@ -459,11 +473,11 @@ Phép thử ở mức huấn luyện là hoán đổi $\alpha$: mô hình tiến
 suy từ tiếng Việt (cùng corpus, cùng cấu hình, 3 seed) đạt 54,77 PPL so với 54,91
 khi dùng $\alpha$ của chính nó ($\Delta = -0{,}15$; KTC 95\% [$-0{,}48$; $0{,}18$];
 Welch $p = 0{,}28$). Vì perplexity ít nhạy với $\alpha$ (mục~\ref{sec:e4text}),
-kết luận đứng được là bộ lọc thay thế được cho nhau ở quy mô này, không phải hai
-bộ lọc giống nhau. Đối chứng chạy lại cùng phiên cho perplexity trùng khớp tới
-từng chữ số với lần chạy gốc ở môi trường khác, nên chênh lệch không đến từ môi
-trường. Các số được tái sinh bởi
-\texttt{python -m hyena\_study.analyze}.
+kết luận đứng được chỉ là trên tiếng Anh, $\alpha$ suy từ tiếng Việt dùng thay được
+$\alpha$ của chính nó, không phải hai bộ lọc giống nhau; chiều ngược lại chưa kiểm
+được trên đúng corpus. Đối chứng chạy lại cùng phiên cho perplexity trùng khớp
+tới từng chữ số với lần chạy gốc ở môi trường khác, nên chênh lệch không đến từ
+môi trường. Các số được tái sinh bởi \texttt{python -m hyena\_study.analyze}.
 
 \subsection{Perplexity trên mô hình ngôn ngữ}
 
@@ -546,7 +560,7 @@ Bỏ positional emb  & 50,79 & $-0{,}59$ & [50,14; 51,45] & 0,024 \\
 \bottomrule
 \end{tabular}
 \caption{Ablation trên tiếng Việt, 2 seed mỗi nhánh (cấu hình chuẩn: 3 seed,
-khoảng $\alpha$ do nhóm chọn). KTC 95\% theo phân phối $t$. $p_{\text{Holm}}$:
+khoảng $\alpha$ do chúng tôi chọn). KTC 95\% theo phân phối $t$. $p_{\text{Holm}}$:
 Welch hai mẫu so với cấu hình chuẩn, hiệu chỉnh Holm cho 5 phép so sánh. Với 2
 seed, bậc tự do Welch chỉ 1,4 đến 3,0 nên mọi kết luận ở bảng này là sơ bộ.}
 \label{tab:e3}
@@ -757,17 +771,18 @@ Khoảng giá trị của tham số suy giảm, một chi tiết bài báo gốc
 hưởng đo được trên tiếng Việt: chuyển từ một khoảng đặt tuỳ tiện sang một lựa
 chọn có nguyên tắc giảm khoảng 0,9 PPL. Việc bổ sung đường cơ sở \textsf{logspace}
 sau khi phát hiện \textsf{uniform} đặt toàn bộ kênh ra ngoài vùng có thông tin là
-quyết định tới kết luận: nếu chỉ so với \textsf{uniform}, nhóm đã quy cả 1,19 PPL
+quyết định tới kết luận: nếu chỉ so với \textsf{uniform}, chúng tôi đã quy cả 1,19 PPL
 cho đóng góp đề xuất, trong khi so với \textsf{logspace} phần còn lại chỉ 0,29 PPL
 và không qua hiệu chỉnh so sánh bội.
 
 Câu hỏi bộ lọc có đặc thù ngôn ngữ hay không mới được trả lời một phần: hình
-dạng bộ lọc phụ thuộc quy ước ánh xạ, còn ở mức huấn luyện bộ lọc thay thế được
-cho nhau trên tiếng Anh; chiều tiếng Việt chưa kiểm được.
+dạng bộ lọc phụ thuộc quy ước ánh xạ, còn ở mức huấn luyện, trên nhánh tiếng Anh,
+dùng $\alpha$ suy từ tiếng Việt không làm perplexity xấu đi có ý nghĩa
+($p = 0{,}28$); chiều hoán đổi ngược lại chưa được kiểm tra.
 
 Phần đặc thù tiếng Việt đứng vững nằm ở phép đo: ở khoảng cách ngắn, tiếng Việt
 mang thông tin tương hỗ cục bộ gấp 1,7 tới 2,3 lần tiếng Anh, và nếu chỉ đo bằng
-âm tiết, nhiễu loạn token ngoài từ điển đã khiến nhóm kết luận sai về tầm xa.
+âm tiết, nhiễu loạn token ngoài từ điển đã khiến chúng tôi kết luận sai về tầm xa.
 
 Hiện tượng lưỡng cực ở associative recall gợi ý vấn đề của Hyena ở quy mô nhỏ có
 thể nằm ở độ ổn định tối ưu hoá chứ không ở năng lực biểu diễn: cấu hình corpus
@@ -781,9 +796,8 @@ Quy mô mô hình của chúng tôi (khoảng 7,5 triệu tham số) nhỏ hơn 
 so với quy mô 355 triệu tham số trong bài báo gốc. Mọi kết luận đều gắn với quy mô này
 và không được ngoại suy.
 
-Chúng tôi dùng \texttt{torch.fft} thuần thay cho CUDA kernel tuỳ chỉnh của
-nhóm tác giả, nên các con số tốc độ của chúng tôi không so trực tiếp được với
-con số trong bài báo gốc.
+Chúng tôi dùng \texttt{torch.fft} thuần thay cho CUDA kernel tuỳ chỉnh của bài
+báo gốc, nên các con số tốc độ không so trực tiếp được với con số trong đó.
 
 Bản tái hiện của chúng tôi \emph{chưa đạt được} kết quả associative recall của
 bài báo gốc, vốn báo cáo 97,2\% ở độ dài 131.072. Đây là hạn chế của bản tái
@@ -837,10 +851,10 @@ hưởng lớn nhất; các nhánh khác cần thêm seed.
 Đóng góp đề xuất cho kết quả hai mặt. Khoảng giá trị của tham số suy giảm quan
 trọng: khoảng 0,9 PPL trên tiếng Việt, cùng chiều trên tiếng Anh. Nhưng suy
 khoảng đó từ thống kê corpus không mang lại lợi ích đo được so với cách đều theo
-thang log; hoán đổi $\alpha$ giữa hai ngôn ngữ trên tiếng Anh cũng không làm
-perplexity kém đi, nên ở quy mô này bộ lọc thay thế được cho nhau. Chúng tôi báo
-cáo các kết quả
-phủ định này cùng giới hạn của bản tái hiện thay vì lược bỏ chúng.
+thang log; trên nhánh tiếng Anh, dùng $\alpha$ suy từ tiếng Việt cũng không làm
+perplexity xấu đi có ý nghĩa, còn chiều hoán đổi ngược lại chưa được kiểm tra.
+Chúng tôi báo cáo các kết quả phủ định này cùng giới hạn của bản tái hiện thay
+vì lược bỏ chúng.
 
 % =============================================================================
 % Day danh muc tai lieu tham khao sang trang rieng.
